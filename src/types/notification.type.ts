@@ -25,3 +25,8 @@ export interface Notification {
   createdAt: ISODateString;
   user?: User;
 }
+
+/** `PATCH /notification/read-all` — number of rows flipped to read. */
+export interface MarkAllNotificationsReadResult {
+  updatedCount: number;
+}

@@ -30,6 +30,15 @@ export const DASHBOARD_ROUTES: Record<Role, string> = {
   ADMIN: "/dashboard/admin",
 };
 
+/**
+ * Profile screen for each role that has one. Admins have no profile page, so
+ * the map is partial and consumers hide the link when the role is absent.
+ */
+export const PROFILE_ROUTES: Partial<Record<Role, string>> = {
+  CLIENT: "/dashboard/profile",
+  PROFESSIONAL: "/dashboard/professional/profile",
+};
+
 /** ISO 4217 code for the platform currency (Bangladeshi Taka). */
 export const CURRENCY = "BDT";
 

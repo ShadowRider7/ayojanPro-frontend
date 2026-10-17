@@ -1,5 +1,6 @@
 "use client";
 
+import { SettingsIcon, UserIcon } from "lucide-react";
 import { useState } from "react";
 import {
   ConfirmDialog,
@@ -15,6 +16,7 @@ import {
   SearchInput,
   StatusBadge,
 } from "@/components/shared";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +27,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   InputOTP,
@@ -197,6 +207,35 @@ export default function StyleGuidePage() {
           <Badge variant="outline">Outline</Badge>
           <Badge variant="destructive">Destructive</Badge>
         </div>
+      </Section>
+
+      <Section title="Avatar & menu">
+        <div className="flex items-center gap-3">
+          <Avatar size="sm">
+            <AvatarFallback>AP</AvatarFallback>
+          </Avatar>
+          <Avatar>
+            <AvatarFallback>AP</AvatarFallback>
+          </Avatar>
+          <Avatar size="lg">
+            <AvatarFallback>AP</AvatarFallback>
+          </Avatar>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="outline" />}>
+            Open menu
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuLabel>My account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <UserIcon /> Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <SettingsIcon /> Settings
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </Section>
 
       <Section title="Text, currency & dates">
