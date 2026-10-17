@@ -1,7 +1,7 @@
 # AyojanPro Frontend — Implementation Plan / Task Tracker
 
 Frontend repo: `C:\projects\ayojanpro-frontend`
-Backend repo: `C:\projects\AyojanPro` (main @ `298ef35`; `GET /event/my-events` and `GET /proposal/me` added locally — see 2.1)
+Backend repo: `C:\projects\AyojanPro` (main @ `1ce7b01`; `GET /event/my-events` and `GET /proposal/me` added — see 2.1)
 Reference repo: `Apollo-Level2-Web-Dev/PH-Healthcare-Nextjs` (stack + file conventions; shadcn style `base-nova`)
 
 Goal: a production-quality Next.js 16 App Router client for the AyojanPro event-service
@@ -72,14 +72,14 @@ Backend CORS is `origin: FRONTEND_URL` with credentials → dev frontend must ru
 
 ---
 
-## 2. Verified backend endpoint reference (main @ bff06f5)
+## 2. Verified backend endpoint reference (main @ 1ce7b01)
 
 - Auth: `POST /auth/{register,verify-email,login,google,refresh-token,forgot-password,reset-password,logout}`, `GET /auth/me`
 - User: `PATCH /user/profile-image` (multipart `profileImage`)
 - Client: `PATCH /client/my-profile`
 - Professional: `POST /professional/apply-as-professional` (multipart `data`,`resume`,`additionalFiles`), `POST /professional/apply-as-professional/verify-email`, `POST /professional/approve-professional` (admin), `GET /professional/all-professionals` (admin), `PATCH /professional/update-my-profile`, `GET /professional/public/all-Professionals`, `GET /professional/public/:professionalId`, `POST /professional/service`, `GET /professional/me/services`, `PATCH|DELETE /professional/service/:id`, `POST|DELETE /professional/skill`, `POST|PATCH|DELETE /professional/experience`, `POST|GET|PATCH|DELETE /professional/portfolio`
-- Event: `POST /event`, `POST /event/services/:eventId`, `GET /event/all-events` (admin/pro only), `PATCH /event/update/:eventId`, `GET /event/:eventId/required-services`, `PATCH /event/update/:eventId/services/:serviceId`, `DELETE /event/:eventId/services/:serviceId`, `GET /event/:eventId`, `PATCH /event/publish-event/:eventId`, `DELETE /event/:eventId`
-- Proposal: `POST /proposal/events/:eventId`, `GET /proposal/requirements/:requirementId`, `GET /proposal/:id`, `PATCH /proposal/:proposalId/{accept,reject,withdraw}`
+- Event: `POST /event`, `POST /event/services/:eventId`, `GET /event/all-events` (admin/pro only), `GET /event/my-events` (client), `PATCH /event/update/:eventId`, `GET /event/:eventId/required-services`, `PATCH /event/update/:eventId/services/:serviceId`, `DELETE /event/:eventId/services/:serviceId`, `GET /event/:eventId`, `PATCH /event/publish-event/:eventId`, `DELETE /event/:eventId`
+- Proposal: `POST /proposal/events/:eventId`, `GET /proposal/requirements/:requirementId`, `GET /proposal/me` (professional), `GET /proposal/:id`, `PATCH /proposal/:proposalId/{accept,reject,withdraw}`
 - Contract: `GET /contract`, `GET /contract/:id`, `PATCH /contract/:id/cancel`, `POST /contract/:id/deliverable`, `GET /contract/:id/deliverable`, `PATCH /contract/:id/complete`
 - Payment: `POST /payment/contracts/:id/{initial,final}`, `GET /payment/contracts/:id`, callback is server-side
 - Review: `POST /review/contracts/:id`, `GET /review/professionals`, `GET /review/clients`
@@ -101,19 +101,23 @@ Admin professional review note: `GET /professional/all-professionals` returns fu
 `contracts`, `proposals` — enough to approve/reject. (No `experience`/`portfolio` nested; use the public
 profile endpoint if needed.)
 
-### 2.1 Backend gaps — RESOLVED
+### 2.1 Backend gaps — RESOLVED (committed `1ce7b01`)
 
-The two missing list endpoints were added to `C:\projects\AyojanPro` (working tree,
-not yet committed/pushed):
+The two missing list endpoints were added to `C:\projects\AyojanPro`, committed as
+`1ce7b01 "myevent and myproposal view added"`, and documented in the backend `README.md`
+and `AyojanPro.postman_collection.json`. Both compile (`tsc --noEmit` clean).
 
 - `GET /api/v1/event/my-events` — `auth(CLIENT)`, returns own non-deleted events
-  (all statuses) incl. `serviceRequirements`, newest first.
+  (all statuses) incl. `serviceRequirements`, `orderBy: createdAt desc`. Response
+  `data` is a **plain array** (no pagination `meta`). 404 if the caller has no
+  client profile.
 - `GET /api/v1/proposal/me` — `auth(PROFESSIONAL)`, returns own proposals incl.
-  `professional`, `event` and `items` (with requirement + professional service),
-  newest first.
+  `professional`, `event` and `items` (each item with `eventServiceRequirement` +
+  `professionalService`), `orderBy: submittedAt desc`. Response `data` is a **plain
+  array** (no pagination `meta`). 404 if the caller has no professional profile.
 
-Both compile (`tsc --noEmit`) and are documented in the backend `README.md`. So Tasks
-14 and 19 can use real list endpoints instead of degrading gracefully.
+Because neither endpoint paginates, the client `useQuery` hooks in Tasks 14 and 19
+should treat `data` as `Event[]` / `Proposal[]` and do any filtering/sorting client-side.
 
 Original audit (for the record): `GET /event/all-events` is gated `ADMIN, PROFESSIONAL`
 and returns only `PUBLISHED` events, and no proposal list existed.
@@ -147,6 +151,7 @@ and returns only `PUBLISHED` events, and no proposal list existed.
   - `next.config.ts`: `images.remotePatterns` for Cloudinary; `cacheComponents` kept (works with the client-side react-query approach).
   - Also added `.gitattributes` (LF normalization) as a separate chore commit.
   - **DoD met:** `bun run build` clean, `/` prerendered with the themed placeholder.
+  - **Committed:** `5b64497` (chore `.gitattributes` = `b4aa2e3`).
 
 - [ ] **T2 — UI kit & shared components**
   - shadcn: `button input label textarea card field table tabs sheet sidebar separator skeleton spinner pagination checkbox input-otp tooltip toast dialog select badge`.
@@ -253,7 +258,7 @@ and returns only `PUBLISHED` events, and no proposal list existed.
 ---
 
 ## 5. Open items to confirm before T14 / T19
-1. Exact paths of the client "my events" and professional "my proposals" endpoints (or add the two
-   proposed in 2.1).
+1. ~~Exact paths of the client "my events" and professional "my proposals" endpoints.~~
+   **Resolved:** `GET /event/my-events` and `GET /proposal/me` (backend `1ce7b01`, see 2.1).
 2. Whether admin professional review needs nested `experience`/`portfolio` (currently not returned by
    `/professional/all-professionals`).
