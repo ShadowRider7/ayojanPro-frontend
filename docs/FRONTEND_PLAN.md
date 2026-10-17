@@ -1,8 +1,8 @@
 # AyojanPro Frontend — Implementation Plan / Task Tracker
 
 Frontend repo: `C:\projects\ayojanpro-frontend`
-Backend repo: `C:\projects\AyojanPro` (main @ `bff06f5`)
-Reference repo: `Apollo-Level2-Web-Dev/PH-Healthcare-Nextjs` (stack + file conventions)
+Backend repo: `C:\projects\AyojanPro` (main @ `298ef35`; `GET /event/my-events` and `GET /proposal/me` added locally — see 2.1)
+Reference repo: `Apollo-Level2-Web-Dev/PH-Healthcare-Nextjs` (stack + file conventions; shadcn style `base-nova`)
 
 Goal: a production-quality Next.js 16 App Router client for the AyojanPro event-service
 platform, matching the reference repo's stack, file layout and patterns.
@@ -101,27 +101,22 @@ Admin professional review note: `GET /professional/all-professionals` returns fu
 `contracts`, `proposals` — enough to approve/reject. (No `experience`/`portfolio` nested; use the public
 profile endpoint if needed.)
 
-### 2.1 Backend gaps (confirm before Tasks 14 & 19)
+### 2.1 Backend gaps — RESOLVED
 
-A full audit of `src/app/module/**/*.route.ts` (all route literals), `app.ts` mounts, the Postman
-collection and `dist/` shows these are **not implemented** on `main @ bff06f5`:
+The two missing list endpoints were added to `C:\projects\AyojanPro` (working tree,
+not yet committed/pushed):
 
-1. **Client "my events"** — `GET /event/all-events` is gated `ADMIN, PROFESSIONAL`, and even for other
-   roles it returns only `PUBLISHED` events (clients need `DRAFT` too). No client-scoped list exists.
-2. **Professional "my proposals"** — there is no proposal list endpoint at all.
+- `GET /api/v1/event/my-events` — `auth(CLIENT)`, returns own non-deleted events
+  (all statuses) incl. `serviceRequirements`, newest first.
+- `GET /api/v1/proposal/me` — `auth(PROFESSIONAL)`, returns own proposals incl.
+  `professional`, `event` and `items` (with requirement + professional service),
+  newest first.
 
-Only `README.md` is modified in the working tree (docs-only: added `/auth/logout`, reset-password body,
-event status filter). Those two list routes are not present.
+Both compile (`tsc --noEmit`) and are documented in the backend `README.md`. So Tasks
+14 and 19 can use real list endpoints instead of degrading gracefully.
 
-**Proposed backend additions** (frontend will target these; if the real paths differ, only the
-`src/api/*.api.ts` file changes because of the thin API layer):
-- `GET /api/v1/event/my-events` — `auth(CLIENT)`, `IQuery` + `status`; returns own events (all statuses,
-  `isDeleted:false`) incl. `serviceRequirements`.
-- `GET /api/v1/proposal/me` — `auth(PROFESSIONAL)`, `IQuery` + `status`; returns own proposals incl.
-  `items` + requirement + event.
-
-Until then, Tasks 14/19 must degrade gracefully (empty state + link-by-id) and this note stays in
-`README`.
+Original audit (for the record): `GET /event/all-events` is gated `ADMIN, PROFESSIONAL`
+and returns only `PUBLISHED` events, and no proposal list existed.
 
 ### 2.2 Other minor gaps / workarounds
 - Own skills/experience have no GET → read them from `GET /professional/public/:ownProfessionalId`.
@@ -143,13 +138,15 @@ Until then, Tasks 14/19 must degrade gracefully (empty state + link-by-id) and t
 
 ### Phase 0 — Foundation
 
-- [ ] **T1 — Project foundation & design tokens**
-  - Install: `ofetch @tanstack/react-query @tanstack/react-form zod @react-oauth/google input-otp lucide-react class-variance-authority cn tw-animate-css` + shadcn deps (`@base-ui/react`).
-  - Add `components.json` (style `base-nova`, css `src/app/globals.css`, aliases as reference), `.env.local`, `.env.example`.
-  - `src/lib/utils.ts` (`cn`); rewrite `src/app/globals.css` with shadcn CSS vars + `@theme inline`.
-  - `src/app/layout.tsx`: Inter font, `<Providers>`, `<Toaster>`, metadata `AyojanPro`.
-  - `next.config.ts`: `images.remotePatterns` for Cloudinary; decide/document `cacheComponents`.
-  - **DoD:** themed placeholder renders; lint/tsc clean.
+- [x] **T1 — Project foundation & design tokens**
+  - Installed: `ofetch @tanstack/react-query @tanstack/react-form zod @react-oauth/google input-otp lucide-react class-variance-authority cn tw-animate-css shadcn @base-ui/react`.
+  - Added `components.json` (shadcn style `base-nova` — confirmed against the reference repo, `src/app/globals.css`, aliases as reference), `.env.local` + committed `.env.example`.
+  - `src/lib/utils.ts` (`cn`); rewrote `src/app/globals.css` with the reference's shadcn CSS vars + `@theme inline`.
+  - `src/app/layout.tsx`: Inter + Geist fonts, `<Providers>`, `<Toaster>`, metadata `AyojanPro`.
+  - `src/providers/*` (query, Google OAuth, tooltip) — pulled forward from T4 so the shell renders.
+  - `next.config.ts`: `images.remotePatterns` for Cloudinary; `cacheComponents` kept (works with the client-side react-query approach).
+  - Also added `.gitattributes` (LF normalization) as a separate chore commit.
+  - **DoD met:** `bun run build` clean, `/` prerendered with the themed placeholder.
 
 - [ ] **T2 — UI kit & shared components**
   - shadcn: `button input label textarea card field table tabs sheet sidebar separator skeleton spinner pagination checkbox input-otp tooltip toast dialog select badge`.
@@ -164,7 +161,7 @@ Until then, Tasks 14/19 must degrade gracefully (empty state + link-by-id) and t
 
 - [ ] **T4 — API client & query layer**
   - `src/lib/apiClient.ts`: ofetch + `credentials:"include"`, typed error class, **401 → `POST /auth/refresh-token` retry once**.
-  - `src/lib/queryKeys.ts`; `src/lib/queryClient.ts`; `src/providers/{index,query.provider,google-auth.provider}.tsx` (+ tooltip/toaster).
+  - `src/lib/queryKeys.ts`; `src/lib/queryClient.ts` (providers/toaster already created in T1).
   - Global API-error → toast helper; `useApiQuery`/`useApiMutation` thin wrappers.
 
 - [ ] **T5 — Auth API, hooks & zod validation**
