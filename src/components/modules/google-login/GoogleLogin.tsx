@@ -3,11 +3,10 @@
 import { type CredentialResponse, GoogleLogin } from "@react-oauth/google";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { getMe } from "@/api";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useGoogleOAuth } from "@/hooks";
-import { DASHBOARD_ROUTES } from "@/lib/constants";
+import { resolveSignedInPath } from "@/lib/auth-redirect";
 
 /**
  * Whether Google sign-in is configured. `GoogleAuthProvider` skips mounting the
@@ -55,21 +54,7 @@ export default function GoogleLoginComponent() {
             type: "success",
           });
 
-          queryClient.invalidateQueries({ queryKey: ["user"] });
-
-          let destination = "/dashboard";
-          try {
-            const me = await queryClient.fetchQuery({
-              queryKey: ["user"],
-              queryFn: getMe,
-              retry: false,
-            });
-            destination = DASHBOARD_ROUTES[me.data.role] ?? destination;
-          } catch {
-            // Fall back to the client dashboard when the session read fails.
-          }
-
-          router.push(destination);
+          router.push(await resolveSignedInPath(queryClient));
         },
         onError: (err) => {
           toast.add({

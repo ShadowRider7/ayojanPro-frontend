@@ -47,6 +47,8 @@ export interface ResetPasswordPayload {
   email: string;
   otp: string;
   newPassword: string;
+  /** Required by the backend validation even though the service ignores it. */
+  confirmPassword: string;
 }
 
 /**

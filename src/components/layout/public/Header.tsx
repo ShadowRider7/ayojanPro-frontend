@@ -1,7 +1,9 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { MenuIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Logo from "@/assets/svg/Logo";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -13,7 +15,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useGetMe } from "@/hooks";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "@/components/ui/toast";
+import { useGetMe, useLogout } from "@/hooks";
 import { APP_NAME, DASHBOARD_ROUTES } from "@/lib/constants";
 
 const NAV_LINKS = [
@@ -25,9 +29,34 @@ const MOBILE_LINK_CLASS =
   "rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted";
 
 export default function Header() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { data, isPending } = useGetMe();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const user = data?.data;
   const dashboardUrl = user ? DASHBOARD_ROUTES[user.role] : null;
+
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        toast.add({
+          title: "Signed out",
+          description: "You have been logged out.",
+          type: "success",
+        });
+
+        queryClient.invalidateQueries({ queryKey: ["user"] });
+        router.push("/");
+      },
+      onError: (err) => {
+        toast.add({
+          title: "Logout failed",
+          description: err.message || "Something went wrong. Please try again",
+          type: "error",
+        });
+      },
+    });
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -55,12 +84,27 @@ export default function Header() {
         <div className="hidden items-center gap-2 md:flex">
           {!isPending &&
             (user && dashboardUrl ? (
-              <Button
-                nativeButton={false}
-                render={<Link href={dashboardUrl} />}
-              >
-                Dashboard
-              </Button>
+              <>
+                <Button
+                  nativeButton={false}
+                  render={<Link href={dashboardUrl} />}
+                >
+                  Dashboard
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? (
+                    <>
+                      <Spinner className="size-3.5" /> Signing out
+                    </>
+                  ) : (
+                    "Log out"
+                  )}
+                </Button>
+              </>
             ) : (
               <>
                 <Link
@@ -112,26 +156,42 @@ export default function Header() {
                 </SheetClose>
               ) : null}
             </nav>
-            {!isPending && !user ? (
-              <SheetFooter>
-                <SheetClose
-                  render={
-                    <Link
-                      href="/login"
-                      className={buttonVariants({ variant: "outline" })}
-                    />
-                  }
-                >
-                  Log in
-                </SheetClose>
-                <SheetClose
-                  render={
-                    <Link href="/register" className={buttonVariants()} />
-                  }
-                >
-                  Get started
-                </SheetClose>
-              </SheetFooter>
+            {!isPending ? (
+              user ? (
+                <SheetFooter>
+                  <SheetClose
+                    render={
+                      <Button
+                        variant="outline"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                      />
+                    }
+                  >
+                    {isLoggingOut ? "Signing out…" : "Log out"}
+                  </SheetClose>
+                </SheetFooter>
+              ) : (
+                <SheetFooter>
+                  <SheetClose
+                    render={
+                      <Link
+                        href="/login"
+                        className={buttonVariants({ variant: "outline" })}
+                      />
+                    }
+                  >
+                    Log in
+                  </SheetClose>
+                  <SheetClose
+                    render={
+                      <Link href="/register" className={buttonVariants()} />
+                    }
+                  >
+                    Get started
+                  </SheetClose>
+                </SheetFooter>
+              )
             ) : null}
           </SheetContent>
         </Sheet>
