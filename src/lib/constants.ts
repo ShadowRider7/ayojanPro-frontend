@@ -1,3 +1,22 @@
+import {
+  APPLICATION_STATUSES,
+  AUTH_PROVIDERS,
+  CONTRACT_STATUSES,
+  DISPUTE_RAISED_BY,
+  DISPUTE_STATUSES,
+  EVENT_STATUSES,
+  NOTIFICATION_TYPES,
+  PAYMENT_METHODS,
+  PAYMENT_STAGES,
+  PAYMENT_STATUSES,
+  PROPOSAL_STATUSES,
+  REVIEVEE_ROLES,
+  ROLES,
+  SERVICE_REQUIREMENT_STATUSES,
+  USER_STATUSES,
+} from "@/types/enums";
+import { humanize } from "@/utils/formatters";
+
 export const APP_NAME = "AyojanPro";
 
 /** ISO 4217 code for the platform currency (Bangladeshi Taka). */
@@ -70,3 +89,51 @@ export function statusTone(status: string | null | undefined): StatusTone {
 
   return STATUS_TONES[status] ?? "neutral";
 }
+
+/**
+ * A single `{ value, label }` pair for a backend enum, shaped for `<Select>`
+ * items and form options.
+ */
+export type EnumOption<T extends string = string> = {
+  value: T;
+  label: string;
+};
+
+/** Build enum options from one of the `as const` arrays in `@/types/enums`. */
+export function toEnumOptions<T extends string>(
+  values: readonly T[],
+): EnumOption<T>[] {
+  return values.map((value) => ({ value, label: humanize(value) }));
+}
+
+/** Look up the human label for an enum value from its options list. */
+export function enumLabel<T extends string>(
+  options: readonly EnumOption<T>[],
+  value: T | null | undefined,
+): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  return options.find((option) => option.value === value)?.label;
+}
+
+// Enum options shared by forms and selects. Keys mirror the backend enums
+// in `@/types/enums`.
+export const ROLE_OPTIONS = toEnumOptions(ROLES);
+export const USER_STATUS_OPTIONS = toEnumOptions(USER_STATUSES);
+export const AUTH_PROVIDER_OPTIONS = toEnumOptions(AUTH_PROVIDERS);
+export const APPLICATION_STATUS_OPTIONS = toEnumOptions(APPLICATION_STATUSES);
+export const EVENT_STATUS_OPTIONS = toEnumOptions(EVENT_STATUSES);
+export const SERVICE_REQUIREMENT_STATUS_OPTIONS = toEnumOptions(
+  SERVICE_REQUIREMENT_STATUSES,
+);
+export const PROPOSAL_STATUS_OPTIONS = toEnumOptions(PROPOSAL_STATUSES);
+export const CONTRACT_STATUS_OPTIONS = toEnumOptions(CONTRACT_STATUSES);
+export const PAYMENT_STAGE_OPTIONS = toEnumOptions(PAYMENT_STAGES);
+export const PAYMENT_STATUS_OPTIONS = toEnumOptions(PAYMENT_STATUSES);
+export const PAYMENT_METHOD_OPTIONS = toEnumOptions(PAYMENT_METHODS);
+export const REVIEVEE_ROLE_OPTIONS = toEnumOptions(REVIEVEE_ROLES);
+export const DISPUTE_STATUS_OPTIONS = toEnumOptions(DISPUTE_STATUSES);
+export const DISPUTE_RAISED_BY_OPTIONS = toEnumOptions(DISPUTE_RAISED_BY);
+export const NOTIFICATION_TYPE_OPTIONS = toEnumOptions(NOTIFICATION_TYPES);
