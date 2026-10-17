@@ -13,3 +13,14 @@ export function getPublicProfessionals(query?: IQuery) {
     { query },
   );
 }
+
+/**
+ * `GET /professional/public/:professionalId` — a single approved
+ * professional's public profile (skills, services, experience, portfolio and
+ * reviews). Rejects with a 404 when the id is unknown or not approved.
+ */
+export function getPublicProfessional(professionalId: string) {
+  return apiClient<ApiResponse<PublicProfessional>>(
+    `/professional/public/${professionalId}`,
+  );
+}

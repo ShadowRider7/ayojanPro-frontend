@@ -11,45 +11,60 @@ import {
 import Link from "next/link";
 import { Container } from "@/components/shared";
 
+/**
+ * Marketing categories for the landing page. `searchTerm` is what the
+ * `/professionals` directory filters on: the API matches it with `contains`
+ * against a professional's name, title, city and country, so these terms are
+ * chosen to appear inside the titles professionals actually use
+ * (e.g. "Photo" matches "Event Photographer").
+ */
 const CATEGORIES = [
   {
     icon: CameraIcon,
     title: "Photography",
+    searchTerm: "Photo",
     description: "Weddings, portraits and corporate coverage.",
   },
   {
     icon: VideoIcon,
     title: "Videography",
+    searchTerm: "Video",
     description: "Highlight reels, live coverage and edits.",
   },
   {
     icon: PartyPopperIcon,
     title: "Decoration",
+    searchTerm: "Decor",
     description: "Stage, floral and venue styling.",
   },
   {
     icon: SparklesIcon,
     title: "Makeup & Hair",
+    searchTerm: "Makeup",
     description: "Bridal, party and on-set styling.",
   },
   {
     icon: MusicIcon,
     title: "Sound & DJ",
+    searchTerm: "Sound",
     description: "Sound systems, DJs and live bands.",
   },
   {
     icon: LightbulbIcon,
     title: "Lighting",
+    searchTerm: "Lighting",
     description: "Ambient, stage and architectural lighting.",
   },
   {
     icon: UtensilsCrossedIcon,
     title: "Catering",
+    searchTerm: "Catering",
     description: "Menus, live counters and service staff.",
   },
   {
     icon: MicIcon,
     title: "Hosting & Anchor",
+    searchTerm: "Anchor",
     description: "Emcees, anchors and event coordination.",
   },
 ];
@@ -72,7 +87,7 @@ export default function ServiceCategories() {
           {CATEGORIES.map((category) => (
             <Link
               key={category.title}
-              href={`/professionals?searchTerm=${encodeURIComponent(category.title)}`}
+              href={`/professionals?searchTerm=${encodeURIComponent(category.searchTerm)}`}
               className="flex flex-col gap-3 rounded-xl border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/40"
             >
               <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
