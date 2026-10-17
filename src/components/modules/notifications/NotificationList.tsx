@@ -43,7 +43,8 @@ const SKELETON_KEYS = [
   "notification-skeleton-2",
 ];
 
-const NOTIFICATION_ICONS: Record<NotificationType, LucideIcon> = {
+/** Per-type icon for a notification row; also drives the overview activity list. */
+export const NOTIFICATION_ICONS: Record<NotificationType, LucideIcon> = {
   APPLICATION: UserPlusIcon,
   PROPOSAL: FileTextIcon,
   CONTRACT: FileSignatureIcon,
