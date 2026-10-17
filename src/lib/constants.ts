@@ -12,12 +12,23 @@ import {
   PROPOSAL_STATUSES,
   REVIEVEE_ROLES,
   ROLES,
+  type Role,
   SERVICE_REQUIREMENT_STATUSES,
   USER_STATUSES,
 } from "@/types";
 import { humanize } from "@/utils/formatters";
 
 export const APP_NAME = "AyojanPro";
+
+/**
+ * Landing path for each role's dashboard after a successful sign-in. Kept here
+ * so the header, login and Google sign-in all agree on the same routes.
+ */
+export const DASHBOARD_ROUTES: Record<Role, string> = {
+  CLIENT: "/dashboard",
+  PROFESSIONAL: "/dashboard/professional",
+  ADMIN: "/dashboard/admin",
+};
 
 /** ISO 4217 code for the platform currency (Bangladeshi Taka). */
 export const CURRENCY = "BDT";

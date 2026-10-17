@@ -14,19 +14,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useGetMe } from "@/hooks";
-import { APP_NAME } from "@/lib/constants";
-import type { Role } from "@/types";
+import { APP_NAME, DASHBOARD_ROUTES } from "@/lib/constants";
 
 const NAV_LINKS = [
   { name: "Home", url: "/" },
   { name: "Browse Professionals", url: "/professionals" },
 ];
-
-const DASHBOARD_ROUTES: Record<Role, string> = {
-  CLIENT: "/dashboard",
-  PROFESSIONAL: "/dashboard/professional",
-  ADMIN: "/dashboard/admin",
-};
 
 const MOBILE_LINK_CLASS =
   "rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted";
