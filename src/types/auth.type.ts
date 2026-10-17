@@ -1,7 +1,9 @@
 /**
- * Auth request payloads (`POST /auth/*`). Shapes mirror the backend
- * `auth.interface.ts` / `auth.validation.ts`.
+ * Auth request payloads and responses (`POST /auth/*`). Shapes mirror the
+ * backend `auth.interface.ts` / `auth.validation.ts` and `auth.controller.ts`.
  */
+
+import type { Client, User } from "./user.type";
 
 /** `POST /auth/register` — client self-registration. */
 export interface RegistrationPayload {
@@ -45,4 +47,20 @@ export interface ResetPasswordPayload {
   email: string;
   otp: string;
   newPassword: string;
+}
+
+/**
+ * Session token pair returned by the auth endpoints. The client never reads
+ * them — the backend also sets them as httpOnly cookies — but they are part
+ * of the response envelope.
+ */
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/** `POST /auth/verify-email` response — the created account plus its session. */
+export interface VerifyAccountResponse extends AuthTokens {
+  user: User;
+  client: Client;
 }
