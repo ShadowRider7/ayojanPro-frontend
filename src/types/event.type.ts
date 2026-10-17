@@ -1,8 +1,29 @@
 import type { DecimalValue, ISODateString, Nullable } from "./common.type";
 import type { Contract } from "./contract.type";
-import type { EventStatus, ServiceRequirementStatus } from "./enums";
 import type { Proposal, ProposalItem } from "./proposal.type";
 import type { Client } from "./user.type";
+
+/** Event lifecycle (`EventStatus` enum). */
+export const EVENT_STATUSES = [
+  "DRAFT",
+  "PUBLISHED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+export type EventStatus = (typeof EVENT_STATUSES)[number];
+
+/** Per-requirement fulfilment state (`ServiceRequirementStatus` enum). */
+export const SERVICE_REQUIREMENT_STATUSES = [
+  "OPEN",
+  "PARTIALLY_FILLED",
+  "FILLED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+] as const;
+export type ServiceRequirementStatus =
+  (typeof SERVICE_REQUIREMENT_STATUSES)[number];
 
 /** An event created by a client (`Event` model). */
 export interface Event {

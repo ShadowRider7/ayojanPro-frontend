@@ -1,8 +1,17 @@
 import type { DecimalValue, ISODateString, Nullable } from "./common.type";
 import type { Contract } from "./contract.type";
-import type { ProposalStatus } from "./enums";
 import type { Event, EventServiceRequirement } from "./event.type";
 import type { Professional, ProfessionalService } from "./professional.type";
+
+/** Proposal/item review state (`ProposalStatus` enum). */
+export const PROPOSAL_STATUSES = [
+  "PENDING",
+  "ACCEPTED",
+  "REJECTED",
+  "WITHDRAWN",
+  "EXPIRED",
+] as const;
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
 /** A professional's offer for an event (`Proposal` model). */
 export interface Proposal {

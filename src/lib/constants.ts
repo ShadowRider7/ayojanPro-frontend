@@ -14,7 +14,7 @@ import {
   ROLES,
   SERVICE_REQUIREMENT_STATUSES,
   USER_STATUSES,
-} from "@/types/enums";
+} from "@/types";
 import { humanize } from "@/utils/formatters";
 
 export const APP_NAME = "AyojanPro";
@@ -99,7 +99,7 @@ export type EnumOption<T extends string = string> = {
   label: string;
 };
 
-/** Build enum options from one of the `as const` arrays in `@/types/enums`. */
+/** Build enum options from one of the `as const` arrays re-exported by `@/types`. */
 export function toEnumOptions<T extends string>(
   values: readonly T[],
 ): EnumOption<T>[] {
@@ -119,7 +119,7 @@ export function enumLabel<T extends string>(
 }
 
 // Enum options shared by forms and selects. Keys mirror the backend enums
-// in `@/types/enums`.
+// re-exported by `@/types`.
 export const ROLE_OPTIONS = toEnumOptions(ROLES);
 export const USER_STATUS_OPTIONS = toEnumOptions(USER_STATUSES);
 export const AUTH_PROVIDER_OPTIONS = toEnumOptions(AUTH_PROVIDERS);

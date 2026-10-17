@@ -1,6 +1,22 @@
 import type { ISODateString, Nullable } from "./common.type";
-import type { AuthProvider, Role, UserStatus } from "./enums";
 import type { Professional } from "./professional.type";
+
+/** Platform account roles (`Role` enum). */
+export const ROLES = ["CLIENT", "PROFESSIONAL", "ADMIN"] as const;
+export type Role = (typeof ROLES)[number];
+
+/** Account lifecycle state (`UserStatus` enum). */
+export const USER_STATUSES = [
+  "ACTIVE",
+  "DELETED",
+  "SUSPENDED",
+  "BLOCKED",
+] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];
+
+/** How the account authenticates (`AuthProvider` enum). */
+export const AUTH_PROVIDERS = ["CREDENTIAL", "GOOGLE"] as const;
+export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
 
 /** A platform account (`User` model). */
 export interface User {

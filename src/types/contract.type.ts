@@ -1,12 +1,24 @@
 import type { DecimalValue, ISODateString, Nullable } from "./common.type";
 import type { Dispute } from "./dispute.type";
-import type { ContractStatus } from "./enums";
 import type { Event, EventServiceRequirement } from "./event.type";
 import type { Payment } from "./payment.type";
 import type { Professional, ProfessionalService } from "./professional.type";
 import type { ProposalItem } from "./proposal.type";
 import type { Review } from "./review.type";
 import type { Client } from "./user.type";
+
+/** Contract lifecycle (`ContractStatus` enum). */
+export const CONTRACT_STATUSES = [
+  "PENDING",
+  "CONFIRMED",
+  "IN_PROGRESS",
+  "DELIVERED",
+  "COMPLETED",
+  "CANCELLED",
+  "DISPUTED",
+  "RESOLVED",
+] as const;
+export type ContractStatus = (typeof CONTRACT_STATUSES)[number];
 
 /** A binding agreement created when a proposal item is accepted (`Contract` model). */
 export interface Contract {

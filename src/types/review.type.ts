@@ -3,6 +3,10 @@ import type { Contract } from "./contract.type";
 import type { Professional } from "./professional.type";
 import type { Client } from "./user.type";
 
+/** Who a review is about (`RevieweeRole` enum; note the backend spelling). */
+export const REVIEVEE_ROLES = ["CLIENT", "PROFESSIONAL"] as const;
+export type RevieweeRole = (typeof REVIEVEE_ROLES)[number];
+
 /** A review left on a completed contract (`Review` model). */
 export interface Review {
   id: string;

@@ -1,9 +1,16 @@
 import type { DecimalValue, ISODateString, Nullable } from "./common.type";
 import type { Contract } from "./contract.type";
-import type { ApplicationStatus } from "./enums";
 import type { Proposal, ProposalItem } from "./proposal.type";
 import type { Review } from "./review.type";
 import type { User } from "./user.type";
+
+/** Professional application review state (`ApplicationStatus` enum). */
+export const APPLICATION_STATUSES = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+] as const;
+export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 
 /** A file attached to a professional application (`additionalFiles` JSON). */
 export interface AdditionalFile {
