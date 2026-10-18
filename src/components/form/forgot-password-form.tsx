@@ -2,7 +2,7 @@
 
 import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type z from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,22 +21,23 @@ import { forgotPasswordSchema } from "@/validation";
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-const DEFAULT_VALUES: ForgotPasswordFormValues = {
-  email: "",
-};
-
 /**
  * Step one of the password reset flow. The backend emails a 6-digit code and
  * expires it after five minutes, so on success we hand the email to the reset
- * screen (no resend endpoint exists).
+ * screen (no resend endpoint exists). The email is seeded from `?email=` when
+ * present — the professional application hands applicants straight here to
+ * set their password after verifying their address.
  */
 export default function ForgotPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const { mutate: forgotPassword, isPending } = useForgotPassword();
 
   const form = useForm({
-    defaultValues: DEFAULT_VALUES,
+    defaultValues: {
+      email: searchParams.get("email") ?? "",
+    } satisfies ForgotPasswordFormValues,
     validators: {
       onSubmit: forgotPasswordSchema,
     },

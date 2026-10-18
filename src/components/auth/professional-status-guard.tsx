@@ -4,6 +4,8 @@ import { ClockIcon, ShieldXIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { EmptyState, StatusBadge } from "@/components/shared";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { useGetMe } from "@/hooks";
 import AccessDenied from "./access-denied";
 import AuthLoading from "./auth-loading";
@@ -11,7 +13,9 @@ import AuthLoading from "./auth-loading";
 /**
  * Blocks the professional workspace until the application is `APPROVED`.
  * PENDING and REJECTED professionals are shown their status instead of the
- * workspace (REJECTED also surfaces `rejectionReason`).
+ * workspace (REJECTED also surfaces `rejectionReason`). The blocked screen
+ * offers a "Check again" refetch so a PENDING professional waiting on the
+ * admin review sees the workspace unlock without reloading the page.
  */
 export default function ProfessionalStatusGuard({
   children,
@@ -20,7 +24,7 @@ export default function ProfessionalStatusGuard({
 }) {
   const router = useRouter();
 
-  const { data, isPending, isError } = useGetMe();
+  const { data, isPending, isError, isRefetching, refetch } = useGetMe();
 
   const user = data?.data;
 
@@ -69,6 +73,19 @@ export default function ProfessionalStatusGuard({
           }
         />
         <StatusBadge status={professional.status} />
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          disabled={isRefetching}
+        >
+          {isRefetching ? (
+            <>
+              <Spinner className="size-3.5" /> Checking
+            </>
+          ) : (
+            "Check again"
+          )}
+        </Button>
       </div>
     </div>
   );

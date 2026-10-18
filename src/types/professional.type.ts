@@ -12,6 +12,43 @@ export const APPLICATION_STATUSES = [
 ] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 
+/**
+ * `POST /professional/apply-as-professional` body — sent as the multipart
+ * `data` JSON field (the resume and additional files travel as separate
+ * fields). Mirrors the backend `IApplyAsProfessionalPayload`.
+ */
+export interface ApplyAsProfessionalPayload {
+  user: {
+    name: string;
+    email: string;
+  };
+  professional: {
+    phone?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    professionalTitle: string;
+    bio?: string;
+    experienceYears: number;
+  };
+}
+
+/** `POST /professional/apply-as-professional/verify-email` body — the application OTP. */
+export interface VerifyProfessionalEmailPayload {
+  email: string;
+  otp: string;
+}
+
+/**
+ * Both application endpoints return the created account with its nested
+ * `Professional` row (`PENDING` until an admin reviews it). Unlike the client
+ * signup, verifying issues no session tokens — the applicant sets a password
+ * via `/forgot-password` and logs in once approved.
+ */
+export interface ProfessionalApplication extends User {
+  professional: Professional;
+}
+
 /** A file attached to a professional application (`additionalFiles` JSON). */
 export interface AdditionalFile {
   url: string;
