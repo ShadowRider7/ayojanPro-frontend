@@ -69,3 +69,8 @@ export interface Deliverable {
   updatedAt: ISODateString;
   contract?: Contract;
 }
+
+/** `PATCH /contract/:id/cancel` body — the reason is optional. */
+export interface CancelContractPayload {
+  reason?: string;
+}

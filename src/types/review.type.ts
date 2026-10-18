@@ -23,3 +23,10 @@ export interface Review {
   client?: Client;
   professional?: Professional;
 }
+
+/** `POST /review/contracts/:id` body — one rating per party per contract. */
+export interface CreateReviewPayload {
+  /** Whole number, 1–5 (backend rule). */
+  rating: number;
+  comment?: string;
+}

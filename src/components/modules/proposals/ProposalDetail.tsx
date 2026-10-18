@@ -338,10 +338,16 @@ function ProposalItemCard({
             </p>
             <StatusBadge status={item.status} />
             {contract ? (
-              <StatusBadge
-                status={contract.status}
-                label={`Contract · ${humanize(contract.status)}`}
-              />
+              <Link
+                href={`/dashboard/contracts/${contract.id}`}
+                className="rounded-full outline-none ring-ring/50 transition-shadow focus-visible:ring-2"
+                aria-label={`Contract ${humanize(contract.status)} — open contract`}
+              >
+                <StatusBadge
+                  status={contract.status}
+                  label={`Contract · ${humanize(contract.status)}`}
+                />
+              </Link>
             ) : null}
           </div>
           {requirement?.description ? (
