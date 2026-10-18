@@ -43,3 +43,19 @@ export interface Dispute {
   raisedBy?: User;
   resolvedBy?: Nullable<User>;
 }
+
+/** `POST /dispute/contracts/:id` body — reason + description (evidence files travel as multipart). */
+export interface RaiseDisputePayload {
+  reason: string;
+  description: string;
+}
+
+/** `PATCH /dispute/:id/status` body — admin-only non-resolving transitions. */
+export interface UpdateDisputeStatusPayload {
+  status: "OPEN" | "UNDER_REVIEW" | "REJECTED" | "CLOSED";
+}
+
+/** `PATCH /dispute/:id/resolve` body — the resolution summary. */
+export interface ResolveDisputePayload {
+  resolution: string;
+}

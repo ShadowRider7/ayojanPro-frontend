@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { DisputeForm } from "@/components/modules/disputes/DisputeForm";
 import {
   ConfirmDialog,
   CurrencyText,
@@ -25,6 +26,13 @@ import {
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Field,
   FieldDescription,
@@ -140,6 +148,7 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [completeOpen, setCompleteOpen] = useState(false);
+  const [disputeOpen, setDisputeOpen] = useState(false);
 
   // The bKash callback lands here; acknowledge the outcome once, then drop
   // the param so a refresh doesn't replay the toast.
@@ -336,6 +345,15 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
             onClick={() => setCompleteOpen(true)}
           >
             Mark as completed
+          </Button>
+        ) : null}
+        {contract.status !== "CANCELLED" && contract.status !== "DISPUTED" ? (
+          <Button
+            variant="outline"
+            disabled={isCancelling || isCompleting}
+            onClick={() => setDisputeOpen(true)}
+          >
+            Raise dispute
           </Button>
         ) : null}
       </PageHeader>
@@ -689,6 +707,23 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
         loading={isCompleting}
         onConfirm={handleComplete}
       />
+
+      <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Raise a dispute</DialogTitle>
+            <DialogDescription>
+              Describe the issue and attach evidence. The other party will be
+              notified and an admin will review.
+            </DialogDescription>
+          </DialogHeader>
+          <DisputeForm
+            contractId={contractId}
+            onSuccess={() => {}}
+            onOpenChange={setDisputeOpen}
+          />
+        </DialogContent>
+      </Dialog>
 
       {deliverableQuery.data?.data ? (
         <DeliverableForm

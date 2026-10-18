@@ -3,6 +3,7 @@ export * from "./analytics.api";
 export * from "./auth.api";
 export * from "./client.api";
 export * from "./contract.api";
+export * from "./dispute.api";
 export * from "./event.api";
 export * from "./notification.api";
 export * from "./payment.api";
