@@ -34,7 +34,6 @@ function ServiceSkeleton() {
   );
 }
 
-// Mirrors formatPriceRange in modules/professionals/ProfessionalProfile.
 function formatPriceRange(service: ProfessionalService) {
   const min = toNumber(service.minimumPrice);
   const max = toNumber(service.maximumPrice);
@@ -111,12 +110,6 @@ function ServiceCard({
   );
 }
 
-/**
- * `/dashboard/professional/services` — manage the services clients see on the
- * public profile (`GET /professional/me/services`, create/edit/delete under
- * `/professional/service`). `isActive` is backend-managed and not editable
- * here; mutations also invalidate the public profile keys.
- */
 export function ServiceList() {
   const { data, isPending, isError, error, refetch } = useMyServices();
 

@@ -26,21 +26,17 @@ export type DataTableColumn<T> = {
 type DataTableProps<T> = {
   columns: DataTableColumn<T>[];
   data: T[] | null | undefined;
-  /** Stable identity for each row (e.g. the record id). */
+
   getRowKey: (row: T, index: number) => React.Key;
   isLoading?: boolean;
   error?: unknown;
   onRetry?: () => void;
-  /** Custom content shown when `data` is empty. */
+
   emptyState?: React.ReactNode;
   skeletonRows?: number;
   className?: string;
 };
 
-/**
- * Presentational table that uniformly handles loading, empty and error states.
- * Sorting/filtering/pagination are the caller's responsibility.
- */
 export function DataTable<T>({
   columns,
   data,
@@ -52,7 +48,7 @@ export function DataTable<T>({
   skeletonRows = 5,
   className,
 }: DataTableProps<T>) {
-  const rows = data ?? [];
+  const rows = useMemo(() => data ?? [], [data]);
   const skeletonKeys = useMemo(
     () => Array.from({ length: skeletonRows }, (_, index) => `row-${index}`),
     [skeletonRows],

@@ -1,21 +1,5 @@
 import z from "zod";
 
-/**
- * Professional-facing proposal and deliverable schemas. Rules mirror the
- * backend `proposal.validation.ts` and `contract.validator.ts` so the forms
- * reject the same payloads the API would: at least one proposal item, no
- * requirement twice in one proposal, a strictly positive amount,
- * `end > start`, a message ≤ 5000, and a deliverable with a title ≤ 255 and
- * at least one valid link.
- *
- * Form values stay flat and string-shaped (dates come from `datetime-local`
- * inputs, amounts from `number` inputs, links from one-link-per-line
- * textareas) so `z.infer` gives the non-optional fields that `defaultValues`
- * needs; ISO strings, numbers and the link array are produced in the submit
- * handlers' payload mapping. Every field is required here because the forms
- * always submit complete values.
- */
-
 function parseDate(value: string): Date {
   return new Date(value);
 }
@@ -30,7 +14,6 @@ const requiredDate = (label: string) =>
     .min(1, `${label} is required`)
     .refine(isValidDate, `${label} is not a valid date`);
 
-/** Split the textarea's one-link-per-line value into the wire format. */
 export function splitDeliverableUrls(value: string): string[] {
   return value
     .split("\n")

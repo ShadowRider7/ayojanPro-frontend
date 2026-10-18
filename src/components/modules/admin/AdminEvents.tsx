@@ -25,7 +25,6 @@ const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   ...EVENT_STATUS_OPTIONS,
 ];
 
-/** `/dashboard/admin/events` — every non-deleted event on the platform. */
 export function AdminEvents() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");

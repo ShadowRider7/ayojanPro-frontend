@@ -4,12 +4,11 @@ import { cn } from "@/lib/utils";
 type PageHeaderProps = {
   title: React.ReactNode;
   description?: React.ReactNode;
-  /** Right-aligned actions (buttons, links, etc.). */
+
   children?: React.ReactNode;
   className?: string;
 };
 
-/** Consistent title block for dashboard/public pages. */
 export function PageHeader({
   title,
   description,

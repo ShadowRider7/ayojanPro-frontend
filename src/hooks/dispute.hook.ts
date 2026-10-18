@@ -13,7 +13,6 @@ import type {
   UpdateDisputeStatusPayload,
 } from "@/types";
 
-/** Raise a dispute against a contract (multipart: reason + description + evidence files). */
 export function useRaiseDispute() {
   const queryClient = useQueryClient();
 
@@ -34,7 +33,6 @@ export function useRaiseDispute() {
   });
 }
 
-/** A single dispute (party or admin view). */
 export function useDispute(disputeId: string) {
   return useQuery({
     queryKey: ["disputes", disputeId],
@@ -43,7 +41,6 @@ export function useDispute(disputeId: string) {
   });
 }
 
-/** Admin list of all disputes. */
 export function useDisputes(query?: IQuery) {
   return useQuery({
     queryKey: ["disputes", query ?? {}],
@@ -51,7 +48,6 @@ export function useDisputes(query?: IQuery) {
   });
 }
 
-/** Admin-only dispute status transition. */
 export function useUpdateDisputeStatus() {
   const queryClient = useQueryClient();
 
@@ -69,7 +65,6 @@ export function useUpdateDisputeStatus() {
   });
 }
 
-/** Admin resolves a dispute. */
 export function useResolveDispute() {
   const queryClient = useQueryClient();
 

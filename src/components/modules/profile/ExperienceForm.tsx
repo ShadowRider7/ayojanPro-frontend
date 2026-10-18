@@ -28,20 +28,11 @@ import { toDateInput } from "@/utils/formatters";
 import { type ExperienceFormValues, experienceFormSchema } from "@/validation";
 
 type ExperienceFormProps = {
-  /** Present in edit mode; omit to add an entry. */
   experience: Experience | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-/**
- * Dialog form for one work-history entry — `POST /professional/experience`
- * or `PATCH /professional/experience/:id`. The parent mounts it fresh per
- * dialog open, so the defaults always seed from the entry being edited. The
- * update schema's dates are `.optional()` but not nullable, so a blank date
- * means "keep the stored value" in edit mode (clearing is not supported by
- * the API); text fields accept `""` and clear.
- */
 export function ExperienceForm({
   experience,
   open,

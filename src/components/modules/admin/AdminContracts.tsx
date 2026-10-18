@@ -26,7 +26,6 @@ const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   ...CONTRACT_STATUS_OPTIONS,
 ];
 
-/** `/dashboard/admin/contracts` — every contract on the platform. */
 export function AdminContracts() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");

@@ -1,8 +1,18 @@
+"use client";
+
 import Link from "next/link";
 import { Container } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { useGetMe } from "@/hooks";
 
 export default function CtaSection() {
+  const { data, isPending } = useGetMe();
+  const user = data?.data;
+
+  if (isPending || user) {
+    return null;
+  }
+
   return (
     <section className="py-16 sm:py-20">
       <Container>

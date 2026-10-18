@@ -46,7 +46,6 @@ function ExperienceSkeleton() {
   );
 }
 
-/** One work-history row, mirroring the public profile's timeline entry. */
 function ExperienceItem({
   experience,
   onEdit,
@@ -116,13 +115,6 @@ function ExperienceItem({
   );
 }
 
-/**
- * Experience section of `/dashboard/professional/profile`. Own experiences
- * have no "me" endpoint (2.2), so the list is read from
- * `GET /professional/public/:professionalId` (full rows, ids included);
- * create/edit/delete hit the `/professional/experience` endpoints and the
- * mutations invalidate the public profile key this list reads from.
- */
 export function ExperienceSection({ professionalId }: ExperienceSectionProps) {
   const { data, isPending, isError, error, refetch } =
     usePublicProfessional(professionalId);

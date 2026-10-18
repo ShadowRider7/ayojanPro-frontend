@@ -33,19 +33,12 @@ import {
 
 type DeliverableFormProps = {
   contractId: string;
-  /** Already-submitted deliverable; present to edit (upsert) it. */
+
   deliverable: Deliverable | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-/**
- * Dialog form for `POST /contract/:id/deliverable` — the assigned
- * professional submits their work as links, one per line. The endpoint is an
- * upsert, so an existing deliverable seeds the form; resubmitting also flips
- * the contract back to `DELIVERED` (e.g. after a re-open), which the backend
- * enforces to `CONFIRMED`/`IN_PROGRESS` only.
- */
 export function DeliverableForm({
   contractId,
   deliverable,

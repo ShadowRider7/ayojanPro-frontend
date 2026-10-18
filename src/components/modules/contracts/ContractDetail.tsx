@@ -65,21 +65,15 @@ import { humanize, toNumber } from "@/utils";
 import { type ReviewFormValues, reviewFormSchema } from "@/validation";
 import { DeliverableForm } from "./DeliverableForm";
 
-/**
- * The backend splits the agreed amount in two (see `payment.service.ts`):
- * 30% up front to confirm the booking, 70% once the work is delivered.
- */
 const INITIAL_PAYMENT_RATIO = 0.3;
 const FINAL_PAYMENT_RATIO = 0.7;
 
-/** Contract statuses the backend's cancel endpoint still accepts. */
 const CANCELLABLE_STATUSES: ContractStatus[] = [
   "PENDING",
   "CONFIRMED",
   "IN_PROGRESS",
 ];
 
-/** What the bKash callback's `?payment=` param maps to, toast-wise. */
 const PAYMENT_OUTCOMES: Record<
   string,
   { title: string; description: string; type: "success" | "error" | "info" }
@@ -113,17 +107,6 @@ type ContractDetailProps = {
   contractId: string;
 };
 
-/**
- * `/dashboard/contracts/[contractId]` — one contract, end to end: the
- * bKash 30/70 payments, the professional's deliverable, cancellation and
- * completion, and (once completed) the client's review.
- *
- * The backend's bKash callback redirects back to this URL with
- * `?payment=success|failure|cancel|error`; the screen reads that param on
- * mount, toasts the outcome, refetches contract/payments and strips the
- * param again. That makes `useSearchParams` a hard dependency, so the page
- * wraps this component in Suspense.
- */
 export function ContractDetail({ contractId }: ContractDetailProps) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -150,8 +133,6 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   const [completeOpen, setCompleteOpen] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
 
-  // The bKash callback lands here; acknowledge the outcome once, then drop
-  // the param so a refresh doesn't replay the toast.
   useEffect(() => {
     const result = searchParams.get("payment");
 
@@ -167,8 +148,6 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
       toast.add(outcome);
     }
 
-    // The callback updates the contract, its payment row and (on the final
-    // half) the contract's lifecycle, so refresh all three key trees.
     queryClient.invalidateQueries({ queryKey: ["contracts"] });
     queryClient.invalidateQueries({ queryKey: ["payments"] });
     queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -196,12 +175,8 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   const requirement = contract.eventServiceRequirement ?? null;
 
   const payments = paymentsQuery.data?.data ?? [];
-  // The backend keeps one payment row per contract (the stage flips
-  // INITIAL → FINAL as the halves are attempted); take the latest defensively.
   const payment = payments.length > 0 ? payments[payments.length - 1] : null;
   const fullyPaid = payment?.status === "COMPLETED";
-  // PARTIALLY_COMPLETED means the 30% initial settled — a failed or
-  // cancelled final attempt reverts the row to exactly this state.
   const initialSettled = payment?.status === "PARTIALLY_COMPLETED";
   const initialAttemptInFlight =
     payment?.stage === "INITIAL" && payment?.status === "PENDING";
@@ -211,9 +186,7 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   const finalAmount = agreedAmount * FINAL_PAYMENT_RATIO;
 
   const isCancellable = CANCELLABLE_STATUSES.includes(contract.status);
-  // The backend refuses `complete` until the final payment settled; its 400
-  // is surfaced as the error toast, so the button only guards the status.
-  const canComplete = contract.status === "DELIVERED";
+  const canComplete = contract.status === "DELIVERED" && fullyPaid;
   const canPayInitial =
     contract.status === "PENDING" && !initialSettled && !fullyPaid;
   const canPayFinal = contract.status === "DELIVERED" && !fullyPaid;
@@ -221,7 +194,6 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
 
   const refreshContractTrees = () => {
     queryClient.invalidateQueries({ queryKey: ["contracts"] });
-    // Cancelling/completing flips the requirement, which the event screen shows.
     queryClient.invalidateQueries({ queryKey: ["events"] });
   };
 
@@ -232,7 +204,6 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
     } = {
       onSuccess: (response) => {
         if (response.data?.paymentUrl) {
-          // bKash owns the next screen; its callback redirects back here.
           window.location.href = response.data.paymentUrl;
         }
       },
@@ -744,7 +715,6 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   );
 }
 
-/** Label/value pair used across the contract summary card. */
 function DetailRow({
   label,
   children,
@@ -762,7 +732,6 @@ function DetailRow({
   );
 }
 
-/** One line of the per-contract payment history. */
 function PaymentRow({ payment }: { payment: Payment }) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border bg-card p-3 text-sm ring-1 ring-foreground/10">
@@ -792,12 +761,6 @@ function PaymentRow({ payment }: { payment: Payment }) {
   );
 }
 
-/**
- * The star-rating + comment form, unlocked at `COMPLETED`. There is no
- * reliable "did I already review this contract?" endpoint (the review list
- * routes are not usable for it), so a duplicate submit simply surfaces the
- * backend's "You Have Already Reviewed This Contract" error as a toast.
- */
 function ReviewForm({
   contractId,
   professionalName,
@@ -829,7 +792,6 @@ function ReviewForm({
               description: `Thanks — your rating is now on ${professionalName}'s profile.`,
               type: "success",
             });
-            // A client's review feeds the professional's public aggregates.
             queryClient.invalidateQueries({
               queryKey: ["publicProfessionals"],
             });
@@ -944,7 +906,6 @@ function ReviewForm({
   );
 }
 
-/** Mirrors the detail screen's structure while the contract loads — also the page's Suspense fallback. */
 export function ContractDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">

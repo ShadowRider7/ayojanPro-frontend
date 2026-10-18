@@ -30,13 +30,10 @@ import {
 } from "@/validation";
 
 type ProfessionalDetailsFormProps = {
-  /** The session's `Professional` row; seeds the form once and is never
-   * re-seeded by background refetches, so in-progress edits are not wiped. */
   professional: Professional;
   className?: string;
 };
 
-/** Map the `Professional` row onto the flat form shape. */
 function seedForm(
   professional: Professional,
 ): UpdateProfessionalProfileFormValues {
@@ -52,14 +49,6 @@ function seedForm(
   };
 }
 
-/**
- * `/dashboard/professional/profile` details editor —
- * `PATCH /professional/update-my-profile`. The endpoint marks the text fields
- * nullable, so a blank field clears the stored value on save (unlike the
- * client profile endpoint, where blank means "keep"); `experienceYears` and
- * `acceptingBookings` always travel. After a save the form re-seeds from the
- * updated row the PATCH returns, so the display always matches the server.
- */
 export function ProfessionalDetailsForm({
   professional,
   className,

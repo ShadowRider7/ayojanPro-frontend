@@ -31,17 +31,11 @@ import type {
   UpdateProfessionalServicePayload,
 } from "@/types";
 
-/**
- * Profile edits (title, bio, skills, experience, portfolio, services) all
- * change what the public endpoints return, so every mutation below
- * invalidates the public profile keys on top of its own.
- */
 function invalidatePublicProfile(queryClient: QueryClient) {
   queryClient.invalidateQueries({ queryKey: ["publicProfessionals"] });
   queryClient.invalidateQueries({ queryKey: ["publicProfessional"] });
 }
 
-/** Browse approved professionals (public listing). */
 export function usePublicProfessionals(query?: IQuery) {
   return useQuery({
     queryKey: ["publicProfessionals", query ?? {}],
@@ -49,7 +43,6 @@ export function usePublicProfessionals(query?: IQuery) {
   });
 }
 
-/** A single approved professional's public profile. */
 export function usePublicProfessional(professionalId: string) {
   return useQuery({
     queryKey: ["publicProfessional", professionalId],
@@ -58,24 +51,26 @@ export function usePublicProfessional(professionalId: string) {
   });
 }
 
-/** Submit a professional application (multipart: `data` JSON + files). */
 export function useApplyAsProfessional() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: applyAsProfessional,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
   });
 }
 
-/** Confirm the application email with the 6-digit OTP that was emailed. */
 export function useVerifyProfessionalEmail() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: verifyProfessionalEmail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
   });
 }
 
-/**
- * `PATCH /professional/update-my-profile`. Invalidates the session too —
- * the row is embedded in `GET /auth/me`, which the dashboard shell reads.
- */
 export function useUpdateProfessionalProfile() {
   const queryClient = useQueryClient();
 
@@ -88,7 +83,6 @@ export function useUpdateProfessionalProfile() {
   });
 }
 
-/** Own services (`GET /professional/me/services`). */
 export function useMyServices() {
   return useQuery({
     queryKey: ["professionalServices"],
@@ -96,7 +90,6 @@ export function useMyServices() {
   });
 }
 
-/** Add / edit / remove one service. */
 export function useAddService() {
   const queryClient = useQueryClient();
 
@@ -139,10 +132,6 @@ export function useDeleteService() {
   });
 }
 
-/**
- * Add / remove a skill. There is no "me" endpoint for skills — the list is
- * read from the public profile (2.2), so both mutations invalidate that key.
- */
 export function useAddSkill() {
   const queryClient = useQueryClient();
 
@@ -165,7 +154,6 @@ export function useDeleteSkill() {
   });
 }
 
-/** Add / edit / remove a work-history entry (read from the public profile). */
 export function useAddExperience() {
   const queryClient = useQueryClient();
 
@@ -205,7 +193,6 @@ export function useDeleteExperience() {
   });
 }
 
-/** Own portfolio items (`GET /professional/me/portfolio`). */
 export function useMyPortfolio() {
   return useQuery({
     queryKey: ["professionalPortfolio"],
@@ -213,7 +200,6 @@ export function useMyPortfolio() {
   });
 }
 
-/** Add (multipart) / edit (metadata) / remove one portfolio item. */
 export function useCreatePortfolioItem() {
   const queryClient = useQueryClient();
 

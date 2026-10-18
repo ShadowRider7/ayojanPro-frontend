@@ -1,13 +1,5 @@
 import z from "zod";
 
-/**
- * Auth form schemas. Rules mirror the backend `auth.validation.ts` so the
- * client rejects the same payloads the API would. Schemas are flat and
- * form-shaped (they include `confirmPassword`) — call sites map them onto the
- * nested `RegistrationPayload` / `ResetPasswordPayload` on submit.
- */
-
-/** `+880…`, `880…` and local `01…` formats for Bangladeshi mobile numbers. */
 export const BD_PHONE_REGEX = /^(?:\+?880|0)1[3-9]\d{8}$/;
 
 export const emailSchema = z.email("Please provide a valid email address");
@@ -31,11 +23,6 @@ export const bdPhoneSchema = z
   })
   .optional();
 
-/**
- * Login only checks that a password was entered. The backend accepts any
- * non-empty password here, and professionals are issued a random password at
- * apply time that would not satisfy `passwordSchema`.
- */
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required"),

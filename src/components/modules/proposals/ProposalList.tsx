@@ -23,15 +23,6 @@ type ProposalListProps = {
   requirementId: string;
 };
 
-/**
- * `/dashboard/events/[eventId]/requirements/[requirementId]/proposals` — the
- * proposals that bid on one service requirement. The requirement context
- * comes from the host event (cached on the event detail screen), because the
- * proposal endpoint never echoes the requirement itself when a requirement
- * has no proposals yet. Accept/reject live on the proposal detail screen,
- * where every item of the proposal is visible — they cascade over the whole
- * proposal, not just this requirement's item.
- */
 export function ProposalList({ eventId, requirementId }: ProposalListProps) {
   const {
     data: eventData,
@@ -149,7 +140,6 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
   );
 }
 
-/** The requirement being bid on, summarised so the list keeps its context. */
 function RequirementSummaryCard({
   requirement,
 }: {
@@ -181,7 +171,6 @@ function RequirementSummaryCard({
   );
 }
 
-/** One proposal card: the professional plus their bid on this requirement. */
 function ProposalRow({
   proposal,
   requirementId,
@@ -189,8 +178,6 @@ function ProposalRow({
   proposal: Proposal;
   requirementId: string;
 }) {
-  // The list endpoint pre-filters items to this requirement (exactly one per
-  // proposal); the fallback keeps the card rendering if that ever changes.
   const item =
     proposal.items?.find(
       (candidate) => candidate.eventServiceRequirementId === requirementId,
@@ -269,7 +256,6 @@ function ProposalRow({
   );
 }
 
-/** The embedded requirement rows are not filtered server-side. */
 function findRequirement(event: Event, requirementId: string) {
   return (
     event.serviceRequirements?.find(
@@ -278,7 +264,6 @@ function findRequirement(event: Event, requirementId: string) {
   );
 }
 
-/** Mirrors the header, summary card and proposal rows while data loads. */
 function ProposalListSkeleton() {
   return (
     <div className="flex flex-col gap-6">

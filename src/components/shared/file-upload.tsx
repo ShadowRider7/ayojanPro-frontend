@@ -12,7 +12,7 @@ type FileUploadProps = {
   onChange: (files: File[]) => void;
   accept?: string;
   multiple?: boolean;
-  /** Maximum size per file, in megabytes. */
+
   maxSizeMB?: number;
   prompt?: React.ReactNode;
   description?: React.ReactNode;
@@ -20,7 +20,6 @@ type FileUploadProps = {
   className?: string;
 };
 
-/** Drag-and-drop / click file picker with per-file size validation. */
 export function FileUpload({
   value = [],
   onChange,
@@ -112,7 +111,6 @@ export function FileUpload({
             if (event.target.files?.length) {
               addFiles(event.target.files);
             }
-            // Allow re-selecting the same file later.
             event.target.value = "";
           }}
         />

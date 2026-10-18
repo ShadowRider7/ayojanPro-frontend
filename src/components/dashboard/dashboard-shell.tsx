@@ -6,12 +6,6 @@ import { useGetMe } from "@/hooks";
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardTopbar } from "./dashboard-topbar";
 
-/**
- * Dashboard chrome — the role sidebar plus a topbar with the notification bell
- * and account menu. Mounted by `(dashboard)/layout.tsx` behind `AuthGuard`, so
- * the session (and therefore the role) is always resolved by the time this
- * renders; the same `["user"]` query is already cached.
- */
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const { data } = useGetMe();
 

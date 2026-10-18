@@ -31,7 +31,6 @@ const STAGE_FILTER_ITEMS: { value: string; label: string }[] = [
   ...PAYMENT_STAGE_OPTIONS,
 ];
 
-/** `/dashboard/admin/payments` — every payment on the platform. */
 export function AdminPayments() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");

@@ -34,11 +34,6 @@ type DialogState = {
   professional: Professional;
 } | null;
 
-/**
- * `/dashboard/admin/professionals` — review and act on professional
- * applications. Approving unlocks the professional workspace; rejecting
- * requires a reason. PENDING professionals are listed first.
- */
 export function ProfessionalApprovals() {
   const { data, isPending, isError, error, refetch } = useAllProfessionals({
     limit: 50,
@@ -70,7 +65,8 @@ export function ProfessionalApprovals() {
           onError: (err) => {
             toast.add({
               title: "Could not approve professional",
-              description: err.message || "Please try again in a moment.",
+              description:
+                err.message || "Something went wrong. Please try again.",
               type: "error",
             });
           },
@@ -105,7 +101,8 @@ export function ProfessionalApprovals() {
           onError: (err) => {
             toast.add({
               title: "Could not reject professional",
-              description: err.message || "Please try again in a moment.",
+              description:
+                err.message || "Something went wrong. Please try again.",
               type: "error",
             });
           },

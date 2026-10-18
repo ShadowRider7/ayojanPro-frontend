@@ -5,7 +5,6 @@ const EMPTY = "—";
 type NumericInput = number | string | null | undefined;
 type DateInput = string | number | Date | null | undefined;
 
-/** Parse a number-ish API value (Prisma `Decimal` often serialises to string). */
 export function toNumber(value: NumericInput): number | null {
   if (value === null || value === undefined || value === "") {
     return null;
@@ -22,7 +21,6 @@ type CurrencyOptions = {
   maximumFractionDigits?: number;
 };
 
-/** Format a monetary amount, defaulting to BDT (`৳`). */
 export function formatCurrency(
   value: NumericInput,
   options: CurrencyOptions = {},
@@ -57,7 +55,6 @@ function toDate(value: DateInput): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/** Format a date as e.g. `17 Oct 2026`. */
 export function formatDate(
   value: DateInput,
   options: Intl.DateTimeFormatOptions = {},
@@ -76,7 +73,6 @@ export function formatDate(
   }).format(date);
 }
 
-/** Format a date + time as e.g. `17 Oct 2026, 2:30 PM`. */
 export function formatDateTime(
   value: DateInput,
   options: Intl.DateTimeFormatOptions = {},
@@ -106,7 +102,6 @@ const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["second", 1000],
 ];
 
-/** Format a date relative to now, e.g. `2 days ago`. */
 export function formatRelativeTime(value: DateInput): string {
   const date = toDate(value);
 
@@ -128,7 +123,6 @@ export function formatRelativeTime(value: DateInput): string {
   return EMPTY;
 }
 
-/** First letters of the first two name words, for avatar fallbacks. */
 export function initials(name: string | null | undefined): string {
   return (name ?? "")
     .split(/\s+/)
@@ -138,11 +132,6 @@ export function initials(name: string | null | undefined): string {
     .join("");
 }
 
-/**
- * Format a timestamp for a `datetime-local` input, e.g. `2026-10-18T14:30`.
- * The input works in the viewer's local time, so this is the inverse of
- * `new Date(inputValue)`.
- */
 export function toDateTimeLocal(value: DateInput): string {
   const date = toDate(value);
 
@@ -155,11 +144,6 @@ export function toDateTimeLocal(value: DateInput): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-/**
- * Format a timestamp for a `date` input, e.g. `2026-10-18`. Like
- * `toDateTimeLocal`, the input is read in the viewer's local time, so this is
- * the inverse of `new Date(inputValue)`.
- */
 export function toDateInput(value: DateInput): string {
   const date = toDate(value);
 
@@ -172,7 +156,6 @@ export function toDateInput(value: DateInput): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-/** Title-case an enum-like value, e.g. `IN_PROGRESS` → `In Progress`. */
 export function humanize(value: string | null | undefined): string {
   if (!value) {
     return EMPTY;

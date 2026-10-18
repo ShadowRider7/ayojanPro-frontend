@@ -19,23 +19,14 @@ import { useEvent, useEventRequiredServices, useMyProposals } from "@/hooks";
 import type { Event, EventServiceRequirement, Proposal } from "@/types";
 import { ProposalForm } from "./ProposalForm";
 
-/** Requirement states that can still receive proposals (backend rule). */
 const PROPOSABLE_STATUSES = ["OPEN", "PARTIALLY_FILLED"] as const;
 
-/** Item states that count as an active bid (re-bidding 409s). */
 const ACTIVE_ITEM_STATUSES = ["PENDING", "ACCEPTED"] as const;
 
 type EventBrowseDetailProps = {
   eventId: string;
 };
 
-/**
- * `/dashboard/professional/browse-events/[eventId]` — one published event
- * with the services it needs (`GET /event/:eventId/required-services`, the
- * professionals' view), plus the professional's own proposals for the event
- * (`GET /proposal/me`). "Send proposal" opens the multi-item proposal form,
- * pre-seeded with the requirement that was clicked.
- */
 export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
   const eventQuery = useEvent(eventId);
   const requirementsQuery = useEventRequiredServices(eventId);
@@ -55,8 +46,6 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
     [requirementsQuery.data?.data],
   );
 
-  // My proposals across every event; the active items on *this* event mark
-  // requirements as already-bid (the backend rejects a repeat bid with 409).
   const myProposals = myProposalsQuery.data?.data ?? [];
   const eventProposals = useMemo(
     () => myProposals.filter((proposal) => proposal.eventId === eventId),
@@ -214,7 +203,6 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
   );
 }
 
-/** The event's schedule, location and description at a glance. */
 function EventSummaryCard({ event }: { event: Event }) {
   const location = [event.city, event.country].filter(Boolean).join(", ");
 
@@ -259,7 +247,6 @@ function EventSummaryCard({ event }: { event: Event }) {
   );
 }
 
-/** One requested service: budget, window and the propose action. */
 function RequirementCard({
   requirement,
   alreadyBid,
@@ -324,7 +311,6 @@ function RequirementCard({
   );
 }
 
-/** The professional's earlier proposals for this event, summarised. */
 function MyProposalsForEventCard({ proposals }: { proposals: Proposal[] }) {
   const pendingCount = proposals.filter((proposal) =>
     (proposal.items ?? []).some((item) => item.status === "PENDING"),
@@ -357,7 +343,6 @@ function MyProposalsForEventCard({ proposals }: { proposals: Proposal[] }) {
   );
 }
 
-/** Mirrors the header, summary card and requirement list while data loads. */
 function EventBrowseDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">

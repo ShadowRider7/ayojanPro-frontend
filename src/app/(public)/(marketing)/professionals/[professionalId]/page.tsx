@@ -2,12 +2,9 @@ import type { Metadata } from "next";
 import { getPublicProfessional } from "@/api";
 import ProfessionalProfile from "@/components/modules/professionals/ProfessionalProfile";
 
-/**
- * Profiles are dynamic (one page per professional, discovered at runtime) and
- * the metadata is fetched from the API, so the route intentionally blocks
- * instead of prerendering a static shell.
- */
-export const instant = false;
+export function generateStaticParams() {
+  return [{ professionalId: "placeholder" }];
+}
 
 type ProfessionalProfilePageProps = {
   params: Promise<{ professionalId: string }>;

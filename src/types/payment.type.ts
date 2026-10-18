@@ -7,11 +7,9 @@ import type {
 import type { Contract } from "./contract.type";
 import type { Client } from "./user.type";
 
-/** Which half of a contract a payment settles (`PaymentStage` enum). */
 export const PAYMENT_STAGES = ["INITIAL", "FINAL"] as const;
 export type PaymentStage = (typeof PAYMENT_STAGES)[number];
 
-/** Payment lifecycle (`PaymentStatus` enum). */
 export const PAYMENT_STATUSES = [
   "PENDING",
   "PROCESSING",
@@ -23,11 +21,9 @@ export const PAYMENT_STATUSES = [
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-/** Supported payment providers (`PaymentMethod` enum). */
 export const PAYMENT_METHODS = ["BKASH"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-/** A bkash payment for a contract (`Payment` model). */
 export interface Payment {
   id: string;
   contractId: string;
@@ -51,7 +47,6 @@ export interface Payment {
   client?: Client;
 }
 
-/** `POST /payment/contracts/:id/{initial,final}` — redirect target. */
 export interface InitiatePaymentResult {
   paymentUrl: string;
 }

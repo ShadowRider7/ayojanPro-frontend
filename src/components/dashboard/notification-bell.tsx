@@ -5,14 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks";
 
-/** Counts above this render as `9+` to keep the badge compact. */
 const MAX_BADGE_COUNT = 9;
 
-/**
- * Topbar bell linking to the notifications screen, with an unread-count
- * badge. It shares the `["notifications"]` query family with the list, so
- * marking anything read refreshes both.
- */
 export function NotificationBell() {
   const { data } = useNotifications(false);
 

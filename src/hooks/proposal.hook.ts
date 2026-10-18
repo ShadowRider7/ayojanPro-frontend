@@ -10,12 +10,6 @@ import {
 } from "@/api";
 import type { ApiResponse, Proposal } from "@/types";
 
-/**
- * The signed-in professional's proposals (`GET /proposal/me`, no
- * pagination). Every proposal query shares the `["proposals"]` prefix, so
- * one invalidation refreshes the list, the requirement lists and the detail
- * screens together.
- */
 export function useMyProposals() {
   return useQuery<ApiResponse<Proposal[]>>({
     queryKey: ["proposals", "mine"],
@@ -23,11 +17,6 @@ export function useMyProposals() {
   });
 }
 
-/**
- * Submit a proposal for an event. Accepting/rejecting responses flips the
- * requirement statuses shown on the event screens, so success refreshes both
- * the proposal and event key trees.
- */
 export function useCreateProposal() {
   const queryClient = useQueryClient();
 
@@ -40,7 +29,6 @@ export function useCreateProposal() {
   });
 }
 
-/** Withdraw every pending item of one own proposal — the requirement re-opens. */
 export function useWithdrawProposal() {
   const queryClient = useQueryClient();
 
@@ -53,11 +41,6 @@ export function useWithdrawProposal() {
   });
 }
 
-/**
- * Proposals for one service requirement (`GET /proposal/requirements/:id`).
- * Both proposal queries share the `["proposals"]` prefix, so one
- * invalidation refreshes the requirement list and the detail screen together.
- */
 export function useRequirementProposals(requirementId: string) {
   return useQuery({
     queryKey: ["proposals", "requirement", requirementId],
@@ -66,7 +49,6 @@ export function useRequirementProposals(requirementId: string) {
   });
 }
 
-/** One proposal with every item (`GET /proposal/:id`). */
 export function useProposal(proposalId: string) {
   return useQuery({
     queryKey: ["proposals", proposalId],
@@ -75,16 +57,25 @@ export function useProposal(proposalId: string) {
   });
 }
 
-/** Accept a whole proposal — creates one contract per pending item. */
 export function useAcceptProposal() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: acceptProposal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
-/** Reject a whole proposal — rejects every pending item. */
 export function useRejectProposal() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: rejectProposal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }

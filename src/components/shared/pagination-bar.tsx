@@ -16,7 +16,6 @@ function range(start: number, end: number): number[] {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 }
 
-/** Compact page list, e.g. `1 … 4 5 6 … 20`. */
 export function getPageRange(
   currentPage: number,
   totalPages: number,
@@ -61,14 +60,13 @@ type PaginationBarProps = {
   totalPages: number;
   onPageChange: (page: number) => void;
   siblingCount?: number;
-  /** Show a `Showing x–y of z` summary (requires `totalItems`, `pageSize`). */
+
   showSummary?: boolean;
   totalItems?: number;
   pageSize?: number;
   className?: string;
 };
 
-/** Page controls built on the shadcn pagination primitives. */
 export function PaginationBar({
   page,
   totalPages,

@@ -10,14 +10,12 @@ import { Button } from "@/components/ui/button";
 import { usePublicProfessionals } from "@/hooks";
 import type { IQuery } from "@/types";
 
-/** Top-rated approved professionals shown on the landing page. */
 const FEATURED_QUERY: IQuery = {
   limit: 4,
   sortBy: "averageRating",
   sortOrder: "desc",
 };
 
-/** Stable keys for the loading placeholder cards. */
 const SKELETON_KEYS = ["first", "second", "third", "fourth"];
 
 export default function FeaturedProfessionals() {

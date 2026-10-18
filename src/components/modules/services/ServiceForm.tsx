@@ -33,19 +33,11 @@ import {
 } from "@/validation";
 
 type ServiceFormProps = {
-  /** Present in edit mode; omit to add a service. */
   service: ProfessionalService | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-/**
- * Dialog form for one service — `POST /professional/service` or, in edit
- * mode, `PATCH /professional/service/:id`. The parent mounts it fresh per
- * dialog open, so the defaults always seed from the service being edited.
- * Prices travel as numbers; the form keeps them as strings and parses on
- * submit. `isActive` is not editable — neither endpoint accepts it.
- */
 export function ServiceForm({ service, open, onOpenChange }: ServiceFormProps) {
   const { mutate: addService, isPending: isAdding } = useAddService();
   const { mutate: updateService, isPending: isUpdating } = useUpdateService();

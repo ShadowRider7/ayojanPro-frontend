@@ -40,22 +40,13 @@ import {
 } from "@/validation";
 
 type ServiceRequirementFormProps = {
-  /** The host event; its schedule bounds the requirement's dates. */
   hostEvent: Event;
-  /** Present in edit mode; omit to add a requirement. */
+
   requirement: EventServiceRequirement | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-/**
- * Dialog form for one service requirement — `POST /event/services/:eventId`
- * or `PATCH /event/update/:eventId/services/:serviceId`. The host event's
- * schedule is passed to the schema pair so the "within the event schedule"
- * rule is explained inline instead of surfacing as the API's 400. The parent
- * mounts it fresh per dialog open, so the defaults always seed from the
- * requirement being edited (or the event window for a new one).
- */
 export function ServiceRequirementForm({
   hostEvent,
   requirement,

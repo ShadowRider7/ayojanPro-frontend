@@ -5,7 +5,6 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NotificationBell } from "./notification-bell";
 import { UserMenu } from "./user-menu";
 
-/** Sticky dashboard topbar: sidebar toggle on the left, account actions right. */
 export function DashboardTopbar() {
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/80">

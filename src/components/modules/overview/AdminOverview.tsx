@@ -17,10 +17,6 @@ import { OverviewSkeleton } from "./OverviewSkeleton";
 import { RecentActivity } from "./RecentActivity";
 import { StatCard } from "./StatCard";
 
-/**
- * `/dashboard/admin` — platform-wide totals from `GET /analytics/admin-analytics`:
- * users, applications, contracts, disputes and revenue.
- */
 export function AdminOverview() {
   const { data, isPending, isError, error, refetch } = useAdminAnalytics();
   const analytics = data?.data;

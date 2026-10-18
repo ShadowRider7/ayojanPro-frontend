@@ -1,7 +1,11 @@
+"use client";
+
 import { FileCheck2Icon, ShieldCheckIcon, StarIcon } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { useGetMe } from "@/hooks";
+import { DASHBOARD_ROUTES } from "@/lib/constants";
 
 const HIGHLIGHTS = [
   {
@@ -25,6 +29,10 @@ const HIGHLIGHTS = [
 ];
 
 export default function Hero() {
+  const { data, isPending } = useGetMe();
+  const user = data?.data;
+  const dashboardUrl = user ? DASHBOARD_ROUTES[user.role] : null;
+
   return (
     <section className="relative overflow-hidden border-b bg-linear-to-b from-primary/5 via-background to-background">
       <Container className="flex flex-col items-center gap-10 py-16 text-center sm:py-20 lg:py-28">
@@ -50,22 +58,36 @@ export default function Hero() {
           >
             Browse professionals
           </Button>
-          <Button
-            variant="outline"
-            className="h-11 px-6 text-base"
-            nativeButton={false}
-            render={<Link href="/register" />}
-          >
-            Create a free account
-          </Button>
+          {!isPending &&
+            (dashboardUrl ? (
+              <Button
+                variant="outline"
+                className="h-11 px-6 text-base"
+                nativeButton={false}
+                render={<Link href={dashboardUrl} />}
+              >
+                Go to your dashboard
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="h-11 px-6 text-base"
+                nativeButton={false}
+                render={<Link href="/register" />}
+              >
+                Create a free account
+              </Button>
+            ))}
         </div>
 
-        <Link
-          href="/apply-as-professional"
-          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          Are you a professional? Apply to join AyojanPro
-        </Link>
+        {!isPending && !user ? (
+          <Link
+            href="/apply-as-professional"
+            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Are you a professional? Apply to join AyojanPro
+          </Link>
+        ) : null}
 
         <div className="grid w-full gap-4 border-t pt-10 text-left sm:grid-cols-3">
           {HIGHLIGHTS.map((highlight) => (

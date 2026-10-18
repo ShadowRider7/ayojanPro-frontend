@@ -30,15 +30,6 @@ import { toast } from "@/components/ui/toast";
 import { useVerifyAccount } from "@/hooks";
 import type { VerifyAccountPayload } from "@/types";
 
-/**
- * Client signup OTP screen. Reads the pending `email` from the query string
- * (set by the register form); verifying sets the session cookies, so we refresh
- * `["user"]` and drop the new client into their dashboard.
- *
- * The backend sends the code from `POST /auth/register` and expires it after
- * five minutes — there is no resend endpoint, so this screen offers a way back
- * to registration instead of a dead "Resend" control.
- */
 export default function VerifyAccountForm() {
   const router = useRouter();
   const queryClient = useQueryClient();

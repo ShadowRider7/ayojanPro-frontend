@@ -3,7 +3,6 @@ import type { Contract } from "./contract.type";
 import type { Event, EventServiceRequirement } from "./event.type";
 import type { Professional, ProfessionalService } from "./professional.type";
 
-/** Proposal/item review state (`ProposalStatus` enum). */
 export const PROPOSAL_STATUSES = [
   "PENDING",
   "ACCEPTED",
@@ -13,7 +12,6 @@ export const PROPOSAL_STATUSES = [
 ] as const;
 export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
-/** A professional's offer for an event (`Proposal` model). */
 export interface Proposal {
   id: string;
   professionalId: string;
@@ -27,7 +25,6 @@ export interface Proposal {
   items?: ProposalItem[];
 }
 
-/** One line of a proposal, tied to a service requirement (`ProposalItem` model). */
 export interface ProposalItem {
   id: string;
   proposalId: string;
@@ -47,7 +44,6 @@ export interface ProposalItem {
   contract?: Contract | null;
 }
 
-/** One requirement line a professional offers for when creating a proposal. */
 export interface ProposalItemInput {
   eventServiceRequirementId: string;
   professionalServiceId: string;
@@ -56,7 +52,6 @@ export interface ProposalItemInput {
   proposedEndAt: string;
 }
 
-/** Body for `POST /proposal/events/:eventId` (professional, multi-item). */
 export interface CreateProposalPayload {
   eventId: string;
   items: ProposalItemInput[];

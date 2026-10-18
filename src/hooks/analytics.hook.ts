@@ -5,7 +5,6 @@ import {
   getProfessionalAnalytics,
 } from "@/api";
 
-/** Role-scoped analytics for the `/dashboard` overview screens. */
 export function useClientAnalytics() {
   return useQuery({
     queryKey: ["analytics", "client"],

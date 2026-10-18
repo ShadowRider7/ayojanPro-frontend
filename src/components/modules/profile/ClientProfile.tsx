@@ -16,11 +16,6 @@ function ProfileSkeleton() {
   );
 }
 
-/**
- * `/dashboard/profile` — the signed-in client's profile. Shows their photo
- * (with an inline upload) alongside an editable details form backed by
- * `PATCH /client/my-profile`.
- */
 export function ClientProfile() {
   const { data, isPending, isError, error, refetch } = useGetMe();
 

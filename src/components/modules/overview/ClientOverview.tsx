@@ -17,11 +17,6 @@ import { OverviewSkeleton } from "./OverviewSkeleton";
 import { RecentActivity } from "./RecentActivity";
 import { StatCard } from "./StatCard";
 
-/**
- * `/dashboard` (client) — event, contract and spending analytics from
- * `GET /analytics/client-analytics`, with bar breakdowns and the latest
- * notifications.
- */
 export function ClientOverview() {
   const { data, isPending, isError, error, refetch } = useClientAnalytics();
   const analytics = data?.data;

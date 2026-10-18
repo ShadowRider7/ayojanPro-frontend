@@ -11,13 +11,6 @@ import {
 import Link from "next/link";
 import { Container } from "@/components/shared";
 
-/**
- * Marketing categories for the landing page. `searchTerm` is what the
- * `/professionals` directory filters on: the API matches it with `contains`
- * against a professional's name, title, city and country, so these terms are
- * chosen to appear inside the titles professionals actually use
- * (e.g. "Photo" matches "Event Photographer").
- */
 const CATEGORIES = [
   {
     icon: CameraIcon,

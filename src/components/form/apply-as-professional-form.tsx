@@ -38,13 +38,6 @@ const DEFAULT_VALUES: ProfessionalApplicationFormValues = {
   additionalFiles: [],
 };
 
-/**
- * `/apply-as-professional` — creates a new PROFESSIONAL account in `PENDING`
- * via multipart `POST /professional/apply-as-professional` (the flat form
- * travels as the `data` JSON field, the files as `resume` / `additionalFiles`).
- * On success the applicant is handed to the OTP screen, then sets a password
- * through `/forgot-password` — the apply endpoints issue no session.
- */
 export default function ApplyAsProfessionalForm() {
   const router = useRouter();
 

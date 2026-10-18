@@ -29,12 +29,6 @@ function ProfileManagerSkeleton() {
   );
 }
 
-/**
- * `/dashboard/professional/profile` — the signed-in professional's profile
- * manager: details form (`PATCH /professional/update-my-profile`), services,
- * skills, experience and portfolio. Skills and experience are read from the
- * public profile (2.2); services and portfolio from their "me" endpoints.
- */
 export function ProfessionalProfileManager() {
   const { data, isPending, isError, error, refetch } = useGetMe();
 

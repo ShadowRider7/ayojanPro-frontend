@@ -7,6 +7,10 @@ export const metadata: Metadata = {
     "Review the proposals professionals submitted for a service requirement.",
 };
 
+export function generateStaticParams() {
+  return [{ eventId: "placeholder", requirementId: "placeholder" }];
+}
+
 type RequirementProposalsPageProps = {
   params: Promise<{ eventId: string; requirementId: string }>;
 };

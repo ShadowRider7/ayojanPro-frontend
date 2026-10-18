@@ -34,20 +34,11 @@ import {
 } from "@/validation";
 
 type PortfolioFormProps = {
-  /** Present in edit mode; omit to add an item. */
   item: PortfolioItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-/**
- * Dialog form for one portfolio item — `POST /professional/portfolio`
- * (multipart: `data` JSON + `mediaFile`) or, in edit mode,
- * `PATCH /professional/portfolio/:id` (metadata only — the endpoint cannot
- * replace the media file). The parent mounts it fresh per dialog open, so the
- * defaults always seed from the item being edited. Uploads are restricted to
- * images: the public profile renders `mediaUrl` through `next/image`.
- */
 export function PortfolioForm({
   item,
   open,
@@ -71,8 +62,6 @@ export function PortfolioForm({
       mediaFile: [] as File[],
     } satisfies PortfolioFormValues,
     validators: {
-      // Create additionally requires the `mediaFile` field; edit validates
-      // against the metadata-only schema.
       onSubmit: isEditMode ? portfolioFormSchema : createPortfolioItemSchema,
     },
     onSubmit: ({ value }) => {

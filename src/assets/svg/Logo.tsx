@@ -2,10 +2,6 @@ type LogoProps = {
   className?: string;
 };
 
-/**
- * AyojanPro mark — a minimal "A" glyph. Decorative: always rendered next to
- * the wordmark, so it is hidden from assistive technology.
- */
 export default function Logo({ className }: LogoProps) {
   return (
     <svg

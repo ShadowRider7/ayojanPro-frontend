@@ -26,7 +26,6 @@ import { useContracts, useGetMe } from "@/hooks";
 import { CONTRACT_STATUS_OPTIONS } from "@/lib/constants";
 import type { Contract } from "@/types";
 
-/** Cards per page; fills the 1/2/3-column grid. */
 const PAGE_SIZE = 9;
 
 const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
@@ -34,7 +33,6 @@ const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   ...CONTRACT_STATUS_OPTIONS,
 ];
 
-/** Stable keys for the loading placeholder cards. */
 const SKELETON_KEYS = Array.from(
   { length: 6 },
   (_, index) => `contract-skeleton-${index}`,
@@ -117,11 +115,6 @@ function ContractCardSkeleton() {
   );
 }
 
-/**
- * `/dashboard/contracts` — the signed-in client's contracts. The endpoint
- * (`GET /contract`) does not paginate, so search, the status filter and
- * pagination all run client-side over the full array.
- */
 export function ContractList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");

@@ -28,7 +28,6 @@ import { useMyProposals, useWithdrawProposal } from "@/hooks";
 import { PROPOSAL_STATUS_OPTIONS } from "@/lib/constants";
 import type { Proposal, ProposalItem, ProposalStatus } from "@/types";
 
-/** Cards per page; fills the 1/2/3-column grid. */
 const PAGE_SIZE = 6;
 
 const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
@@ -36,7 +35,6 @@ const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   ...PROPOSAL_STATUS_OPTIONS,
 ];
 
-/** In priority order: a proposal is what its pending items still need. */
 const STATUS_PRIORITY: ProposalStatus[] = [
   "PENDING",
   "ACCEPTED",
@@ -45,13 +43,11 @@ const STATUS_PRIORITY: ProposalStatus[] = [
   "EXPIRED",
 ];
 
-/** Stable keys for the loading placeholder cards. */
 const SKELETON_KEYS = Array.from(
   { length: 6 },
   (_, index) => `my-proposal-skeleton-${index}`,
 );
 
-/** A proposal spans many items; surface the one that still needs attention. */
 function deriveOverallStatus(items: ProposalItem[]): ProposalStatus | null {
   for (const status of STATUS_PRIORITY) {
     if (items.some((item) => item.status === status)) {
@@ -165,13 +161,6 @@ function ProposalCardSkeleton() {
   );
 }
 
-/**
- * `/dashboard/professional/proposals` — every proposal the professional
- * submitted (`GET /proposal/me`, no pagination, so search, the status filter
- * and pagination run client-side). Withdraw acts on the whole proposal via
- * the shared ConfirmDialog; responded items are left untouched by the
- * backend.
- */
 export function MyProposals() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -248,7 +237,6 @@ export function MyProposals() {
           description: err.message || "Something went wrong. Please try again",
           type: "error",
         });
-        // A mid-loop failure can leave some items withdrawn; refresh anyway.
         refetch();
         setWithdrawTarget(null);
       },
@@ -309,6 +297,7 @@ export function MyProposals() {
           description="Find an event that needs your services and send your first proposal — it can cover several requested services at once."
           action={
             <Button
+              nativeButton={false}
               render={<Link href="/dashboard/professional/browse-events" />}
             >
               Browse events

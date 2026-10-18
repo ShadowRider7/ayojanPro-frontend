@@ -1,15 +1,6 @@
 import z from "zod";
 import { bdPhoneSchema, emailSchema } from "./auth.validation";
 
-/**
- * Professional application schemas. The application form is flat and
- * form-shaped (like `registrationSchema`); the submit handler maps it onto
- * the nested multipart body of `POST /professional/apply-as-professional`.
- * Text-field rules mirror the backend `professional.validation.ts`
- * `applyAsProfessionalSchema`. The file fields live here too because the form
- * owns them — the API reads them from the multipart body, not the `data` JSON
- * (multer allows one resume and up to ten additional files).
- */
 export const professionalApplicationSchema = z.object({
   name: z
     .string()
@@ -27,9 +18,6 @@ export const professionalApplicationSchema = z.object({
     .string()
     .trim()
     .refine((value) => /^\d+$/.test(value), "Enter a whole number of years"),
-  // The apply endpoint itself imposes no bio limit, but the profile editor
-  // (`PATCH /professional/update-my-profile`) caps bios at 500 — match it so
-  // nothing applied with here becomes uneditable later.
   bio: z.string().trim().max(500, "Bio cannot exceed 500 characters"),
   city: z.string().trim().max(100, "City name cannot exceed 100 characters"),
   country: z
@@ -54,17 +42,6 @@ const optionalDate = z
   .string()
   .refine((value) => value === "" || isValidDate(value), "Pick a valid date");
 
-/**
- * Profile-management schemas for T18. Like the application schema above they
- * are flat and form-shaped, and their rules mirror the backend
- * `professional.validation.ts` (`updateProfessionalProfileSchema`,
- * `addServiceSchema`, `addSkillSchema`, `addExperienceSchema`,
- * `CreatePortfolioSchema`): title 2–255 / bio ≤ 500 / city & country ≤ 100,
- * service prices as non-negative numbers, a ≤ 150-char skill name, and the
- * portfolio's required `workDate`. Blank strings mean "no value" — the submit
- * handlers turn them into `null` (clear) or `undefined` (omit) to match each
- * endpoint's nullable/optional rules.
- */
 export const updateProfessionalProfileSchema = z.object({
   professionalTitle: z
     .string()
@@ -76,8 +53,6 @@ export const updateProfessionalProfileSchema = z.object({
     .trim()
     .refine((value) => /^\d+$/.test(value), "Enter a whole number of years"),
   bio: z.string().trim().max(500, "Bio cannot exceed 500 characters"),
-  // Stricter than the backend's free-form ≤ 30 chars: the app-wide rule for
-  // phone fields is a Bangladeshi mobile number (register + apply use it too).
   phone: bdPhoneSchema,
   address: z.string().trim(),
   city: z.string().trim().max(100, "City name cannot exceed 100 characters"),
@@ -113,7 +88,6 @@ export const professionalServiceFormSchema = z
       .string()
       .trim()
       .max(1000, "Description cannot exceed 1000 characters"),
-    // Required by the backend (no `.optional()`), though it may be left empty.
     pricingNote: z
       .string()
       .trim()
@@ -133,10 +107,6 @@ export type ProfessionalServiceFormValues = z.infer<
   typeof professionalServiceFormSchema
 >;
 
-/**
- * The inline "add skill" form. Only the name travels — the endpoint accepts
- * an optional description, but there is no field for it on this card.
- */
 export const skillFormSchema = z.object({
   name: z
     .string()
@@ -214,23 +184,14 @@ const portfolioBaseSchema = z.object({
     }, "Enter a valid URL (e.g. https://…)"),
 });
 
-/**
- * Both portfolio forms carry a `mediaFile` field so one form value type fits
- * the two modes; only the create schema requires a non-empty selection.
- */
 const portfolioMediaFile = z.array(z.instanceof(File));
 
-/** Edit form: metadata only — `PATCH /portfolio/:id` cannot replace the file. */
 export const portfolioFormSchema = portfolioBaseSchema.extend({
   mediaFile: portfolioMediaFile,
 });
 
 export type PortfolioFormValues = z.infer<typeof portfolioFormSchema>;
 
-/**
- * Create form: the media travels as the multipart `mediaFile` field, so it
- * lives in the schema like the application form's `resume` does.
- */
 export const createPortfolioItemSchema = portfolioBaseSchema.extend({
   mediaFile: portfolioMediaFile.min(
     1,

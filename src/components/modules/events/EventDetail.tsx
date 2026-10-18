@@ -14,6 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
+  BackButton,
   ConfirmDialog,
   CurrencyText,
   DateText,
@@ -40,13 +41,6 @@ type RequirementDialogState = {
   requirement: EventServiceRequirement | null;
 };
 
-/**
- * `/dashboard/events/[eventId]` — one event with its service requirements.
- * Requirements are read from the array embedded in `GET /event/:eventId`
- * (which works for drafts too, unlike the standalone required-services
- * endpoint) and soft-deleted rows are dropped before rendering, because the
- * backend does not filter them.
- */
 export function EventDetail({ eventId }: { eventId: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -89,7 +83,6 @@ export function EventDetail({ eventId }: { eventId: string }) {
 
   const location = [event.city, event.country].filter(Boolean).join(", ");
 
-  // The API embeds soft-deleted requirements too; only show the live ones.
   const requirements =
     event.serviceRequirements?.filter(
       (requirement) => !requirement.isDeleted,
@@ -163,6 +156,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <BackButton href="/dashboard/events" label="Back to events" />
       <PageHeader
         title={event.title}
         description={
@@ -395,7 +389,6 @@ export function EventDetail({ eventId }: { eventId: string }) {
   );
 }
 
-/** Mirrors the header, requirement list and details card while the event loads. */
 function EventDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">

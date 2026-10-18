@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Update an event's details, schedule and location.",
 };
 
+export function generateStaticParams() {
+  return [{ eventId: "placeholder" }];
+}
+
 type EditEventPageProps = {
   params: Promise<{ eventId: string }>;
 };

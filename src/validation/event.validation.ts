@@ -1,22 +1,5 @@
 import z from "zod";
 
-/**
- * Event and service-requirement form schemas. Rules mirror the backend
- * `event.validation.ts` (`eventValidator`) so the forms reject the same
- * payloads the API would: title ≤ 255, service name ≤ 150, a strictly
- * positive budget, and `startAt < endAt` on both models. The requirement
- * schema is a function of its host event so the backend's "service dates
- * must be within the event schedule" rule (`eventService.createEventService`)
- * is also explained inline instead of surfacing as the API's 400.
- *
- * Form values stay flat and string-shaped (dates come from `datetime-local`
- * inputs, the budget from a `number` input) so `z.infer` gives the
- * non-optional fields that `defaultValues` needs; ISO strings and numbers are
- * produced in the submit handlers' payload mapping. Every field is required
- * here because both forms always submit complete values — the backend's
- * partial `*Update` schemas serve raw API callers, not these forms.
- */
-
 function parseDate(value: string): Date {
   return new Date(value);
 }
@@ -58,13 +41,6 @@ export const eventFormSchema = z
     },
   );
 
-/**
- * The requirement form schema, parameterised by its host event so the
- * backend's "Service dates must be within the event schedule" check
- * (`eventService.createEventService`) is explained inline instead of
- * surfacing as the API's 400. TanStack Form's validator types do not accept
- * an array here, so the schedule rule is a second `.refine` on one schema.
- */
 export function serviceRequirementFormSchema(event: {
   startAt: string;
   endAt: string;

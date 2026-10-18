@@ -6,12 +6,11 @@ type EmptyStateProps = {
   icon?: LucideIcon;
   title: React.ReactNode;
   description?: React.ReactNode;
-  /** Primary call to action. */
+
   action?: React.ReactNode;
   className?: string;
 };
 
-/** Neutral placeholder shown when a collection has no items. */
 export function EmptyState({
   icon: Icon,
   title,

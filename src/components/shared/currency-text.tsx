@@ -8,7 +8,6 @@ type CurrencyTextProps = {
   className?: string;
 };
 
-/** Right-aligned-friendly monetary value, defaulting to BDT. */
 export function CurrencyText({
   value,
   currency,

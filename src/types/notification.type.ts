@@ -1,7 +1,6 @@
 import type { ISODateString } from "./common.type";
 import type { User } from "./user.type";
 
-/** Notification category (`NotificationType` enum). */
 export const NOTIFICATION_TYPES = [
   "APPLICATION",
   "PROPOSAL",
@@ -14,7 +13,6 @@ export const NOTIFICATION_TYPES = [
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-/** An in-app notification (`Notification` model, db table `notifications`). */
 export interface Notification {
   id: string;
   userId: string;
@@ -26,7 +24,6 @@ export interface Notification {
   user?: User;
 }
 
-/** `PATCH /notification/read-all` — number of rows flipped to read. */
 export interface MarkAllNotificationsReadResult {
   updatedCount: number;
 }

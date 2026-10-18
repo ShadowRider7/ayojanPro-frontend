@@ -1,3 +1,4 @@
+export * from "./back-button";
 export * from "./confirm-dialog";
 export * from "./container";
 export * from "./currency-text";

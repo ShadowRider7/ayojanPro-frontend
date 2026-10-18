@@ -9,11 +9,6 @@ import {
 } from "@/api";
 import type { AttachDeliverablePayload, CancelContractPayload } from "@/types";
 
-/**
- * The signed-in user's contracts (`GET /contract`, no pagination). Every
- * contract query shares the `["contracts"]` prefix, so one invalidation
- * refreshes the list, the detail screen and its sub-panels together.
- */
 export function useContracts() {
   return useQuery({
     queryKey: ["contracts"],
@@ -21,7 +16,6 @@ export function useContracts() {
   });
 }
 
-/** One contract with payments, deliverable and both parties (`GET /contract/:id`). */
 export function useContract(contractId: string) {
   return useQuery({
     queryKey: ["contracts", contractId],
@@ -30,7 +24,6 @@ export function useContract(contractId: string) {
   });
 }
 
-/** The professional's submitted deliverable, or null (`GET /contract/:id/deliverable`). */
 export function useContractDeliverable(contractId: string) {
   return useQuery({
     queryKey: ["contracts", contractId, "deliverable"],
@@ -39,11 +32,6 @@ export function useContractDeliverable(contractId: string) {
   });
 }
 
-/**
- * Submit (or replace) the professional's deliverable. The upsert also flips
- * the contract to `DELIVERED`, which decides what the client can do next, so
- * success refreshes the contract and event trees together.
- */
 export function useAttachDeliverable() {
   const queryClient = useQueryClient();
 
@@ -62,8 +50,8 @@ export function useAttachDeliverable() {
   });
 }
 
-/** Cancel a live contract — re-opens its requirement for new proposals. */
 export function useCancelContract() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       contractId,
@@ -72,12 +60,20 @@ export function useCancelContract() {
       contractId: string;
       payload?: CancelContractPayload;
     }) => cancelContract(contractId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
-/** Mark a delivered, fully paid contract as completed. */
 export function useCompleteContract() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: completeContract,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }

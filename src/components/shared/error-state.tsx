@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 type ErrorStateProps = {
   title?: React.ReactNode;
   description?: React.ReactNode;
-  /** An `Error`, API error envelope, or plain string. */
+
   error?: unknown;
   onRetry?: () => void;
   retryLabel?: string;
@@ -39,7 +39,6 @@ function getErrorMessage(error: unknown): string | null {
   return null;
 }
 
-/** Shown when a query or mutation fails. */
 export function ErrorState({
   title = "Something went wrong",
   description,
@@ -49,7 +48,9 @@ export function ErrorState({
   className,
 }: ErrorStateProps) {
   const message =
-    description ?? getErrorMessage(error) ?? "Please try again in a moment.";
+    description ??
+    getErrorMessage(error) ??
+    "Something went wrong. Please try again.";
 
   return (
     <div

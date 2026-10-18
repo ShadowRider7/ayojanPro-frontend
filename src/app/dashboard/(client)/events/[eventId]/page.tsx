@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Manage an event and the professional services it needs.",
 };
 
+export function generateStaticParams() {
+  return [{ eventId: "placeholder" }];
+}
+
 type EventDetailPageProps = {
   params: Promise<{ eventId: string }>;
 };

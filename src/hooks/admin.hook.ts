@@ -10,7 +10,6 @@ import {
 } from "@/api";
 import type { ApproveProfessionalPayload, IQuery } from "@/types";
 
-/** `GET /admin/users` — all users with their profiles. */
 export function useAdminUsers(query?: IQuery) {
   return useQuery({
     queryKey: ["admin", "users", query ?? {}],
@@ -18,7 +17,6 @@ export function useAdminUsers(query?: IQuery) {
   });
 }
 
-/** `GET /admin/events` — all events. */
 export function useAdminEvents(query?: IQuery) {
   return useQuery({
     queryKey: ["admin", "events", query ?? {}],
@@ -26,7 +24,6 @@ export function useAdminEvents(query?: IQuery) {
   });
 }
 
-/** `GET /admin/contracts` — all contracts. */
 export function useAdminContracts(query?: IQuery) {
   return useQuery({
     queryKey: ["admin", "contracts", query ?? {}],
@@ -34,7 +31,6 @@ export function useAdminContracts(query?: IQuery) {
   });
 }
 
-/** `GET /admin/payments` — all payments. */
 export function useAdminPayments(query?: IQuery) {
   return useQuery({
     queryKey: ["admin", "payments", query ?? {}],
@@ -42,7 +38,6 @@ export function useAdminPayments(query?: IQuery) {
   });
 }
 
-/** `GET /professional/all-professionals` — admin professional list with full details. */
 export function useAllProfessionals(query?: IQuery) {
   return useQuery({
     queryKey: ["admin", "professionals", query ?? {}],
@@ -50,7 +45,6 @@ export function useAllProfessionals(query?: IQuery) {
   });
 }
 
-/** `PATCH /admin/users/:id/status` — activate, suspend or block a user. */
 export function useUpdateUserStatus() {
   const queryClient = useQueryClient();
 
@@ -68,7 +62,6 @@ export function useUpdateUserStatus() {
   });
 }
 
-/** `POST /professional/approve-professional` — approve or reject an application. */
 export function useApproveProfessional() {
   const queryClient = useQueryClient();
 

@@ -17,10 +17,6 @@ type ProfessionalCardProps = {
   professional: PublicProfessional;
 };
 
-/**
- * Summary card for an approved professional. Shared by the landing page's
- * featured strip and the `/professionals` directory.
- */
 export default function ProfessionalCard({
   professional,
 }: ProfessionalCardProps) {
@@ -79,7 +75,6 @@ export default function ProfessionalCard({
   );
 }
 
-/** Loading placeholder that mirrors the card layout. */
 export function ProfessionalCardSkeleton() {
   return (
     <Card className="h-full">

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createEvent,
   createEventServiceRequirement,
@@ -23,7 +23,6 @@ import type {
   UpdateServiceRequirementPayload,
 } from "@/types";
 
-/** The signed-in client's own events, newest first. The endpoint does not paginate. */
 export function useMyEvents() {
   return useQuery({
     queryKey: ["events", "my"],
@@ -31,11 +30,6 @@ export function useMyEvents() {
   });
 }
 
-/**
- * Published events for professionals (`GET /event/all-events`), paginated
- * server-side like the public directory — search and filters live in the
- * query key so each screen state caches separately.
- */
 export function usePublishedEvents(query: IQuery) {
   return useQuery<ApiResponse<IPaginated<Event>>>({
     queryKey: ["events", "published", query],
@@ -43,11 +37,6 @@ export function usePublishedEvents(query: IQuery) {
   });
 }
 
-/**
- * A single event with its embedded service requirements. Every event query
- * shares the `["events"]` key prefix, so one invalidation refreshes the list
- * screen, the detail screen and the requirement queries together.
- */
 export function useEvent(eventId: string) {
   return useQuery<ApiResponse<Event>>({
     queryKey: ["events", eventId],
@@ -56,12 +45,6 @@ export function useEvent(eventId: string) {
   });
 }
 
-/**
- * The standalone requirement list (`GET /event/:eventId/required-services`)
- * that professionals will browse in T19. The client's own event screens read
- * the requirements embedded in `useEvent` instead, because this endpoint 403s
- * while the event is still a draft.
- */
 export function useEventRequiredServices(eventId: string) {
   return useQuery<ApiResponse<EventServiceRequirement[]>>({
     queryKey: ["events", eventId, "requiredServices"],
@@ -71,40 +54,66 @@ export function useEventRequiredServices(eventId: string) {
 }
 
 export function useCreateEvent() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
 export function useUpdateEvent() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (variables: { eventId: string; payload: UpdateEventPayload }) =>
       updateEvent(variables.eventId, variables.payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["events", variables.eventId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["events", "my"] });
+    },
   });
 }
 
 export function usePublishEvent() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: publishEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
 export function useDeleteEvent() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 
 export function useCreateServiceRequirement() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (variables: {
       eventId: string;
       payload: CreateServiceRequirementPayload;
     }) => createEventServiceRequirement(variables.eventId, variables.payload),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["events", variables.eventId],
+      });
+    },
   });
 }
 
 export function useUpdateServiceRequirement() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (variables: {
       eventId: string;
@@ -116,12 +125,23 @@ export function useUpdateServiceRequirement() {
         variables.serviceId,
         variables.payload,
       ),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["events", variables.eventId],
+      });
+    },
   });
 }
 
 export function useDeleteServiceRequirement() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (variables: { eventId: string; serviceId: string }) =>
       deleteEventServiceRequirement(variables.eventId, variables.serviceId),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["events", variables.eventId],
+      });
+    },
   });
 }

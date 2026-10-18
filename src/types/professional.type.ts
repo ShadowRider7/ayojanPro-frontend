@@ -4,7 +4,6 @@ import type { Proposal, ProposalItem } from "./proposal.type";
 import type { Review } from "./review.type";
 import type { User } from "./user.type";
 
-/** Professional application review state (`ApplicationStatus` enum). */
 export const APPLICATION_STATUSES = [
   "PENDING",
   "APPROVED",
@@ -12,11 +11,6 @@ export const APPLICATION_STATUSES = [
 ] as const;
 export type ApplicationStatus = (typeof APPLICATION_STATUSES)[number];
 
-/**
- * `POST /professional/apply-as-professional` body — sent as the multipart
- * `data` JSON field (the resume and additional files travel as separate
- * fields). Mirrors the backend `IApplyAsProfessionalPayload`.
- */
 export interface ApplyAsProfessionalPayload {
   user: {
     name: string;
@@ -33,29 +27,20 @@ export interface ApplyAsProfessionalPayload {
   };
 }
 
-/** `POST /professional/apply-as-professional/verify-email` body — the application OTP. */
 export interface VerifyProfessionalEmailPayload {
   email: string;
   otp: string;
 }
 
-/**
- * Both application endpoints return the created account with its nested
- * `Professional` row (`PENDING` until an admin reviews it). Unlike the client
- * signup, verifying issues no session tokens — the applicant sets a password
- * via `/forgot-password` and logs in once approved.
- */
 export interface ProfessionalApplication extends User {
   professional: Professional;
 }
 
-/** A file attached to a professional application (`additionalFiles` JSON). */
 export interface AdditionalFile {
   url: string;
   publicId: string;
 }
 
-/** A service offered by a professional (`ProfessionalService` model). */
 export interface ProfessionalService {
   id: string;
   professionalId: string;
@@ -76,7 +61,6 @@ export interface ProfessionalService {
   };
 }
 
-/** A canonical skill (`Skill` model). */
 export interface Skill {
   id: string;
   name: string;
@@ -86,7 +70,6 @@ export interface Skill {
   professionals?: ProfessionalSkill[];
 }
 
-/** Join row linking a professional to a skill (`ProfessionalSkill` model). */
 export interface ProfessionalSkill {
   professionalId: string;
   skillId: string;
@@ -95,7 +78,6 @@ export interface ProfessionalSkill {
   professional?: Professional;
 }
 
-/** A work-history entry (`Experience` model). */
 export interface Experience {
   id: string;
   professionalId: string;
@@ -109,7 +91,6 @@ export interface Experience {
   professional?: Professional;
 }
 
-/** A past-work showcase item (`PortfolioItem` model). */
 export interface PortfolioItem {
   id: string;
   professionalId: string;
@@ -125,7 +106,6 @@ export interface PortfolioItem {
   professional?: Professional;
 }
 
-/** A professional profile (`Professional` model). */
 export interface Professional {
   id: string;
   name: string;
@@ -162,13 +142,6 @@ export interface Professional {
   reviews?: Review[];
 }
 
-/**
- * Public professional payload returned by `GET /professional/public/all-Professionals`
- * and `GET /professional/public/:professionalId`. Both endpoints share the same
- * `select`, so nested skills only carry the skill `id` and `name` — enough for
- * the profile editor to remove one (`DELETE /professional/skill/:id` takes the
- * `Skill` id).
- */
 export interface PublicProfessional {
   id: string;
   name: string;
@@ -185,12 +158,6 @@ export interface PublicProfessional {
   reviews: Review[];
 }
 
-/**
- * `PATCH /professional/update-my-profile` body — every field is optional;
- * text fields are nullable (`null` clears them) and `experienceYears` is a
- * plain non-negative integer. The endpoint only touches the `Professional`
- * row (photo/name changes go through `/user/*`).
- */
 export interface UpdateProfessionalProfilePayload {
   bio?: string | null;
   professionalTitle?: string | null;
@@ -202,7 +169,6 @@ export interface UpdateProfessionalProfilePayload {
   acceptingBookings?: boolean;
 }
 
-/** `POST /professional/service` body — all five fields are required. */
 export interface CreateProfessionalServicePayload {
   name: string;
   description?: string;
@@ -211,21 +177,14 @@ export interface CreateProfessionalServicePayload {
   maximumPrice: number;
 }
 
-/** `PATCH /professional/service/:id` body — all fields optional. */
 export type UpdateProfessionalServicePayload =
   Partial<CreateProfessionalServicePayload>;
 
-/**
- * `POST /professional/skill` body. Creates **and links** a skill by name —
- * the backend has no "attach an existing skill" path, and `Skill.name` is
- * globally unique, so a duplicate name 409s.
- */
 export interface CreateSkillPayload {
   name: string;
   description?: string;
 }
 
-/** `POST /professional/experience` body. */
 export interface CreateExperiencePayload {
   title: string;
   description?: string;
@@ -234,14 +193,8 @@ export interface CreateExperiencePayload {
   endDate?: string;
 }
 
-/** `PATCH /professional/experience/:id` body — all fields optional. */
 export type UpdateExperiencePayload = Partial<CreateExperiencePayload>;
 
-/**
- * The `data` JSON field of `POST /professional/portfolio` (multipart: the
- * media travels alongside it as `mediaFile`). `workDate` is required and
- * `externalUrl` accepts a URL or `""`.
- */
 export interface CreatePortfolioItemPayload {
   title: string;
   description?: string;
@@ -250,8 +203,4 @@ export interface CreatePortfolioItemPayload {
   externalUrl?: string;
 }
 
-/**
- * `PATCH /professional/portfolio/:id` body (plain JSON — the media file
- * cannot be replaced through it). All fields optional.
- */
 export type UpdatePortfolioItemPayload = Partial<CreatePortfolioItemPayload>;

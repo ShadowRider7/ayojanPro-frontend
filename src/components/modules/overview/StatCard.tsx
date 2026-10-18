@@ -7,13 +7,12 @@ import { cn } from "@/lib/utils";
 type StatCardProps = {
   label: string;
   value: React.ReactNode;
-  /** Small line under the value, e.g. `"3 active"`. */
+
   hint?: React.ReactNode;
   icon?: LucideIcon;
   className?: string;
 };
 
-/** One headline number on a dashboard overview screen. */
 export function StatCard({
   label,
   value,
@@ -41,7 +40,6 @@ export function StatCard({
   );
 }
 
-/** Loading placeholder matching `StatCard`'s footprint. */
 export function StatCardSkeleton() {
   return (
     <Card size="sm" className="gap-2">

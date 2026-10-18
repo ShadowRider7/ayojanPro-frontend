@@ -36,14 +36,12 @@ import type { Notification, NotificationType } from "@/types";
 
 type Filter = "all" | "unread";
 
-/** Stable keys for the loading placeholder rows. */
 const SKELETON_KEYS = [
   "notification-skeleton-0",
   "notification-skeleton-1",
   "notification-skeleton-2",
 ];
 
-/** Per-type icon for a notification row; also drives the overview activity list. */
 export const NOTIFICATION_ICONS: Record<NotificationType, LucideIcon> = {
   APPLICATION: UserPlusIcon,
   PROPOSAL: FileTextIcon,
@@ -118,11 +116,6 @@ function NotificationRow({
   );
 }
 
-/**
- * `/dashboard/notifications` — the signed-in user's notifications with an
- * all/unread filter, per-item and mark-all read actions, and an unread count
- * shared with the topbar bell (both live under `["notifications"]`).
- */
 export function NotificationList() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<Filter>("all");
@@ -152,7 +145,8 @@ export function NotificationList() {
         onError: (err) => {
           toast.add({
             title: "Could not update notification",
-            description: err.message || "Please try again in a moment.",
+            description:
+              err.message || "Something went wrong. Please try again.",
             type: "error",
           });
         },
@@ -173,7 +167,7 @@ export function NotificationList() {
       onError: (err) => {
         toast.add({
           title: "Could not update notifications",
-          description: err.message || "Please try again in a moment.",
+          description: err.message || "Something went wrong. Please try again.",
           type: "error",
         });
       },

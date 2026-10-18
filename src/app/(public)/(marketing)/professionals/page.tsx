@@ -17,11 +17,6 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * The directory reads the `searchTerm`/`professionalTitle` URL params on the
- * client, so it is wrapped in a Suspense boundary to keep the page shell
- * prerenderable.
- */
 export default function ProfessionalsPage() {
   return (
     <Suspense fallback={<ProfessionalDirectorySkeleton />}>

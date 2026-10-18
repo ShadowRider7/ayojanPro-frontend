@@ -26,7 +26,6 @@ type ProposalDetailProps = {
   proposalId: string;
 };
 
-/** In priority order: a proposal is what its pending items still need. */
 const STATUS_PRIORITY: ProposalStatus[] = [
   "PENDING",
   "ACCEPTED",
@@ -35,13 +34,6 @@ const STATUS_PRIORITY: ProposalStatus[] = [
   "EXPIRED",
 ];
 
-/**
- * `/dashboard/proposals/[proposalId]` — one proposal with every item (a
- * proposal can span several requirements of the same event). This is where
- * the client decides: accept/reject act on the **whole** proposal, so the
- * screens explain the cascade — each pending item becomes (or declines into)
- * its own contract, and accepting auto-rejects competing proposals.
- */
 export function ProposalDetail({ proposalId }: ProposalDetailProps) {
   const queryClient = useQueryClient();
   const { data, isPending, isError, error, refetch } = useProposal(proposalId);
@@ -71,8 +63,6 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
   const overallStatus = deriveOverallStatus(items);
   const rating = toNumber(professional?.averageRating);
 
-  // Item statuses feed the requirement cards on the event screen (embedded
-  // in `GET /event/:eventId`), so accept/reject refresh both key trees.
   const invalidateProposals = () => {
     queryClient.invalidateQueries({ queryKey: ["proposals"] });
     queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -94,8 +84,6 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
               : `${created} contracts created — manage them under Contracts.`,
           type: "success",
         });
-        // The backend accepts items one by one; refetching after success
-        // (and error, below) keeps the cascade visible wherever it applied.
         invalidateProposals();
         setDialog(null);
       },
@@ -105,8 +93,6 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
           description: err.message || "Something went wrong. Please try again",
           type: "error",
         });
-        // A mid-loop failure can leave earlier items accepted, so refetch
-        // even on error rather than assuming nothing changed.
         invalidateProposals();
         setDialog(null);
       },
@@ -316,7 +302,6 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
   );
 }
 
-/** One proposal item: the requirement, the quoted service, amount and dates. */
 function ProposalItemCard({
   item,
   eventId,
@@ -401,10 +386,6 @@ function ProposalItemCard({
   );
 }
 
-/**
- * A proposal spans many items, each with its own status; surface the one
- * that still needs attention first (pending), then what already happened.
- */
 function deriveOverallStatus(items: ProposalItem[]): ProposalStatus | null {
   for (const status of STATUS_PRIORITY) {
     if (items.some((item) => item.status === status)) {
@@ -415,7 +396,6 @@ function deriveOverallStatus(items: ProposalItem[]): ProposalStatus | null {
   return items[0]?.status ?? null;
 }
 
-/** Mirrors the header, professional card and item list while the load runs. */
 function ProposalDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6">

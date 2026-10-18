@@ -35,14 +35,6 @@ function SkillsSkeleton() {
   );
 }
 
-/**
- * Skills section of `/dashboard/professional/profile`. Own skills have no
- * "me" endpoint (2.2), so the list is read from
- * `GET /professional/public/:professionalId` — its skill entries carry the
- * `Skill` id the remove action needs. Adding creates **and** links a skill by
- * name; the backend rejects duplicates platform-wide with a 409, surfaced
- * here as the error toast.
- */
 export function ProfessionalSkillsCard({
   professionalId,
   className,
@@ -66,7 +58,6 @@ export function ProfessionalSkillsCard({
       onSubmit: skillFormSchema,
     },
     onSubmit: ({ value }) => {
-      // The schema trims for validation only — send the trimmed name.
       addSkill(
         { name: value.name.trim() },
         {

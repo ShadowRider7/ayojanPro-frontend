@@ -10,13 +10,6 @@ import { useGetMe } from "@/hooks";
 import AccessDenied from "./access-denied";
 import AuthLoading from "./auth-loading";
 
-/**
- * Blocks the professional workspace until the application is `APPROVED`.
- * PENDING and REJECTED professionals are shown their status instead of the
- * workspace (REJECTED also surfaces `rejectionReason`). The blocked screen
- * offers a "Check again" refetch so a PENDING professional waiting on the
- * admin review sees the workspace unlock without reloading the page.
- */
 export default function ProfessionalStatusGuard({
   children,
 }: {

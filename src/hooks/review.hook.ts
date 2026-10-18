@@ -1,9 +1,9 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createContractReview } from "@/api";
 import type { CreateReviewPayload } from "@/types";
 
-/** Leave a rating on a completed contract (one review per side). */
 export function useCreateContractReview() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
       contractId,
@@ -12,5 +12,9 @@ export function useCreateContractReview() {
       contractId: string;
       payload: CreateReviewPayload;
     }) => createContractReview(contractId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["professionals"] });
+    },
   });
 }

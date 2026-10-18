@@ -25,27 +25,19 @@ import { usePublishedEvents } from "@/hooks";
 import { SERVICE_REQUIREMENT_STATUS_OPTIONS } from "@/lib/constants";
 import type { Event, IQuery } from "@/types";
 
-/** Cards per page; fills the 1/2/3-column grid. */
 const PAGE_SIZE = 9;
 
-/**
- * The `status` query of `/event/all-events` filters on the event's
- * **service requirements** (an event matches when every requirement has
- * that status), so the options come from the requirement enum.
- */
 const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   { value: "all", label: "All requirement statuses" },
   ...SERVICE_REQUIREMENT_STATUS_OPTIONS,
 ];
 
-/** Stable keys for the loading placeholder cards. */
 const SKELETON_KEYS = Array.from(
   { length: 6 },
   (_, index) => `browse-event-skeleton-${index}`,
 );
 
 function EventCard({ event }: { event: Event }) {
-  // The API embeds soft-deleted requirements too; only count the live ones.
   const liveRequirements =
     event.serviceRequirements?.filter(
       (requirement) => !requirement.isDeleted,
@@ -107,12 +99,6 @@ function EventCardSkeleton() {
   );
 }
 
-/**
- * `/dashboard/professional/browse-events` — published events professionals
- * can bid on. The endpoint (`GET /event/all-events`) paginates server-side
- * and filters `searchTerm` + requirement `status`, so both live in the query
- * key like the public directory.
- */
 export function EventBrowse() {
   const [searchTerm, setSearchTerm] = useState("");
   const [status, setStatus] = useState("all");

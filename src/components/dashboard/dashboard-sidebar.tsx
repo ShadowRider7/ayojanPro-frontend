@@ -20,18 +20,12 @@ import { adminRoutes, clientRoutes, professionalRoutes } from "@/routes";
 import type { Role } from "@/types";
 import type { SidebarItems } from "@/types/sidebar.type";
 
-/** Role → sidebar config, mirroring the reference's `sidebarRoutes` map. */
 const SIDEBAR_ROUTES: Record<Role, SidebarItems> = {
   ADMIN: adminRoutes,
   CLIENT: clientRoutes,
   PROFESSIONAL: professionalRoutes,
 };
 
-/**
- * Highlights a link on its own page and on nested screens, except for the
- * bare role dashboard (`/dashboard`, `/dashboard/professional`,
- * `/dashboard/admin`) which prefixes every other URL in the same sidebar.
- */
 function isActiveItem(pathname: string, url: string, root: string) {
   return pathname === url || (url !== root && pathname.startsWith(`${url}/`));
 }

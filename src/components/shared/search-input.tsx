@@ -10,14 +10,13 @@ type SearchInputProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  /** Debounce applied before `onChange` fires, in milliseconds. */
+
   delay?: number;
   disabled?: boolean;
   className?: string;
   inputClassName?: string;
 };
 
-/** Debounced search field with a leading icon and a clear button. */
 export function SearchInput({
   value,
   onChange,
@@ -29,7 +28,6 @@ export function SearchInput({
 }: SearchInputProps) {
   const [text, setText] = useState(value);
 
-  // Keep in sync when the parent resets the value externally.
   useEffect(() => {
     setText(value);
   }, [value]);

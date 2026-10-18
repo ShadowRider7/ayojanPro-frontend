@@ -20,10 +20,6 @@ type DisputeFormValues = {
   description: string;
 };
 
-/**
- * The raise-dispute dialog body — reason, description, and evidence files.
- * Evidence is required (>=1 file). Submits multipart to `POST /dispute/contracts/:id`.
- */
 export function DisputeForm({
   contractId,
   onSuccess,

@@ -21,13 +21,6 @@ import { forgotPasswordSchema } from "@/validation";
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-/**
- * Step one of the password reset flow. The backend emails a 6-digit code and
- * expires it after five minutes, so on success we hand the email to the reset
- * screen (no resend endpoint exists). The email is seeded from `?email=` when
- * present — the professional application hands applicants straight here to
- * set their password after verifying their address.
- */
 export default function ForgotPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();

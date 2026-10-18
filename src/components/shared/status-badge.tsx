@@ -17,19 +17,14 @@ const TONE_CLASSES: Record<StatusTone, string> = {
 };
 
 type StatusBadgeProps = {
-  /** A backend enum value, e.g. `IN_PROGRESS`. */
   status?: string | null;
-  /** Overrides the auto-generated label. */
+
   label?: string;
-  /** Overrides the auto-resolved tone. */
+
   tone?: StatusTone;
   className?: string;
 };
 
-/**
- * Renders any backend status/enum value as a colour-coded badge. Tone is
- * resolved from `STATUS_TONES` in `@/lib/constants`.
- */
 export function StatusBadge({
   status,
   label,

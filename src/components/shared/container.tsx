@@ -1,7 +1,6 @@
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** Centred, page-width wrapper shared by public sections and screens. */
 export function Container({
   className,
   ...props

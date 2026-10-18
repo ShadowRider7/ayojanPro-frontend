@@ -25,13 +25,6 @@ type ProfileImageCardProps = {
   user: UserProfile;
 };
 
-/**
- * Avatar + identity card on `/dashboard/profile`. Picking a photo validates it
- * client-side, previews it locally and uploads it straight away
- * (`PATCH /user/profile-image`); the preview is held until the refetched
- * session delivers the stored URL, so the avatar swaps without flashing the
- * previous photo.
- */
 export function ProfileImageCard({ user }: ProfileImageCardProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const imageUrlAtPick = useRef<string | null>(user.imageUrl);
@@ -41,14 +34,12 @@ export function ProfileImageCard({ user }: ProfileImageCardProps) {
 
   const displayUrl = previewUrl ?? user.imageUrl;
 
-  // Swap the local preview for the stored URL once the upload refetch lands.
   useEffect(() => {
     if (previewUrl && user.imageUrl !== imageUrlAtPick.current) {
       setPreviewUrl(null);
     }
   }, [previewUrl, user.imageUrl]);
 
-  // Revoke each object URL when its preview is replaced or the card unmounts.
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -60,7 +51,6 @@ export function ProfileImageCard({ user }: ProfileImageCardProps) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    // Reset so the same file can be picked again after a failed upload.
     event.target.value = "";
 
     if (!file) {
@@ -95,8 +85,6 @@ export function ProfileImageCard({ user }: ProfileImageCardProps) {
           description: "Your new photo is now visible across AyojanPro.",
           type: "success",
         });
-        // The hook invalidates ["user"]; the preview clears once the new
-        // URL arrives from the refetch.
       },
       onError: (err) => {
         setPreviewUrl(null);

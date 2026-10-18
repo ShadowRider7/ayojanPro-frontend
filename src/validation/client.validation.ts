@@ -1,17 +1,5 @@
 import z from "zod";
 
-/**
- * Client profile form schema. Rules mirror the backend
- * `client.validation.ts` (`ClientValidation.updateClientProfileSchema`) so the
- * client rejects the same payloads the API would: bio ≤ 500 chars, an
- * E.164-style phone, address ≥ 2 chars when present, and free-text city /
- * country.
- *
- * The schema is flat and required-string shaped (an empty string means "no
- * value") so `z.infer` gives non-optional fields for `defaultValues`. On submit
- * empty strings are dropped from the payload — the backend marks these fields
- * `.optional()`, so an empty value would fail its `min`/`regex` checks.
- */
 const E164_PHONE_REGEX = /^\+?[1-9]\d{1,14}$/;
 
 export const updateClientProfileSchema = z.object({

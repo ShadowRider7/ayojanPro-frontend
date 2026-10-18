@@ -12,9 +12,9 @@ import { cn } from "@/lib/utils";
 export type MetricBarDatum = {
   label: string;
   value: number;
-  /** Bar accent; defaults to the brand primary. */
+
   tone?: StatusTone | "primary";
-  /** Formats the numeric readout, e.g. currency amounts. */
+
   format?: (value: number) => string;
 };
 
@@ -34,12 +34,6 @@ const BAR_TONE_CLASSES: Record<StatusTone | "primary", string> = {
   destructive: "bg-destructive",
 };
 
-/**
- * Horizontal bar breakdown rendered with plain Tailwind widths — no chart
- * library. Each row shows its own readout, so the bars stay decorative
- * (`aria-hidden`) while the numbers carry the meaning. All-zero data falls
- * back to an empty state instead of flat bars.
- */
 export function MetricBars({
   title,
   description,

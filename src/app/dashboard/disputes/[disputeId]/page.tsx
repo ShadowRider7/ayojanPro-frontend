@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "View dispute details, evidence, and resolution.",
 };
 
+export function generateStaticParams() {
+  return [{ disputeId: "placeholder" }];
+}
+
 export default function DisputeDetailPage({
   params,
 }: {

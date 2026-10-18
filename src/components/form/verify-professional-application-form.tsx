@@ -29,17 +29,6 @@ import { toast } from "@/components/ui/toast";
 import { useVerifyProfessionalEmail } from "@/hooks";
 import type { VerifyProfessionalEmailPayload } from "@/types";
 
-/**
- * OTP screen for the professional application. Reads the pending `email` from
- * the query string (set by the application form). Verifying marks the email
- * confirmed but issues no session, so the applicant is handed to
- * `/forgot-password` to set their own password (prefilled with the email)
- * before logging in once the application is approved.
- *
- * The backend sends the code from `POST /professional/apply-as-professional`
- * and expires it after an hour — there is no resend endpoint, so this screen
- * offers a way back to the application instead of a dead "Resend" control.
- */
 export default function VerifyProfessionalApplicationForm() {
   const router = useRouter();
   const searchParams = useSearchParams();

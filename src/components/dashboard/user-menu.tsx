@@ -19,11 +19,6 @@ import { useGetMe, useLogout } from "@/hooks";
 import { PROFILE_ROUTES } from "@/lib/constants";
 import { initials } from "@/utils";
 
-/**
- * Topbar account menu — identity, a role-aware profile link and logout. The
- * logout mirrors the public header: toast, drop the cached session and land
- * back on the landing page.
- */
 export function UserMenu() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -90,7 +85,10 @@ export function UserMenu() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {profileUrl ? (
-          <DropdownMenuItem render={<Link href={profileUrl} />}>
+          <DropdownMenuItem
+            nativeButton={false}
+            render={<Link href={profileUrl} />}
+          >
             <UserIcon />
             Profile
           </DropdownMenuItem>

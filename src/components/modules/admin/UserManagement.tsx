@@ -22,7 +22,6 @@ import { useAdminUsers, useUpdateUserStatus } from "@/hooks";
 import { enumLabel, ROLE_OPTIONS, USER_STATUS_OPTIONS } from "@/lib/constants";
 import type { AdminUser } from "@/types";
 
-/** Status values an admin can set. */
 const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   { value: "all", label: "All statuses" },
   ...USER_STATUS_OPTIONS,
@@ -33,11 +32,6 @@ const ROLE_FILTER_ITEMS: { value: string; label: string }[] = [
   ...ROLE_OPTIONS,
 ];
 
-/**
- * `/dashboard/admin/users` — DataTable of every non-deleted user with their
- * role, status, and a status-change action. Suspends/blocks or re-activates
- * client and professional accounts (admin accounts are backend-protected).
- */
 export function UserManagement() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -75,7 +69,8 @@ export function UserManagement() {
           onError: (err) => {
             toast.add({
               title: "Could not update user status",
-              description: err.message || "Please try again in a moment.",
+              description:
+                err.message || "Something went wrong. Please try again.",
               type: "error",
             });
           },

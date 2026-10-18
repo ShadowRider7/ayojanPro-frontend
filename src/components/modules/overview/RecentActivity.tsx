@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/hooks";
 import { NOTIFICATION_ICONS } from "../notifications/NotificationList";
 
-/** How many notifications the overview strip shows before "View all". */
 const ACTIVITY_LIMIT = 5;
 
 const ACTIVITY_SKELETON_KEYS = [
@@ -24,12 +23,6 @@ const ACTIVITY_SKELETON_KEYS = [
   "activity-skeleton-2",
 ];
 
-/**
- * "Recent activity" panel shared by the role dashboards — the five newest
- * notifications (the endpoint does not paginate, so the slice is client-side)
- * with a link to the full list. Lives under the same `["notifications"]` key
- * as the topbar bell and the notifications screen.
- */
 export function RecentActivity() {
   const { data, isPending, isError, error, refetch } = useNotifications();
   const items = (data?.data ?? []).slice(0, ACTIVITY_LIMIT);
@@ -42,6 +35,7 @@ export function RecentActivity() {
           <Button
             variant="ghost"
             size="sm"
+            nativeButton={false}
             render={<Link href="/dashboard/notifications" />}
           >
             View all

@@ -31,7 +31,6 @@ import { useMyEvents } from "@/hooks";
 import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
 import type { Event } from "@/types";
 
-/** Cards per page; fills the 1/2/3-column grid. */
 const PAGE_SIZE = 9;
 
 const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
@@ -39,14 +38,12 @@ const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   ...EVENT_STATUS_OPTIONS,
 ];
 
-/** Stable keys for the loading placeholder cards. */
 const SKELETON_KEYS = Array.from(
   { length: 6 },
   (_, index) => `event-skeleton-${index}`,
 );
 
 function EventCard({ event }: { event: Event }) {
-  // The API embeds soft-deleted requirements too; only count the live ones.
   const requirementCount =
     event.serviceRequirements?.filter((requirement) => !requirement.isDeleted)
       .length ?? 0;
@@ -112,11 +109,6 @@ function EventCardSkeleton() {
   );
 }
 
-/**
- * `/dashboard/events` — the signed-in client's events. The endpoint
- * (`GET /event/my-events`) does not paginate, so search, the status filter
- * and pagination all run client-side over the full array.
- */
 export function EventList() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -174,7 +166,10 @@ export function EventList() {
         title="Events"
         description="Create and manage the events you need professionals for."
       >
-        <Button render={<Link href="/dashboard/events/new" />}>
+        <Button
+          nativeButton={false}
+          render={<Link href="/dashboard/events/new" />}
+        >
           <PlusIcon /> New event
         </Button>
       </PageHeader>
@@ -225,7 +220,10 @@ export function EventList() {
           title="No events yet"
           description="Create your event, list the services you need, then publish it so professionals can submit proposals."
           action={
-            <Button render={<Link href="/dashboard/events/new" />}>
+            <Button
+              nativeButton={false}
+              render={<Link href="/dashboard/events/new" />}
+            >
               <PlusIcon /> New event
             </Button>
           }

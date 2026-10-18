@@ -1,6 +1,3 @@
-/** Payloads for `GET /analytics/{client,professional,admin}-analytics`. */
-
-/** `GET /analytics/client-analytics`. */
 export interface ClientAnalytics {
   totalEvents: number;
   activeEvents: number;
@@ -15,7 +12,6 @@ export interface ClientAnalytics {
   totalReviewsGiven: number;
 }
 
-/** `GET /analytics/professional-analytics`. */
 export interface ProfessionalAnalytics {
   totalServices: number;
   activeServices: number;
@@ -32,7 +28,6 @@ export interface ProfessionalAnalytics {
   totalDisputesRaised: number;
 }
 
-/** `GET /analytics/admin-analytics`. */
 export interface AdminAnalytics {
   totalClients: number;
   totalProfessionals: number;

@@ -1,16 +1,10 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/api";
 
-/**
- * The current user's notifications. `isRead` narrows the list to unread
- * (`false`) or read (`true`) rows; omit it for everything. Every variant
- * shares the `["notifications"]` key prefix, so one invalidation refreshes
- * the list screen and the topbar unread badge together.
- */
 export function useNotifications(isRead?: boolean) {
   return useQuery({
     queryKey: ["notifications", isRead ?? "all"],
@@ -19,13 +13,21 @@ export function useNotifications(isRead?: boolean) {
 }
 
 export function useMarkNotificationRead() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markNotificationRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 }
 
 export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: markAllNotificationsRead,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
   });
 }

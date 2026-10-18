@@ -29,11 +29,6 @@ import { resetPasswordSchema } from "@/validation";
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-/**
- * Step two of the password reset flow. Reads the pending `email` from the query
- * string (set by the forgot-password form) and completes the reset with the
- * 6-digit code plus a new password.
- */
 export default function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();

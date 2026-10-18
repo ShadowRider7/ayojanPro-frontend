@@ -31,7 +31,6 @@ import type {
 } from "@/types";
 import { formatCurrency, toNumber } from "@/utils";
 
-/** How many reviews are shown before pointing at the full total. */
 const REVIEWS_PREVIEW_LIMIT = 6;
 
 function RatingBadge({ review }: { review: Review }) {
@@ -235,7 +234,6 @@ type ProfessionalProfileProps = {
   professionalId: string;
 };
 
-/** `/professionals/[professionalId]` — full public profile of a professional. */
 export default function ProfessionalProfile({
   professionalId,
 }: ProfessionalProfileProps) {

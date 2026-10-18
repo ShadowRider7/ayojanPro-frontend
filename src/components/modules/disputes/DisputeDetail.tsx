@@ -25,11 +25,6 @@ import { toast } from "@/components/ui/toast";
 import { useDispute, useResolveDispute } from "@/hooks";
 import type { Dispute } from "@/types";
 
-/**
- * `/dashboard/disputes/[disputeId]` — party view of a dispute. Shows the
- * reason, description, evidence, status, and resolution. Admins additionally
- * see status-change and resolve actions.
- */
 export function DisputeDetail({ disputeId }: { disputeId: string }) {
   const { data, isPending, isError, error, refetch } = useDispute(disputeId);
   const dispute = data?.data ?? null;
@@ -229,7 +224,6 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
         description="Choose a new status for this dispute."
         confirmLabel="Update status"
         onConfirm={() => {
-          // Status update logic handled by admin screen
           setStatusDialogOpen(false);
         }}
       >

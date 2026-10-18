@@ -32,11 +32,9 @@ import { toDateTimeLocal } from "@/utils/formatters";
 import { type EventFormValues, eventFormSchema } from "@/validation";
 
 type EventFormProps = {
-  /** Present in edit mode (`/dashboard/events/[eventId]/edit`); omit to create. */
   eventId?: string;
 };
 
-/** Map the `Event` row onto the flat, string-shaped form values. */
 function seedForm(existingEvent: Event | null): EventFormValues {
   return {
     title: existingEvent?.title ?? "",
@@ -50,13 +48,6 @@ function seedForm(existingEvent: Event | null): EventFormValues {
   };
 }
 
-/**
- * `/dashboard/events/new` and `/dashboard/events/[eventId]/edit` — one form
- * for both: create posts `POST /event`, edit seeds every field from the
- * loaded event and sends the complete payload to `PATCH /event/update/:eventId`.
- * The form always submits every field, so the schema's required rules apply
- * in both modes; the backend treats omitted fields as unchanged.
- */
 export function EventForm({ eventId }: EventFormProps) {
   const isEdit = Boolean(eventId);
   const { data, isPending, isError, error, refetch } = useEvent(eventId ?? "");
@@ -405,7 +396,11 @@ function EventFormFields({ existingEvent }: { existingEvent: Event | null }) {
       </form>
 
       <CardFooter className="justify-end gap-2">
-        <Button variant="outline" render={<Link href={backHref} />}>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href={backHref} />}
+        >
           Cancel
         </Button>
         <Button type="submit" form="event-form" disabled={isPending}>
@@ -424,7 +419,6 @@ function EventFormFields({ existingEvent }: { existingEvent: Event | null }) {
   );
 }
 
-/** Mirrors the form card while the event resolves in edit mode. */
 function EventFormSkeleton() {
   return (
     <Card size="sm" className="max-w-2xl">

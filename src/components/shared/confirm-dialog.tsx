@@ -21,13 +21,12 @@ type ConfirmDialogProps = {
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void | Promise<void>;
-  /** `destructive` styles the confirm button for irreversible actions. */
+
   variant?: "default" | "destructive";
   loading?: boolean;
   children?: React.ReactNode;
 };
 
-/** Controlled confirmation dialog for destructive / important actions. */
 export function ConfirmDialog({
   open,
   onOpenChange,

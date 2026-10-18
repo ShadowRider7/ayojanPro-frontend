@@ -17,11 +17,6 @@ import { OverviewSkeleton } from "./OverviewSkeleton";
 import { RecentActivity } from "./RecentActivity";
 import { StatCard } from "./StatCard";
 
-/**
- * `/dashboard/professional` — service, proposal, contract and earnings
- * analytics from `GET /analytics/professional-analytics`. Reached only after
- * the professional status guard, so the profile always exists.
- */
 export function ProfessionalOverview() {
   const { data, isPending, isError, error, refetch } =
     useProfessionalAnalytics();

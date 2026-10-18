@@ -7,6 +7,10 @@ export const metadata: Metadata = {
     "Review a proposal's items, then accept it to create contracts or reject it.",
 };
 
+export function generateStaticParams() {
+  return [{ proposalId: "placeholder" }];
+}
+
 type ProposalDetailPageProps = {
   params: Promise<{ proposalId: string }>;
 };

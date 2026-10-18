@@ -24,23 +24,15 @@ import {
 import { usePublicProfessionals } from "@/hooks";
 import type { IQuery } from "@/types";
 
-/** Card grid page size (keeps rows full on the 2- and 3-column layouts). */
 const PAGE_SIZE = 12;
 
-/** Sentinel value for the "no title filter" option of the title select. */
 const ALL_TITLES = "all-titles";
 
-/** Stable keys for the loading placeholder cards. */
 const SKELETON_KEYS = Array.from(
   { length: PAGE_SIZE },
   (_, index) => `professional-skeleton-${index}`,
 );
 
-/**
- * `/professionals` — searchable, paginated directory of approved
- * professionals. Search and title filters are seeded from the URL so the
- * landing page's category links (`?searchTerm=Photography`) arrive pre-filled.
- */
 export default function ProfessionalDirectory() {
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState(
@@ -88,9 +80,6 @@ export default function ProfessionalDirectory() {
     setPage(1);
   }, []);
 
-  // The endpoint filters titles by exact match and exposes no list of them, so
-  // the options are faceted from the professionals currently on screen (the
-  // selected value is always kept so the control never loses its label).
   const titleItems = useMemo(() => {
     const titles = new Set(professionals.map((item) => item.professionalTitle));
 
@@ -218,7 +207,6 @@ export default function ProfessionalDirectory() {
   );
 }
 
-/** Prerendered fallback for the directory's `Suspense` boundary. */
 export function ProfessionalDirectorySkeleton() {
   return (
     <section className="py-12 sm:py-16">

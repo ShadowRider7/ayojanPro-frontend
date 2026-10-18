@@ -11,6 +11,10 @@ export const metadata: Metadata = {
     "Pay for a contract through bKash, review its deliverable, then complete or cancel it.",
 };
 
+export function generateStaticParams() {
+  return [{ contractId: "placeholder" }];
+}
+
 type ContractDetailPageProps = {
   params: Promise<{ contractId: string }>;
 };
@@ -20,8 +24,6 @@ export default async function ContractDetailPage({
 }: ContractDetailPageProps) {
   const { contractId } = await params;
 
-  // ContractDetail reads the bKash callback's `?payment=` param through
-  // `useSearchParams`, which needs a Suspense boundary under cacheComponents.
   return (
     <Suspense fallback={<ContractDetailSkeleton />}>
       <ContractDetail contractId={contractId} />

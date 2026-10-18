@@ -18,7 +18,6 @@ const PANEL_SKELETON_KEYS = [
   "panel-skeleton-3",
 ];
 
-/** Loading state for a role dashboard: stat-card grid + panel grid. */
 export function OverviewSkeleton() {
   return (
     <>

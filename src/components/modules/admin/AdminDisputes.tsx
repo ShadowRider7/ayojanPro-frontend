@@ -41,14 +41,12 @@ const STATUS_TRANSITIONS: Exclude<DisputeStatus, "RESOLVED">[] = [
   "CLOSED",
 ];
 
-/** Type guard: dispute statuses an admin can transition to (excludes RESOLVED, which is terminal). */
 function isTransitionableStatus(
   status: DisputeStatus,
 ): status is "OPEN" | "UNDER_REVIEW" | "REJECTED" | "CLOSED" {
   return ["OPEN", "UNDER_REVIEW", "REJECTED", "CLOSED"].includes(status);
 }
 
-/** `/dashboard/admin/disputes` — admin DataTable of all disputes with status and resolve actions. */
 export function AdminDisputes() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
@@ -95,7 +93,8 @@ export function AdminDisputes() {
           onError: (err) => {
             toast.add({
               title: "Could not update status",
-              description: err.message || "Please try again in a moment.",
+              description:
+                err.message || "Something went wrong. Please try again.",
               type: "error",
             });
           },
@@ -134,7 +133,8 @@ export function AdminDisputes() {
         onError: (err) => {
           toast.add({
             title: "Could not resolve dispute",
-            description: err.message || "Please try again in a moment.",
+            description:
+              err.message || "Something went wrong. Please try again.",
             type: "error",
           });
         },

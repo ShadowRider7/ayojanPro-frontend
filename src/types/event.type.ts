@@ -3,7 +3,6 @@ import type { Contract } from "./contract.type";
 import type { Proposal, ProposalItem } from "./proposal.type";
 import type { Client } from "./user.type";
 
-/** Event lifecycle (`EventStatus` enum). */
 export const EVENT_STATUSES = [
   "DRAFT",
   "PUBLISHED",
@@ -13,7 +12,6 @@ export const EVENT_STATUSES = [
 ] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
-/** Per-requirement fulfilment state (`ServiceRequirementStatus` enum). */
 export const SERVICE_REQUIREMENT_STATUSES = [
   "OPEN",
   "PARTIALLY_FILLED",
@@ -25,7 +23,6 @@ export const SERVICE_REQUIREMENT_STATUSES = [
 export type ServiceRequirementStatus =
   (typeof SERVICE_REQUIREMENT_STATUSES)[number];
 
-/** An event created by a client (`Event` model). */
 export interface Event {
   id: string;
   clientId: string;
@@ -48,7 +45,6 @@ export interface Event {
   contracts?: Contract[];
 }
 
-/** `POST /event` body — create an event for the signed-in client. */
 export interface CreateEventPayload {
   title: string;
   description?: string;
@@ -56,13 +52,12 @@ export interface CreateEventPayload {
   city?: string;
   country?: string;
   address?: string;
-  /** ISO date string; must be strictly before `endAt`. */
+
   startAt: string;
-  /** ISO date string. */
+
   endAt: string;
 }
 
-/** `PATCH /event/update/:eventId` body. All fields optional; send only what changed. */
 export interface UpdateEventPayload {
   title?: string;
   description?: string;
@@ -70,26 +65,24 @@ export interface UpdateEventPayload {
   city?: string;
   country?: string;
   address?: string;
-  /** ISO date string; must be strictly before `endAt`. */
+
   startAt?: string;
-  /** ISO date string. */
+
   endAt?: string;
 }
 
-/** `POST /event/services/:eventId` body — one service requirement on an event. */
 export interface CreateServiceRequirementPayload {
   serviceName: string;
   description?: string;
-  /** Strictly positive. The backend defaults the currency to BDT. */
+
   budget: number;
   currency?: string;
-  /** ISO date string; must fall within the event schedule. */
+
   startAt: string;
-  /** ISO date string; must fall within the event schedule. */
+
   endAt: string;
 }
 
-/** `PATCH /event/update/:eventId/services/:serviceId` body. All fields optional. */
 export interface UpdateServiceRequirementPayload {
   serviceName?: string;
   description?: string;
@@ -99,7 +92,6 @@ export interface UpdateServiceRequirementPayload {
   endAt?: string;
 }
 
-/** A single service a client needs for an event (`EventServiceRequirement` model). */
 export interface EventServiceRequirement {
   id: string;
   eventId: string;

@@ -48,7 +48,6 @@ function PortfolioSkeleton() {
   );
 }
 
-/** One showcase tile — the public profile's PortfolioCard plus edit/delete. */
 function PortfolioCard({
   item,
   onEdit,
@@ -132,13 +131,6 @@ function PortfolioCard({
   );
 }
 
-/**
- * Portfolio section of `/dashboard/professional/profile` — own items read
- * from `GET /professional/me/portfolio`; create is multipart
- * (`POST /professional/portfolio`), edit is metadata-only
- * (`PATCH /professional/portfolio/:id` — the media file cannot be replaced,
- * delete and re-add instead).
- */
 export function PortfolioSection() {
   const { data, isPending, isError, error, refetch } = useMyPortfolio();
 

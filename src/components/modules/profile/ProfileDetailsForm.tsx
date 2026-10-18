@@ -29,13 +29,10 @@ import {
 } from "@/validation";
 
 type ProfileDetailsFormProps = {
-  /** The session's `Client` row; seeds the form once and is never re-seeded
-   * by background refetches, so in-progress edits are not wiped. */
   client: Client | null;
   className?: string;
 };
 
-/** Map the `Client` row onto the flat form shape. */
 function seedForm(client: Client | null): UpdateClientProfileFormValues {
   return {
     bio: client?.bio ?? "",
@@ -46,13 +43,6 @@ function seedForm(client: Client | null): UpdateClientProfileFormValues {
   };
 }
 
-/**
- * `/dashboard/profile` contact editor — `PATCH /client/my-profile`. The API's
- * phone/address rules reject empty strings and treat omitted fields as
- * unchanged, so blank means "keep the stored value" there; `bio`, `city` and
- * `country` accept `""` and clear. After a save the form re-seeds from the
- * updated row the PATCH returns, so the display always matches the server.
- */
 export function ProfileDetailsForm({
   client,
   className,

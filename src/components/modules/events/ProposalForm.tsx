@@ -41,17 +41,15 @@ import type {
 import { toDateTimeLocal } from "@/utils/formatters";
 import { type ProposalFormValues, proposalFormSchema } from "@/validation";
 
-/** Only these requirement states can still receive proposals (backend rule). */
 const PROPOSABLE_STATUSES = ["OPEN", "PARTIALLY_FILLED"] as const;
 
 type ProposalFormProps = {
-  /** The published event being bid on — its schedule bounds every item. */
   event: Event;
-  /** The event's live (non-deleted) requirements. */
+
   requirements: EventServiceRequirement[];
-  /** Requirements where this professional already has an active item (409 if rebid). */
+
   bidOnRequirementIds: string[];
-  /** Preselects the first item's requirement; omit to start blank. */
+
   initialRequirementId?: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -85,14 +83,6 @@ function blankItem(event: Event): ProposalFormValues["items"][number] {
   };
 }
 
-/**
- * Dialog form for `POST /proposal/events/:eventId` — one proposal covering
- * one or more of the event's requirements. Each item picks a requirement
- * (only open ones the professional has not bid on yet) and one of their own
- * services, and quotes an amount + schedule; the requirement's window seeds
- * the dates and caps the `datetime-local` inputs. The parent mounts it fresh
- * per dialog open, so the defaults always re-seed.
- */
 export function ProposalForm({
   event,
   requirements,
@@ -244,8 +234,6 @@ export function ProposalForm({
                 const otherSelectedIds = form.state.values.items
                   .filter((_, otherIndex) => otherIndex !== index)
                   .map((other) => other.eventServiceRequirementId);
-                // Keep the current selection visible while hiding requirements
-                // another row already covers (the backend rejects a repeat bid).
                 const rowRequirementItems = [
                   ...(item.eventServiceRequirementId
                     ? requirementItems.filter(
@@ -307,7 +295,6 @@ export function ProposalForm({
                                   );
 
                                   if (next) {
-                                    // Seed the quote with the requirement's own window.
                                     form.setFieldValue(
                                       `items[${index}].proposedStartAt`,
                                       toDateTimeLocal(next.startAt),
