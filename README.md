@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AyojanPro Frontend
 
-## Getting Started
+A production-quality Next.js 16 App Router client for the AyojanPro event-service platform. Clients plan events, professionals apply and get booked, contracts, payments (bKash), deliverables, reviews, and disputes are all managed through this UI.
 
-First, run the development server:
+## Tech stack
+
+- **Next.js 16** (App Router) — React 19, TypeScript
+- **Tailwind CSS v4** (via Turbopack loader, not PostCSS)
+- **ofetch** — API client
+- **@tanstack/react-query** — data fetching/caching
+- **@tanstack/react-form** + **zod** — forms + validation
+- **@react-oauth/google** — Google sign-in
+- **shadcn/ui** (base-nova style on `@base-ui/react`) — UI primitives
+- **Biome** — linting + formatting
+- **Bun** — package manager
+
+## Prerequisites
+
+- [Bun](https://bun.sh) >= 1.4
+- Backend running at `http://localhost:5000` (see [AyojanPro](https://github.com/AyojanPro/AyojanPro) backend repo)
+- Node.js >= 20 (for Next.js)
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Install dependencies
+bun install
+
+# Copy env file and fill in values
+cp .env.example .env.local
+
+# Run dev server (http://localhost:3000)
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Description | Example |
+|---|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:5000/api/v1` |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID (same as backend) | `<your-client-id>` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The dev frontend must run on `http://localhost:3000` because the backend CORS is configured with `origin: FRONTEND_URL` and credentials.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---|---|
+| `bun run dev` | Start dev server on :3000 |
+| `bun run build` | Production build |
+| `bun run lint` | Biome check |
+| `bun run format` | Biome format (write) |
+| `bunx tsc --noEmit` | TypeScript type check |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Architecture
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Directory layout
 
-## Deploy on Vercel
+```
+src/
+  api/            # Thin API functions over apiClient (one file per domain)
+  hooks/          # TanStack Query wrappers (useQuery/useMutation)
+  types/          # Domain types + enums + payloads (one file per domain)
+  validation/     # Zod schemas (one file per domain)
+  routes/         # Sidebar config per role (client/professional/admin)
+  providers/      # Query, Google OAuth, Tooltip providers
+  lib/            # apiClient, utils (cn), constants
+  utils/          # formatters, file-size util
+  components/
+    ui/           # shadcn primitives (base-nova)
+    shared/       # PageHeader, DataTable, StatusBadge, states, etc.
+    auth/         # Guards (AuthGuard, RoleGuard, ProfessionalStatusGuard)
+    form/         # Domain forms (register, verify, apply)
+    layout/public/# Header, Footer
+    modules/      # Feature components (events, contracts, disputes, etc.)
+  app/            # Next.js App Router pages
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Data flow
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Read:** Component → `useX()` hook (`useQuery`) → API function (`apiClient`) → backend envelope `{ success, statusCode, message, data, meta? }`. Components read `data?.data`.
+- **Write:** Component/form → `useMutation` → API function → toast + invalidate query keys on success.
+- **Session:** Backend sets httpOnly cookies; client never reads them. `GET /auth/me` (`useGetMe`, key `["user"]`) is the source of truth.
+
+### Guards
+
+- `AuthGuard` — any authenticated session (wraps dashboard layout)
+- `RoleGuard` — role-based access (wraps each role layout)
+- `ProfessionalStatusGuard` — APPROVED status only (wraps professional workspace)
+
+### Dashboard URLs
+
+- Client: `/dashboard`, `/dashboard/events`, `/dashboard/contracts`, `/dashboard/profile`
+- Professional: `/dashboard/professional/*`
+- Admin: `/dashboard/admin/*`
+- Shared: `/dashboard/contracts`, `/dashboard/notifications`
+
+## Backend gaps (see frontend plan §2.1)
+
+- `GET /event/my-events` and `GET /proposal/me` were added to the backend (commit `1ce7b01`) — both return plain arrays (no pagination).
+- Own skills/experience have no GET endpoint — read them from the public profile (`GET /professional/public/:id`).
+- Professionals get a random password at apply time — no set/change-password endpoint; use `/forgot-password` to set one.
+- Admin professional review (`GET /professional/all-professionals`) does not include `experience`/`portfolio` nested data.
+
+## Development notes
+
+- Package manager is **Bun** — do not add a second lockfile.
+- `next.config.ts` enables `cacheComponents: true`, `partialPrefetching`, and `reactCompiler`.
+- Tailwind v4 is wired through the Turbopack loader — no `postcss.config.*`.
+- Import alias is `@/*` → `src/*`.
+- `.next/types` is generated by `next dev`/`next build` — run dev once before standalone type checks.
+- Biome defaults to LF — on Windows with `core.autocrlf=true`, reformat `package.json` if lint reports a format diff.
+- The `/style-guide` page was removed in T22 (temp development page).
