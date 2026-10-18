@@ -1,3 +1,4 @@
+export * from "./admin.api";
 export * from "./analytics.api";
 export * from "./auth.api";
 export * from "./client.api";

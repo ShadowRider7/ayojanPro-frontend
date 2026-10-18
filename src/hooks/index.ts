@@ -1,3 +1,4 @@
+export * from "./admin.hook";
 export * from "./analytics.hook";
 export * from "./auth.hook";
 export * from "./client.hook";
