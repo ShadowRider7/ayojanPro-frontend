@@ -60,3 +60,12 @@ export interface UserProfile extends User {
   client: Client | null;
   professional: Professional | null;
 }
+
+/** `PATCH /client/my-profile` body. All fields optional; send only what changed. */
+export interface UpdateClientProfilePayload {
+  bio?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+}

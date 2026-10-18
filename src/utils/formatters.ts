@@ -128,6 +128,16 @@ export function formatRelativeTime(value: DateInput): string {
   return EMPTY;
 }
 
+/** First letters of the first two name words, for avatar fallbacks. */
+export function initials(name: string | null | undefined): string {
+  return (name ?? "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+}
+
 /** Title-case an enum-like value, e.g. `IN_PROGRESS` → `In Progress`. */
 export function humanize(value: string | null | undefined): string {
   if (!value) {

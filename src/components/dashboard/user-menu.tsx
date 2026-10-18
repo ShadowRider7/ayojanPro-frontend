@@ -17,16 +17,7 @@ import {
 import { toast } from "@/components/ui/toast";
 import { useGetMe, useLogout } from "@/hooks";
 import { PROFILE_ROUTES } from "@/lib/constants";
-
-/** First letters of the first two name words, for the avatar fallback. */
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? "")
-    .join("");
-}
+import { initials } from "@/utils";
 
 /**
  * Topbar account menu — identity, a role-aware profile link and logout. The
