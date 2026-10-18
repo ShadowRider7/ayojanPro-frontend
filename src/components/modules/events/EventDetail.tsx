@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   BriefcaseIcon,
   CalendarIcon,
+  MessagesSquareIcon,
   PencilIcon,
   PlusIcon,
   SendIcon,
@@ -262,7 +263,21 @@ export function EventDetail({ eventId }: { eventId: string }) {
                       <DateText value={requirement.startAt} mode="datetime" /> –{" "}
                       <DateText value={requirement.endAt} mode="datetime" />
                     </p>
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        render={
+                          <Link
+                            href={`/dashboard/events/${eventId}/requirements/${requirement.id}/proposals`}
+                          >
+                            <MessagesSquareIcon /> Proposals
+                            {requirement.proposalItems?.length
+                              ? ` (${requirement.proposalItems.length})`
+                              : ""}
+                          </Link>
+                        }
+                      />
                       <Button
                         variant="ghost"
                         size="xs"

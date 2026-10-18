@@ -4,3 +4,4 @@ export * from "./client.hook";
 export * from "./event.hook";
 export * from "./notification.hook";
 export * from "./professional.hook";
+export * from "./proposal.hook";
