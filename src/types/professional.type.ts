@@ -165,7 +165,9 @@ export interface Professional {
 /**
  * Public professional payload returned by `GET /professional/public/all-Professionals`
  * and `GET /professional/public/:professionalId`. Both endpoints share the same
- * `select`, so nested skills only carry the skill `name`.
+ * `select`, so nested skills only carry the skill `id` and `name` — enough for
+ * the profile editor to remove one (`DELETE /professional/skill/:id` takes the
+ * `Skill` id).
  */
 export interface PublicProfessional {
   id: string;
@@ -176,9 +178,80 @@ export interface PublicProfessional {
   averageRating: Nullable<DecimalValue>;
   totalReviews: number;
   createdAt: ISODateString;
-  skills: { skill: Pick<Skill, "name"> }[];
+  skills: { skill: Pick<Skill, "id" | "name"> }[];
   experiences: Experience[];
   services: ProfessionalService[];
   portfolioItems: PortfolioItem[];
   reviews: Review[];
 }
+
+/**
+ * `PATCH /professional/update-my-profile` body — every field is optional;
+ * text fields are nullable (`null` clears them) and `experienceYears` is a
+ * plain non-negative integer. The endpoint only touches the `Professional`
+ * row (photo/name changes go through `/user/*`).
+ */
+export interface UpdateProfessionalProfilePayload {
+  bio?: string | null;
+  professionalTitle?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  experienceYears?: number;
+  acceptingBookings?: boolean;
+}
+
+/** `POST /professional/service` body — all five fields are required. */
+export interface CreateProfessionalServicePayload {
+  name: string;
+  description?: string;
+  pricingNote: string;
+  minimumPrice: number;
+  maximumPrice: number;
+}
+
+/** `PATCH /professional/service/:id` body — all fields optional. */
+export type UpdateProfessionalServicePayload =
+  Partial<CreateProfessionalServicePayload>;
+
+/**
+ * `POST /professional/skill` body. Creates **and links** a skill by name —
+ * the backend has no "attach an existing skill" path, and `Skill.name` is
+ * globally unique, so a duplicate name 409s.
+ */
+export interface CreateSkillPayload {
+  name: string;
+  description?: string;
+}
+
+/** `POST /professional/experience` body. */
+export interface CreateExperiencePayload {
+  title: string;
+  description?: string;
+  organization?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+/** `PATCH /professional/experience/:id` body — all fields optional. */
+export type UpdateExperiencePayload = Partial<CreateExperiencePayload>;
+
+/**
+ * The `data` JSON field of `POST /professional/portfolio` (multipart: the
+ * media travels alongside it as `mediaFile`). `workDate` is required and
+ * `externalUrl` accepts a URL or `""`.
+ */
+export interface CreatePortfolioItemPayload {
+  title: string;
+  description?: string;
+  eventType?: string;
+  workDate: string;
+  externalUrl?: string;
+}
+
+/**
+ * `PATCH /professional/portfolio/:id` body (plain JSON — the media file
+ * cannot be replaced through it). All fields optional.
+ */
+export type UpdatePortfolioItemPayload = Partial<CreatePortfolioItemPayload>;

@@ -155,6 +155,23 @@ export function toDateTimeLocal(value: DateInput): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+/**
+ * Format a timestamp for a `date` input, e.g. `2026-10-18`. Like
+ * `toDateTimeLocal`, the input is read in the viewer's local time, so this is
+ * the inverse of `new Date(inputValue)`.
+ */
+export function toDateInput(value: DateInput): string {
+  const date = toDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  const pad = (part: number) => String(part).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 /** Title-case an enum-like value, e.g. `IN_PROGRESS` → `In Progress`. */
 export function humanize(value: string | null | undefined): string {
   if (!value) {

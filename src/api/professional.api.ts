@@ -2,9 +2,22 @@ import apiClient from "@/lib/apiClient";
 import type {
   ApiResponse,
   ApplyAsProfessionalPayload,
+  CreateExperiencePayload,
+  CreatePortfolioItemPayload,
+  CreateProfessionalServicePayload,
+  CreateSkillPayload,
+  Experience,
   IQuery,
+  PortfolioItem,
+  Professional,
   ProfessionalApplication,
+  ProfessionalService,
   PublicProfessional,
+  Skill,
+  UpdateExperiencePayload,
+  UpdatePortfolioItemPayload,
+  UpdateProfessionalProfilePayload,
+  UpdateProfessionalServicePayload,
   VerifyProfessionalEmailPayload,
 } from "@/types";
 
@@ -74,5 +87,151 @@ export function verifyProfessionalEmail(
   return apiClient<ApiResponse<ProfessionalApplication>>(
     "/professional/apply-as-professional/verify-email",
     { method: "POST", body: payload },
+  );
+}
+
+/**
+ * `PATCH /professional/update-my-profile` — edits the signed-in
+ * professional's profile row (title, bio, contact details, experience years
+ * and the `acceptingBookings` flag). Every field is optional; `null` clears a
+ * text field. Returns the updated row.
+ */
+export function updateProfessionalProfile(
+  payload: UpdateProfessionalProfilePayload,
+) {
+  return apiClient<ApiResponse<Professional>>(
+    "/professional/update-my-profile",
+    { method: "PATCH", body: payload },
+  );
+}
+
+/**
+ * `GET /professional/me/services` — own services with their contracts and
+ * proposal items. Plain array, no pagination.
+ */
+export function getMyServices() {
+  return apiClient<ApiResponse<ProfessionalService[]>>(
+    "/professional/me/services",
+  );
+}
+
+/** `POST /professional/service` — add one service to your profile. */
+export function addService(payload: CreateProfessionalServicePayload) {
+  return apiClient<ApiResponse<ProfessionalService>>("/professional/service", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/** `PATCH /professional/service/:id` — partial edit of one service. */
+export function updateService(
+  serviceId: string,
+  payload: UpdateProfessionalServicePayload,
+) {
+  return apiClient<ApiResponse<ProfessionalService>>(
+    `/professional/service/${serviceId}`,
+    { method: "PATCH", body: payload },
+  );
+}
+
+/** `DELETE /professional/service/:id` — hard-deletes the service. */
+export function deleteService(serviceId: string) {
+  return apiClient<ApiResponse<null>>(`/professional/service/${serviceId}`, {
+    method: "DELETE",
+  });
+}
+
+/**
+ * `POST /professional/skill` — creates a global `Skill` by name and links it
+ * to you. `Skill.name` is unique platform-wide, so a duplicate name returns a
+ * 409.
+ */
+export function addSkill(payload: CreateSkillPayload) {
+  return apiClient<ApiResponse<Skill>>("/professional/skill", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/** `DELETE /professional/skill/:id` — the id is the `Skill` id. */
+export function deleteSkill(skillId: string) {
+  return apiClient<ApiResponse<null>>(`/professional/skill/${skillId}`, {
+    method: "DELETE",
+  });
+}
+
+/** `POST /professional/experience` — add a work-history entry. */
+export function addExperience(payload: CreateExperiencePayload) {
+  return apiClient<ApiResponse<Experience>>("/professional/experience", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/** `PATCH /professional/experience/:id` — partial edit of one entry. */
+export function updateExperience(
+  experienceId: string,
+  payload: UpdateExperiencePayload,
+) {
+  return apiClient<ApiResponse<Experience>>(
+    `/professional/experience/${experienceId}`,
+    { method: "PATCH", body: payload },
+  );
+}
+
+/** `DELETE /professional/experience/:id` — hard-deletes the entry. */
+export function deleteExperience(experienceId: string) {
+  return apiClient<ApiResponse<null>>(
+    `/professional/experience/${experienceId}`,
+    { method: "DELETE" },
+  );
+}
+
+/**
+ * `POST /professional/portfolio` — multipart: the metadata travels in the
+ * `data` JSON field and the media as `mediaFile` (exactly one file).
+ */
+export function createPortfolioItem({
+  payload,
+  mediaFile,
+}: {
+  payload: CreatePortfolioItemPayload;
+  mediaFile: File;
+}) {
+  const body = new FormData();
+
+  body.append("data", JSON.stringify(payload));
+  body.append("mediaFile", mediaFile);
+
+  return apiClient<ApiResponse<PortfolioItem>>("/professional/portfolio", {
+    method: "POST",
+    body,
+  });
+}
+
+/** `GET /professional/me/portfolio` — own portfolio items (plain array). */
+export function getMyPortfolioItems() {
+  return apiClient<ApiResponse<PortfolioItem[]>>("/professional/me/portfolio");
+}
+
+/**
+ * `PATCH /professional/portfolio/:id` — metadata only (plain JSON; the media
+ * file cannot be replaced through this endpoint).
+ */
+export function updatePortfolioItem(
+  portfolioId: string,
+  payload: UpdatePortfolioItemPayload,
+) {
+  return apiClient<ApiResponse<PortfolioItem>>(
+    `/professional/portfolio/${portfolioId}`,
+    { method: "PATCH", body: payload },
+  );
+}
+
+/** `DELETE /professional/portfolio/:id` — hard-deletes the item. */
+export function deletePortfolioItem(portfolioId: string) {
+  return apiClient<ApiResponse<null>>(
+    `/professional/portfolio/${portfolioId}`,
+    { method: "DELETE" },
   );
 }
