@@ -1,12 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  attachDeliverable,
   cancelContract,
   completeContract,
   getContract,
   getContractDeliverable,
   getContracts,
 } from "@/api";
-import type { CancelContractPayload } from "@/types";
+import type { AttachDeliverablePayload, CancelContractPayload } from "@/types";
 
 /**
  * The signed-in user's contracts (`GET /contract`, no pagination). Every
@@ -35,6 +36,29 @@ export function useContractDeliverable(contractId: string) {
     queryKey: ["contracts", contractId, "deliverable"],
     queryFn: () => getContractDeliverable(contractId),
     enabled: Boolean(contractId),
+  });
+}
+
+/**
+ * Submit (or replace) the professional's deliverable. The upsert also flips
+ * the contract to `DELIVERED`, which decides what the client can do next, so
+ * success refreshes the contract and event trees together.
+ */
+export function useAttachDeliverable() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      contractId,
+      payload,
+    }: {
+      contractId: string;
+      payload: AttachDeliverablePayload;
+    }) => attachDeliverable(contractId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
   });
 }
 

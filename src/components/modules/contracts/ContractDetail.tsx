@@ -9,6 +9,7 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   StarIcon,
+  UploadIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -42,6 +43,7 @@ import {
   useContractDeliverable,
   useContractPayments,
   useCreateContractReview,
+  useGetMe,
   useInitiateFinalPayment,
   useInitiateInitialPayment,
 } from "@/hooks";
@@ -53,6 +55,7 @@ import type {
 } from "@/types";
 import { humanize, toNumber } from "@/utils";
 import { type ReviewFormValues, reviewFormSchema } from "@/validation";
+import { DeliverableForm } from "./DeliverableForm";
 
 /**
  * The backend splits the agreed amount in two (see `payment.service.ts`):
@@ -123,6 +126,9 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   const { data, isPending, isError, error, refetch } = useContract(contractId);
   const paymentsQuery = useContractPayments(contractId);
   const deliverableQuery = useContractDeliverable(contractId);
+  const { data: me } = useGetMe();
+  const isProfessional = me?.data?.role === "PROFESSIONAL";
+  const [deliverableFormOpen, setDeliverableFormOpen] = useState(false);
 
   const { mutate: cancel, isPending: isCancelling } = useCancelContract();
   const { mutate: complete, isPending: isCompleting } = useCompleteContract();
@@ -299,7 +305,9 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
           <span className="flex flex-wrap items-center gap-2">
             <span>
               {requirement?.serviceName ?? "Service"} ·{" "}
-              {professional?.name ?? "Professional"}
+              {isProfessional
+                ? `${contract.client?.user?.name ?? "Client"}`
+                : `${professional?.name ?? "Professional"}`}
             </span>
             <StatusBadge status={contract.status} />
           </span>
@@ -322,7 +330,7 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
             Cancel contract
           </Button>
         ) : null}
-        {canComplete ? (
+        {canComplete && !isProfessional ? (
           <Button
             disabled={isCancelling || isCompleting}
             onClick={() => setCompleteOpen(true)}
@@ -397,141 +405,160 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
         </CardContent>
       </Card>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-heading text-lg font-semibold">Payments</h2>
-          <p className="text-sm text-muted-foreground">
-            Paid through bKash in two parts: 30% to confirm the booking, 70%
-            once the work is delivered.
-          </p>
-        </div>
-
-        <Card size="sm">
-          <CardContent className="flex flex-col gap-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-3">
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="font-medium">Initial (30%)</span>
-                  <CurrencyText
-                    value={initialAmount}
-                    currency={contract.currency}
-                    className="font-semibold"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {contract.status === "CANCELLED"
-                    ? "Cancelled — no longer due on this contract."
-                    : initialSettled || fullyPaid
-                      ? "Paid — the professional is booked."
-                      : "Due to confirm the booking."}
-                </p>
-              </div>
-              <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-3">
-                <div className="flex items-center justify-between gap-2 text-sm">
-                  <span className="font-medium">Final (70%)</span>
-                  <CurrencyText
-                    value={finalAmount}
-                    currency={contract.currency}
-                    className="font-semibold"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {contract.status === "CANCELLED"
-                    ? "Cancelled — no longer due on this contract."
-                    : fullyPaid
-                      ? "Paid — the contract is settled."
-                      : "Due after the work is delivered."}
-                </p>
-              </div>
-            </div>
-
-            {fullyPaid ? (
-              <p className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
-                <CircleCheckIcon className="size-4 shrink-0" />
-                Fully paid — nothing else is due on this contract.
-              </p>
-            ) : null}
-
-            {canPayInitial ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-3">
-                <p className="text-sm text-muted-foreground">
-                  Pay the{" "}
-                  <CurrencyText
-                    value={initialAmount}
-                    currency={contract.currency}
-                    className="font-medium text-foreground"
-                  />{" "}
-                  advance to confirm the booking.
-                  {initialAttemptInFlight
-                    ? " A previous attempt did not finish — starting again is safe."
-                    : ""}
-                </p>
-                <Button
-                  disabled={isRedirecting}
-                  onClick={() => handlePay("initial")}
-                >
-                  {isStartingInitial ? <Spinner /> : <BanknoteIcon />}
-                  Pay initial (30%)
-                </Button>
-              </div>
-            ) : null}
-
-            {canPayFinal ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-3">
-                <p className="text-sm text-muted-foreground">
-                  The work is delivered — pay the remaining{" "}
-                  <CurrencyText
-                    value={finalAmount}
-                    currency={contract.currency}
-                    className="font-medium text-foreground"
-                  />{" "}
-                  to complete the contract.
-                </p>
-                <Button
-                  disabled={isRedirecting}
-                  onClick={() => handlePay("final")}
-                >
-                  {isStartingFinal ? <Spinner /> : <BanknoteIcon />}
-                  Pay final (70%)
-                </Button>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        <div className="flex flex-col gap-2">
-          <h3 className="font-heading text-sm font-medium">Payment history</h3>
-          {paymentsQuery.isPending ? (
-            <Skeleton className="h-16 w-full" />
-          ) : paymentsQuery.isError ? (
-            <ErrorState
-              title="Could not load payments"
-              error={paymentsQuery.error}
-              onRetry={paymentsQuery.refetch}
-              className="py-6"
-            />
-          ) : payments.length === 0 ? (
-            <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
-              No payments yet — each bKash attempt is listed here.
+      {!isProfessional ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-heading text-lg font-semibold">Payments</h2>
+            <p className="text-sm text-muted-foreground">
+              Paid through bKash in two parts: 30% to confirm the booking, 70%
+              once the work is delivered.
             </p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {payments.map((row) => (
-                <PaymentRow key={row.id} payment={row} />
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
+          </div>
+
+          <Card size="sm">
+            <CardContent className="flex flex-col gap-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <span className="font-medium">Initial (30%)</span>
+                    <CurrencyText
+                      value={initialAmount}
+                      currency={contract.currency}
+                      className="font-semibold"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {contract.status === "CANCELLED"
+                      ? "Cancelled — no longer due on this contract."
+                      : initialSettled || fullyPaid
+                        ? "Paid — the professional is booked."
+                        : "Due to confirm the booking."}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <span className="font-medium">Final (70%)</span>
+                    <CurrencyText
+                      value={finalAmount}
+                      currency={contract.currency}
+                      className="font-semibold"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {contract.status === "CANCELLED"
+                      ? "Cancelled — no longer due on this contract."
+                      : fullyPaid
+                        ? "Paid — the contract is settled."
+                        : "Due after the work is delivered."}
+                  </p>
+                </div>
+              </div>
+
+              {fullyPaid ? (
+                <p className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                  <CircleCheckIcon className="size-4 shrink-0" />
+                  Fully paid — nothing else is due on this contract.
+                </p>
+              ) : null}
+
+              {canPayInitial ? (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-3">
+                  <p className="text-sm text-muted-foreground">
+                    Pay the{" "}
+                    <CurrencyText
+                      value={initialAmount}
+                      currency={contract.currency}
+                      className="font-medium text-foreground"
+                    />{" "}
+                    advance to confirm the booking.
+                    {initialAttemptInFlight
+                      ? " A previous attempt did not finish — starting again is safe."
+                      : ""}
+                  </p>
+                  <Button
+                    disabled={isRedirecting}
+                    onClick={() => handlePay("initial")}
+                  >
+                    {isStartingInitial ? <Spinner /> : <BanknoteIcon />}
+                    Pay initial (30%)
+                  </Button>
+                </div>
+              ) : null}
+
+              {canPayFinal ? (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-3">
+                  <p className="text-sm text-muted-foreground">
+                    The work is delivered — pay the remaining{" "}
+                    <CurrencyText
+                      value={finalAmount}
+                      currency={contract.currency}
+                      className="font-medium text-foreground"
+                    />{" "}
+                    to complete the contract.
+                  </p>
+                  <Button
+                    disabled={isRedirecting}
+                    onClick={() => handlePay("final")}
+                  >
+                    {isStartingFinal ? <Spinner /> : <BanknoteIcon />}
+                    Pay final (70%)
+                  </Button>
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <div className="flex flex-col gap-2">
+            <h3 className="font-heading text-sm font-medium">
+              Payment history
+            </h3>
+            {paymentsQuery.isPending ? (
+              <Skeleton className="h-16 w-full" />
+            ) : paymentsQuery.isError ? (
+              <ErrorState
+                title="Could not load payments"
+                error={paymentsQuery.error}
+                onRetry={paymentsQuery.refetch}
+                className="py-6"
+              />
+            ) : payments.length === 0 ? (
+              <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+                No payments yet — each bKash attempt is listed here.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {payments.map((row) => (
+                  <PaymentRow key={row.id} payment={row} />
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-lg font-semibold">Deliverable</h2>
           <p className="text-sm text-muted-foreground">
-            What the professional submitted for this contract — usually links to
-            the finished work.
+            {isProfessional
+              ? "Submit the finished work for this contract — usually links to the final deliverables."
+              : "What the professional submitted for this contract — usually links to the finished work."}
           </p>
         </div>
+
+        {isProfessional && contract.status !== "CANCELLED" ? (
+          <Button
+            variant="outline"
+            className="w-fit"
+            disabled={isCancelling || isCompleting}
+            onClick={() => setDeliverableFormOpen(true)}
+          >
+            <UploadIcon />
+            {deliverableQuery.data?.data
+              ? "Update deliverable"
+              : "Submit deliverable"}
+          </Button>
+        ) : null}
 
         {deliverableQuery.isPending ? (
           <Skeleton className="h-24 w-full" />
@@ -599,13 +626,17 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-lg font-semibold">Review</h2>
           <p className="text-sm text-muted-foreground">
-            Once the contract is completed you can rate{" "}
-            {professional?.name ?? "the professional"} — the review shows on
-            their public profile.
+            {isProfessional
+              ? "What the client said about your work — reviews are shown on your public profile."
+              : `Once the contract is completed you can rate ${professional?.name ?? "the professional"} — the review shows on their public profile.`}
           </p>
         </div>
 
-        {contract.status === "COMPLETED" ? (
+        {isProfessional ? (
+          <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
+            Reviews from clients appear here once the contract is completed.
+          </p>
+        ) : contract.status === "COMPLETED" ? (
           <ReviewForm
             contractId={contractId}
             professionalName={professional?.name ?? "the professional"}
@@ -658,6 +689,22 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
         loading={isCompleting}
         onConfirm={handleComplete}
       />
+
+      {deliverableQuery.data?.data ? (
+        <DeliverableForm
+          contractId={contractId}
+          deliverable={deliverableQuery.data.data}
+          open={deliverableFormOpen}
+          onOpenChange={setDeliverableFormOpen}
+        />
+      ) : (
+        <DeliverableForm
+          contractId={contractId}
+          deliverable={null}
+          open={deliverableFormOpen}
+          onOpenChange={setDeliverableFormOpen}
+        />
+      )}
     </div>
   );
 }

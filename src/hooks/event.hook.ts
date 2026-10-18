@@ -4,6 +4,7 @@ import {
   createEventServiceRequirement,
   deleteEvent,
   deleteEventServiceRequirement,
+  getAllEvents,
   getEvent,
   getEventRequiredServices,
   getMyEvents,
@@ -12,7 +13,12 @@ import {
   updateEventServiceRequirement,
 } from "@/api";
 import type {
+  ApiResponse,
   CreateServiceRequirementPayload,
+  Event,
+  EventServiceRequirement,
+  IPaginated,
+  IQuery,
   UpdateEventPayload,
   UpdateServiceRequirementPayload,
 } from "@/types";
@@ -26,12 +32,24 @@ export function useMyEvents() {
 }
 
 /**
+ * Published events for professionals (`GET /event/all-events`), paginated
+ * server-side like the public directory — search and filters live in the
+ * query key so each screen state caches separately.
+ */
+export function usePublishedEvents(query: IQuery) {
+  return useQuery<ApiResponse<IPaginated<Event>>>({
+    queryKey: ["events", "published", query],
+    queryFn: () => getAllEvents(query),
+  });
+}
+
+/**
  * A single event with its embedded service requirements. Every event query
  * shares the `["events"]` key prefix, so one invalidation refreshes the list
  * screen, the detail screen and the requirement queries together.
  */
 export function useEvent(eventId: string) {
-  return useQuery({
+  return useQuery<ApiResponse<Event>>({
     queryKey: ["events", eventId],
     queryFn: () => getEvent(eventId),
     enabled: Boolean(eventId),
@@ -45,7 +63,7 @@ export function useEvent(eventId: string) {
  * while the event is still a draft.
  */
 export function useEventRequiredServices(eventId: string) {
-  return useQuery({
+  return useQuery<ApiResponse<EventServiceRequirement[]>>({
     queryKey: ["events", eventId, "requiredServices"],
     queryFn: () => getEventRequiredServices(eventId),
     enabled: Boolean(eventId),

@@ -46,3 +46,19 @@ export interface ProposalItem {
   professionalService?: ProfessionalService;
   contract?: Contract | null;
 }
+
+/** One requirement line a professional offers for when creating a proposal. */
+export interface ProposalItemInput {
+  eventServiceRequirementId: string;
+  professionalServiceId: string;
+  proposedAmount: number;
+  proposedStartAt: string;
+  proposedEndAt: string;
+}
+
+/** Body for `POST /proposal/events/:eventId` (professional, multi-item). */
+export interface CreateProposalPayload {
+  eventId: string;
+  items: ProposalItemInput[];
+  message?: string;
+}

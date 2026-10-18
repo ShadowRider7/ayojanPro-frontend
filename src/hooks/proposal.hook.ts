@@ -1,10 +1,57 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   acceptProposal,
+  createProposal,
+  getMyProposals,
   getProposal,
   getRequirementProposals,
   rejectProposal,
+  withdrawProposal,
 } from "@/api";
+import type { ApiResponse, Proposal } from "@/types";
+
+/**
+ * The signed-in professional's proposals (`GET /proposal/me`, no
+ * pagination). Every proposal query shares the `["proposals"]` prefix, so
+ * one invalidation refreshes the list, the requirement lists and the detail
+ * screens together.
+ */
+export function useMyProposals() {
+  return useQuery<ApiResponse<Proposal[]>>({
+    queryKey: ["proposals", "mine"],
+    queryFn: getMyProposals,
+  });
+}
+
+/**
+ * Submit a proposal for an event. Accepting/rejecting responses flips the
+ * requirement statuses shown on the event screens, so success refreshes both
+ * the proposal and event key trees.
+ */
+export function useCreateProposal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createProposal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
+
+/** Withdraw every pending item of one own proposal — the requirement re-opens. */
+export function useWithdrawProposal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: withdrawProposal,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+  });
+}
 
 /**
  * Proposals for one service requirement (`GET /proposal/requirements/:id`).

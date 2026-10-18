@@ -58,6 +58,20 @@ export interface Contract {
   disputes?: Dispute[];
 }
 
+/** Body for `POST /contract/:id/deliverable` (professional, upsert). */
+export interface AttachDeliverablePayload {
+  title: string;
+  description?: string;
+  /** One URL per line; validated as absolute URLs on the backend. */
+  externalUrl: string;
+}
+
+/** Response of `POST /contract/:id/deliverable` (also flips the contract to DELIVERED). */
+export interface AttachDeliverableResult {
+  deliverable: Deliverable;
+  contract: Contract;
+}
+
 /** A professional's submitted work for a contract (`Deliverable` model). */
 export interface Deliverable {
   id: string;

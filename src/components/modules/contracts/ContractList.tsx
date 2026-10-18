@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useContracts } from "@/hooks";
+import { useContracts, useGetMe } from "@/hooks";
 import { CONTRACT_STATUS_OPTIONS } from "@/lib/constants";
 import type { Contract } from "@/types";
 
@@ -40,10 +40,20 @@ const SKELETON_KEYS = Array.from(
   (_, index) => `contract-skeleton-${index}`,
 );
 
-function ContractCard({ contract }: { contract: Contract }) {
+function ContractCard({
+  contract,
+  isProfessional,
+}: {
+  contract: Contract;
+  isProfessional: boolean;
+}) {
   const event = contract.event ?? null;
   const requirement = contract.eventServiceRequirement ?? null;
   const professional = contract.professional ?? null;
+  const client = contract.client ?? null;
+  const clientName = client?.user?.name ?? "—";
+  const professionalName = professional?.name ?? "—";
+  const otherPartyName = isProfessional ? clientName : professionalName;
 
   return (
     <Link
@@ -65,8 +75,8 @@ function ContractCard({ contract }: { contract: Contract }) {
           </span>
         </p>
         <p>
-          Professional:{" "}
-          <span className="text-foreground">{professional?.name ?? "—"}</span>
+          {isProfessional ? "Client" : "Professional"}:{" "}
+          <span className="text-foreground">{otherPartyName}</span>
         </p>
       </div>
 
@@ -118,6 +128,8 @@ export function ContractList() {
   const [page, setPage] = useState(1);
 
   const { data, isPending, isError, error, refetch } = useContracts();
+  const { data: me } = useGetMe();
+  const isProfessional = me?.data?.role === "PROFESSIONAL";
   const contracts = data?.data ?? [];
 
   const filtered = useMemo(() => {
@@ -165,14 +177,22 @@ export function ContractList() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Contracts"
-        description="Every contract you signed — track its payments, deliverables and completion here."
+        description={
+          isProfessional
+            ? "Every contract you've been hired for — track deliverables, status and completion here."
+            : "Every contract you signed — track its payments, deliverables and completion here."
+        }
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <SearchInput
           value={search}
           onChange={handleSearchChange}
-          placeholder="Search by event, service or professional…"
+          placeholder={
+            isProfessional
+              ? "Search by event, service or client…"
+              : "Search by event, service or professional…"
+          }
           className="w-full sm:max-w-md"
         />
         <Select
@@ -212,10 +232,24 @@ export function ContractList() {
         <EmptyState
           icon={FileSignatureIcon}
           title="No contracts yet"
-          description="When you accept a professional's proposal, its contract appears here to track payments, deliverables and completion."
+          description={
+            isProfessional
+              ? "When a client accepts your proposal, the contract appears here — submit the deliverable once the work is done."
+              : "When you accept a professional's proposal, its contract appears here to track payments, deliverables and completion."
+          }
           action={
-            <Button render={<Link href="/dashboard/events" />}>
-              Go to my events
+            <Button
+              render={
+                <Link
+                  href={
+                    isProfessional
+                      ? "/dashboard/professional/browse-events"
+                      : "/dashboard/events"
+                  }
+                />
+              }
+            >
+              {isProfessional ? "Browse events" : "Go to my events"}
             </Button>
           }
         />
@@ -233,7 +267,11 @@ export function ContractList() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {visibleContracts.map((contract) => (
-              <ContractCard key={contract.id} contract={contract} />
+              <ContractCard
+                key={contract.id}
+                contract={contract}
+                isProfessional={isProfessional}
+              />
             ))}
           </div>
           <PaginationBar

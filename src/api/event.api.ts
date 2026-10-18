@@ -5,9 +5,24 @@ import type {
   CreateServiceRequirementPayload,
   Event,
   EventServiceRequirement,
+  IPaginated,
+  IQuery,
   UpdateEventPayload,
   UpdateServiceRequirementPayload,
 } from "@/types";
+
+/**
+ * `GET /event/all-events` — the published-event feed professionals browse
+ * (admins may call it too). Paginated with `meta`; `status` filters on the
+ * event's **service requirements** (an event matches when every requirement
+ * has that status), and `searchTerm` matches the title, description, the
+ * location fields and the client's name/email.
+ */
+export function getAllEvents(query: IQuery = {}) {
+  return apiClient<ApiResponse<IPaginated<Event>>>("/event/all-events", {
+    query,
+  });
+}
 
 /**
  * `GET /event/my-events` — the signed-in client's own events (every status),

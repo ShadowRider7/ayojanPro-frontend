@@ -1,6 +1,8 @@
 import apiClient from "@/lib/apiClient";
 import type {
   ApiResponse,
+  AttachDeliverablePayload,
+  AttachDeliverableResult,
   CancelContractPayload,
   Contract,
   Deliverable,
@@ -49,6 +51,33 @@ export function cancelContract(
 export function getContractDeliverable(contractId: string) {
   return apiClient<ApiResponse<Deliverable | null>>(
     `/contract/${contractId}/deliverable`,
+  );
+}
+
+/**
+ * `POST /contract/:id/deliverable` — submit (or replace) the assigned
+ * professional's deliverable for a contract. Only while the contract is
+ * `CONFIRMED` or `IN_PROGRESS`; the upsert also flips the contract to
+ * `DELIVERED` and notifies the client. The form collects one link per line —
+ * the wire format is a non-empty `string[]` of valid URLs.
+ */
+export function attachDeliverable(
+  contractId: string,
+  payload: AttachDeliverablePayload,
+) {
+  return apiClient<ApiResponse<AttachDeliverableResult>>(
+    `/contract/${contractId}/deliverable`,
+    {
+      method: "POST",
+      body: {
+        title: payload.title,
+        description: payload.description,
+        externalUrl: payload.externalUrl
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
+      },
+    },
   );
 }
 

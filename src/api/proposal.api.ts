@@ -1,5 +1,53 @@
 import apiClient from "@/lib/apiClient";
-import type { ApiResponse, Contract, Proposal, ProposalItem } from "@/types";
+import type {
+  ApiResponse,
+  Contract,
+  CreateProposalPayload,
+  Proposal,
+  ProposalItem,
+} from "@/types";
+
+/**
+ * `POST /proposal/events/:eventId` — submit one proposal covering one or
+ * more of the event's service requirements (professional only). The backend
+ * rejects requirements that are not `OPEN`/`PARTIALLY_FILLED`, requirements
+ * or services that are not the caller's own, and a repeat bid on a
+ * requirement where this professional already has an active item (409).
+ * Returns the created `Proposal` with its items.
+ */
+export function createProposal(payload: CreateProposalPayload) {
+  return apiClient<ApiResponse<Proposal>>(
+    `/proposal/events/${payload.eventId}`,
+    {
+      method: "POST",
+      body: { message: payload.message, items: payload.items },
+    },
+  );
+}
+
+/**
+ * `GET /proposal/me` — every proposal the signed-in professional submitted,
+ * newest first, each with its event and items (each item with its requirement
+ * and the professional's service). The endpoint does not paginate: `data` is
+ * a plain array.
+ */
+export function getMyProposals() {
+  return apiClient<ApiResponse<Proposal[]>>("/proposal/me");
+}
+
+/**
+ * `PATCH /proposal/:proposalId/withdraw` — withdraw one own proposal
+ * (professional only): every still-`PENDING` item becomes `WITHDRAWN` and
+ * the client is notified; responded items are left untouched. Fails with a
+ * 400 when nothing is pending. Returns the updated `ProposalItem`, or an
+ * array when several items were pending.
+ */
+export function withdrawProposal(proposalId: string) {
+  return apiClient<ApiResponse<ProposalItem | ProposalItem[]>>(
+    `/proposal/${proposalId}/withdraw`,
+    { method: "PATCH" },
+  );
+}
 
 /**
  * `GET /proposal/requirements/:requirementId` — every proposal that bid on
