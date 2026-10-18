@@ -138,6 +138,23 @@ export function initials(name: string | null | undefined): string {
     .join("");
 }
 
+/**
+ * Format a timestamp for a `datetime-local` input, e.g. `2026-10-18T14:30`.
+ * The input works in the viewer's local time, so this is the inverse of
+ * `new Date(inputValue)`.
+ */
+export function toDateTimeLocal(value: DateInput): string {
+  const date = toDate(value);
+
+  if (!date) {
+    return "";
+  }
+
+  const pad = (part: number) => String(part).padStart(2, "0");
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 /** Title-case an enum-like value, e.g. `IN_PROGRESS` → `In Progress`. */
 export function humanize(value: string | null | undefined): string {
   if (!value) {

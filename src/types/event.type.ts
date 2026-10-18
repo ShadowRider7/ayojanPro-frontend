@@ -48,6 +48,57 @@ export interface Event {
   contracts?: Contract[];
 }
 
+/** `POST /event` body — create an event for the signed-in client. */
+export interface CreateEventPayload {
+  title: string;
+  description?: string;
+  eventType?: string;
+  city?: string;
+  country?: string;
+  address?: string;
+  /** ISO date string; must be strictly before `endAt`. */
+  startAt: string;
+  /** ISO date string. */
+  endAt: string;
+}
+
+/** `PATCH /event/update/:eventId` body. All fields optional; send only what changed. */
+export interface UpdateEventPayload {
+  title?: string;
+  description?: string;
+  eventType?: string;
+  city?: string;
+  country?: string;
+  address?: string;
+  /** ISO date string; must be strictly before `endAt`. */
+  startAt?: string;
+  /** ISO date string. */
+  endAt?: string;
+}
+
+/** `POST /event/services/:eventId` body — one service requirement on an event. */
+export interface CreateServiceRequirementPayload {
+  serviceName: string;
+  description?: string;
+  /** Strictly positive. The backend defaults the currency to BDT. */
+  budget: number;
+  currency?: string;
+  /** ISO date string; must fall within the event schedule. */
+  startAt: string;
+  /** ISO date string; must fall within the event schedule. */
+  endAt: string;
+}
+
+/** `PATCH /event/update/:eventId/services/:serviceId` body. All fields optional. */
+export interface UpdateServiceRequirementPayload {
+  serviceName?: string;
+  description?: string;
+  budget?: number;
+  currency?: string;
+  startAt?: string;
+  endAt?: string;
+}
+
 /** A single service a client needs for an event (`EventServiceRequirement` model). */
 export interface EventServiceRequirement {
   id: string;
