@@ -13,6 +13,7 @@ import { ExperienceSection } from "./ExperienceSection";
 import { PortfolioSection } from "./PortfolioSection";
 import { ProfessionalDetailsForm } from "./ProfessionalDetailsForm";
 import { ProfessionalSkillsCard } from "./ProfessionalSkillsCard";
+import { ProfileImageCard } from "./ProfileImageCard";
 
 function ProfileManagerSkeleton() {
   return (
@@ -61,7 +62,13 @@ export function ProfessionalProfileManager() {
         />
       ) : (
         <>
-          <ProfessionalDetailsForm professional={user.professional} />
+          <div className="grid items-start gap-6 lg:grid-cols-3">
+            <ProfileImageCard user={user} />
+            <ProfessionalDetailsForm
+              professional={user.professional}
+              className="lg:col-span-2"
+            />
+          </div>
           <ProfessionalSkillsCard professionalId={user.professional.id} />
           <ExperienceSection professionalId={user.professional.id} />
           <PortfolioSection />

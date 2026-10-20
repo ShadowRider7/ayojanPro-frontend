@@ -156,6 +156,7 @@ export interface PublicProfessional {
   services: ProfessionalService[];
   portfolioItems: PortfolioItem[];
   reviews: Review[];
+  user?: User;
 }
 
 export interface UpdateProfessionalProfilePayload {

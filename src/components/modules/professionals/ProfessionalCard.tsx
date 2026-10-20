@@ -1,5 +1,7 @@
 import { StarIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PublicProfessional } from "@/types";
-import { toNumber } from "@/utils";
+import { initials, toNumber } from "@/utils";
 
 type ProfessionalCardProps = {
   professional: PublicProfessional;
@@ -23,24 +25,42 @@ export default function ProfessionalCard({
   const rating = toNumber(professional.averageRating) ?? 0;
   const skills = professional.skills?.map((item) => item.skill.name) ?? [];
   const serviceCount = professional.services?.length ?? 0;
+  const imageUrl = professional.user?.imageUrl ?? null;
+  const fallbackInitials =
+    initials(professional.name) ||
+    professional.name.slice(0, 2).toUpperCase() ||
+    "?";
 
   return (
     <Card className="h-full transition-shadow hover:shadow-md">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-1">
-            <CardTitle className="truncate text-base sm:text-lg">
-              {professional.name}
-            </CardTitle>
-            <p className="truncate text-sm text-muted-foreground">
-              {professional.professionalTitle}
-            </p>
+      <CardHeader className="flex flex-row items-start gap-3">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={professional.name}
+            width={48}
+            height={48}
+            className="size-12 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
+            {fallbackInitials}
           </div>
-          <Badge variant="secondary" className="shrink-0 gap-1">
-            {rating.toFixed(1)}
-            <StarIcon className="size-3 fill-current" />
-          </Badge>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <CardTitle className="truncate text-base sm:text-lg">
+            {professional.name}
+          </CardTitle>
+          <p className="truncate text-sm text-muted-foreground">
+            {professional.professionalTitle}
+          </p>
         </div>
+
+        <Badge variant="secondary" className="shrink-0 gap-1">
+          {rating.toFixed(1)}
+          <StarIcon className="size-3 fill-current" />
+        </Badge>
       </CardHeader>
 
       <CardContent className="flex flex-1 flex-col gap-3">
@@ -81,9 +101,12 @@ export default function ProfessionalCard({
 export function ProfessionalCardSkeleton() {
   return (
     <Card className="h-full">
-      <CardHeader>
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-3 w-24" />
+      <CardHeader className="flex flex-row items-start gap-3">
+        <Skeleton className="size-12 shrink-0 rounded-full" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <Skeleton className="h-3 w-full" />

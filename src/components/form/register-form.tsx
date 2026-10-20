@@ -9,6 +9,7 @@ import type z from "zod";
 import GoogleLoginComponent, {
   isGoogleAuthConfigured,
 } from "@/components/modules/google-login/GoogleLogin";
+import { PhoneInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -22,6 +23,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useRegistration } from "@/hooks";
 import type { RegistrationPayload } from "@/types";
+import { toE164Phone } from "@/utils";
 import { registrationSchema } from "@/validation";
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
@@ -47,14 +49,14 @@ export function RegisterForm() {
       onSubmit: registrationSchema,
     },
     onSubmit: ({ value }) => {
-      const phone = value.phone?.trim() ?? "";
+      const phone = toE164Phone(value.phone);
 
       const payload: RegistrationPayload = {
         name: value.name.trim(),
         email: value.email.trim(),
         password: value.password,
         client: {
-          phone: phone === "" ? undefined : phone,
+          phone: phone ?? undefined,
         },
       };
 
@@ -157,16 +159,13 @@ export function RegisterForm() {
               return (
                 <Field data-invalid={isInvalid}>
                   <FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
-                  <Input
+                  <PhoneInput
                     id={field.name}
                     name={field.name}
-                    type="tel"
-                    placeholder="+880 1712 345678"
                     value={field.state.value}
                     onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onValueChange={(value) => field.handleChange(value)}
                     aria-invalid={isInvalid}
-                    autoComplete="tel"
                   />
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>

@@ -61,6 +61,9 @@ export function ServiceRequirementForm({
     useUpdateServiceRequirement();
   const isPending = isCreating || isUpdating;
 
+  const eventStartAt = toDateTimeLocal(hostEvent.startAt);
+  const eventEndAt = toDateTimeLocal(hostEvent.endAt);
+
   const form = useForm({
     defaultValues: {
       serviceName: requirement?.serviceName ?? "",
@@ -232,67 +235,95 @@ export function ServiceRequirementForm({
             </form.Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <form.Field name="startAt">
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+              <form.Subscribe selector={(state) => state.values.endAt}>
+                {(endAt) => (
+                  <form.Field name="startAt">
+                    {(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
+                      const maxAt =
+                        endAt && endAt < eventEndAt ? endAt : eventEndAt;
 
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>Starts at</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="datetime-local"
-                        min={toDateTimeLocal(hostEvent.startAt)}
-                        max={toDateTimeLocal(hostEvent.endAt)}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        aria-invalid={isInvalid}
-                      />
-                      {isInvalid ? (
-                        <FieldError errors={field.state.meta.errors} />
-                      ) : null}
-                    </Field>
-                  );
-                }}
-              </form.Field>
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            Starts at
+                          </FieldLabel>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="datetime-local"
+                            min={eventStartAt}
+                            max={maxAt || undefined}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) => {
+                              const nextStartAt = event.target.value;
 
-              <form.Field name="endAt">
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+                              field.handleChange(nextStartAt);
 
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>Ends at</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="datetime-local"
-                        min={toDateTimeLocal(hostEvent.startAt)}
-                        max={toDateTimeLocal(hostEvent.endAt)}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        aria-invalid={isInvalid}
-                      />
-                      {isInvalid ? (
-                        <FieldError errors={field.state.meta.errors} />
-                      ) : null}
-                      <FieldDescription>
-                        Event window: <DateText value={hostEvent.startAt} /> –{" "}
-                        <DateText value={hostEvent.endAt} />
-                      </FieldDescription>
-                    </Field>
-                  );
-                }}
-              </form.Field>
+                              // Keep the window valid when the start moves past
+                              // the end that was already picked.
+                              if (
+                                nextStartAt &&
+                                endAt &&
+                                nextStartAt >= endAt
+                              ) {
+                                form.setFieldValue("endAt", "");
+                              }
+                            }}
+                            aria-invalid={isInvalid}
+                          />
+                          {isInvalid ? (
+                            <FieldError errors={field.state.meta.errors} />
+                          ) : null}
+                        </Field>
+                      );
+                    }}
+                  </form.Field>
+                )}
+              </form.Subscribe>
+
+              <form.Subscribe selector={(state) => state.values.startAt}>
+                {(startAt) => (
+                  <form.Field name="endAt">
+                    {(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
+                      const minAt =
+                        startAt && startAt > eventStartAt
+                          ? startAt
+                          : eventStartAt;
+
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>Ends at</FieldLabel>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="datetime-local"
+                            min={minAt || undefined}
+                            max={eventEndAt || undefined}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            aria-invalid={isInvalid}
+                          />
+                          {isInvalid ? (
+                            <FieldError errors={field.state.meta.errors} />
+                          ) : null}
+                          <FieldDescription>
+                            Event window: <DateText value={hostEvent.startAt} />{" "}
+                            – <DateText value={hostEvent.endAt} />
+                          </FieldDescription>
+                        </Field>
+                      );
+                    }}
+                  </form.Field>
+                )}
+              </form.Subscribe>
             </div>
           </FieldGroup>
         </form>

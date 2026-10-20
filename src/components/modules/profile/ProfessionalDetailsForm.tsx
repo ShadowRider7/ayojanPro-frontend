@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import { PhoneInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useUpdateProfessionalProfile } from "@/hooks";
 import type { Professional, UpdateProfessionalProfilePayload } from "@/types";
+import { toE164Phone } from "@/utils";
 import {
   type UpdateProfessionalProfileFormValues,
   updateProfessionalProfileSchema,
@@ -71,7 +73,7 @@ export function ProfessionalDetailsForm({
         experienceYears: Number(value.experienceYears),
         acceptingBookings: value.acceptingBookings,
         bio: clearable(value.bio),
-        phone: clearable(value.phone),
+        phone: toE164Phone(value.phone),
         address: clearable(value.address),
         city: clearable(value.city),
         country: clearable(value.country),
@@ -245,17 +247,12 @@ export function ProfessionalDetailsForm({
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
-                      <Input
+                      <PhoneInput
                         id={field.name}
                         name={field.name}
-                        type="tel"
-                        placeholder="+880 1712 345678"
-                        autoComplete="tel"
-                        value={field.state.value ?? ""}
+                        value={field.state.value}
                         onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
+                        onValueChange={(value) => field.handleChange(value)}
                         aria-invalid={isInvalid}
                       />
                       {isInvalid && (

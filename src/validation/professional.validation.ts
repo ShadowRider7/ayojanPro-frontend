@@ -1,5 +1,5 @@
 import z from "zod";
-import { bdPhoneSchema, emailSchema } from "./auth.validation";
+import { emailSchema, optionalPhoneSchema } from "./auth.validation";
 
 export const professionalApplicationSchema = z.object({
   name: z
@@ -8,7 +8,7 @@ export const professionalApplicationSchema = z.object({
     .min(2, "Name must be at least 2 characters long")
     .max(255, "Name cannot exceed 255 characters"),
   email: emailSchema,
-  phone: bdPhoneSchema,
+  phone: optionalPhoneSchema,
   professionalTitle: z
     .string()
     .trim()
@@ -53,7 +53,7 @@ export const updateProfessionalProfileSchema = z.object({
     .trim()
     .refine((value) => /^\d+$/.test(value), "Enter a whole number of years"),
   bio: z.string().trim().max(500, "Bio cannot exceed 500 characters"),
-  phone: bdPhoneSchema,
+  phone: optionalPhoneSchema,
   address: z.string().trim(),
   city: z.string().trim().max(100, "City name cannot exceed 100 characters"),
   country: z

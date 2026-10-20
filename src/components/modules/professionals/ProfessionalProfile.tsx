@@ -29,7 +29,7 @@ import type {
   ProfessionalService,
   Review,
 } from "@/types";
-import { formatCurrency, toNumber } from "@/utils";
+import { formatCurrency, initials, toNumber } from "@/utils";
 
 const REVIEWS_PREVIEW_LIMIT = 6;
 
@@ -220,8 +220,16 @@ function ProfessionalProfileSkeleton() {
   return (
     <Container className="flex flex-col gap-6 py-12 sm:py-16">
       <Skeleton className="h-8 w-32" />
-      <Skeleton className="h-40 w-full rounded-xl" />
-      <Skeleton className="h-6 w-40" />
+      <div className="flex flex-col gap-4 rounded-xl border p-6">
+        <div className="flex items-start gap-4">
+          <Skeleton className="size-20 shrink-0 rounded-full" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <Skeleton className="h-4 w-full" />
+      </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Skeleton className="h-32 w-full rounded-xl" />
         <Skeleton className="h-32 w-full rounded-xl" />
@@ -270,6 +278,11 @@ export default function ProfessionalProfile({
   const portfolio = professional.portfolioItems ?? [];
   const reviews = professional.reviews ?? [];
   const reviewPreview = reviews.slice(0, REVIEWS_PREVIEW_LIMIT);
+  const imageUrl = professional.user?.imageUrl ?? null;
+  const fallbackInitials =
+    initials(professional.name) ||
+    professional.name.slice(0, 2).toUpperCase() ||
+    "?";
 
   return (
     <Container className="flex flex-col gap-10 py-12 sm:py-16">
@@ -288,13 +301,28 @@ export default function ProfessionalProfile({
       <Card>
         <CardHeader className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-                {professional.name}
-              </h1>
-              <p className="text-muted-foreground">
-                {professional.professionalTitle}
-              </p>
+            <div className="flex items-start gap-4">
+              {imageUrl ? (
+                <Image
+                  src={imageUrl}
+                  alt={professional.name}
+                  width={80}
+                  height={80}
+                  className="size-20 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-muted text-xl font-medium text-muted-foreground">
+                  {fallbackInitials}
+                </div>
+              )}
+              <div className="flex flex-col gap-1">
+                <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {professional.name}
+                </h1>
+                <p className="text-muted-foreground">
+                  {professional.professionalTitle}
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">

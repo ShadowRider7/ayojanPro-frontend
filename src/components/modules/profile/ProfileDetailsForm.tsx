@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
+import { PhoneInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useUpdateClientProfile } from "@/hooks";
 import type { Client, UpdateClientProfilePayload } from "@/types";
+import { toE164Phone } from "@/utils";
 import {
   type UpdateClientProfileFormValues,
   updateClientProfileSchema,
@@ -55,12 +57,12 @@ export function ProfileDetailsForm({
       onSubmit: updateClientProfileSchema,
     },
     onSubmit: ({ value }) => {
-      const phone = value.phone?.trim() ?? "";
+      const phone = toE164Phone(value.phone);
       const address = value.address?.trim() ?? "";
 
       const payload: UpdateClientProfilePayload = {
         bio: value.bio?.trim() ?? "",
-        phone: phone === "" ? undefined : phone,
+        phone: phone ?? undefined,
         address: address === "" ? undefined : address,
         city: value.city?.trim() ?? "",
         country: value.country?.trim() ?? "",
@@ -146,17 +148,12 @@ export function ProfileDetailsForm({
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Phone</FieldLabel>
-                      <Input
+                      <PhoneInput
                         id={field.name}
                         name={field.name}
-                        type="tel"
-                        placeholder="+880 1712 345678"
-                        autoComplete="tel"
-                        value={field.state.value ?? ""}
+                        value={field.state.value}
                         onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
+                        onValueChange={field.handleChange}
                         aria-invalid={isInvalid}
                       />
                       {isInvalid && (

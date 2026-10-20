@@ -1,6 +1,5 @@
 import z from "zod";
-
-export const BD_PHONE_REGEX = /^(?:\+?880|0)1[3-9]\d{8}$/;
+import { isValidPhone } from "@/utils";
 
 export const emailSchema = z.email("Please provide a valid email address");
 
@@ -16,12 +15,13 @@ export const otpSchema = z
   .string()
   .regex(/^\d{6}$/, "OTP must be a 6-digit number");
 
-export const bdPhoneSchema = z
+export const phoneFieldSchema = z
   .string()
-  .refine((value) => value === "" || BD_PHONE_REGEX.test(value), {
-    message: "Please provide valid Bangladeshi number",
-  })
-  .optional();
+  .refine((value) => value === "" || isValidPhone(value), {
+    message: "Please provide a valid phone number",
+  });
+
+export const optionalPhoneSchema = phoneFieldSchema.optional();
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -36,7 +36,7 @@ export const registrationSchema = z
       .min(2, "Name must be at least 2 characters long")
       .max(255, "Name cannot exceed 255 characters"),
     email: emailSchema,
-    phone: bdPhoneSchema,
+    phone: optionalPhoneSchema,
     password: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })

@@ -61,14 +61,14 @@ export default function VerifyProfessionalApplicationForm() {
     verify(payload, {
       onSuccess: () => {
         toast.add({
-          title: "Email verified",
+          title: "Email verified — application under review",
           description:
-            "One last step — set a password to finish setting up your account.",
+            'Please wait for our authority to review your application. If approved, you will receive an email with your password — sign in with it, then choose "Forgot password" in your account menu to set your own and keep your account secure.',
           type: "success",
+          timeout: 10000,
         });
 
-        const params = new URLSearchParams({ email });
-        router.push(`/forgot-password?${params.toString()}`);
+        router.push("/");
       },
       onError: (err) => {
         toast.add({

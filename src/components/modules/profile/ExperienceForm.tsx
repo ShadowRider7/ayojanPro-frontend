@@ -177,62 +177,86 @@ export function ExperienceForm({
             </form.Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <form.Field name="startDate">
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+              <form.Subscribe selector={(state) => state.values.endDate}>
+                {(endDate) => (
+                  <form.Field name="startDate">
+                    {(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
 
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>Start date</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="date"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        aria-invalid={isInvalid}
-                      />
-                      {isInvalid ? (
-                        <FieldError errors={field.state.meta.errors} />
-                      ) : null}
-                    </Field>
-                  );
-                }}
-              </form.Field>
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            Start date
+                          </FieldLabel>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="date"
+                            max={endDate || undefined}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) => {
+                              const nextStartDate = event.target.value;
 
-              <form.Field name="endDate">
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+                              field.handleChange(nextStartDate);
 
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>End date</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="date"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        aria-invalid={isInvalid}
-                      />
-                      {isInvalid ? (
-                        <FieldError errors={field.state.meta.errors} />
-                      ) : null}
-                      <FieldDescription>
-                        Leave blank if it is ongoing.
-                      </FieldDescription>
-                    </Field>
-                  );
-                }}
-              </form.Field>
+                              // Keep the range valid when the start moves past
+                              // the end that was already picked.
+                              if (
+                                nextStartDate &&
+                                endDate &&
+                                nextStartDate > endDate
+                              ) {
+                                form.setFieldValue("endDate", "");
+                              }
+                            }}
+                            aria-invalid={isInvalid}
+                          />
+                          {isInvalid ? (
+                            <FieldError errors={field.state.meta.errors} />
+                          ) : null}
+                        </Field>
+                      );
+                    }}
+                  </form.Field>
+                )}
+              </form.Subscribe>
+
+              <form.Subscribe selector={(state) => state.values.startDate}>
+                {(startDate) => (
+                  <form.Field name="endDate">
+                    {(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
+
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>End date</FieldLabel>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="date"
+                            min={startDate || undefined}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            aria-invalid={isInvalid}
+                          />
+                          {isInvalid ? (
+                            <FieldError errors={field.state.meta.errors} />
+                          ) : null}
+                          <FieldDescription>
+                            Leave blank if it is ongoing.
+                          </FieldDescription>
+                        </Field>
+                      );
+                    }}
+                  </form.Field>
+                )}
+              </form.Subscribe>
             </div>
 
             <form.Field name="description">

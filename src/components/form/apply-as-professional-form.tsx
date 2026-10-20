@@ -3,7 +3,7 @@
 import { useForm } from "@tanstack/react-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileUpload } from "@/components/shared";
+import { FileUpload, PhoneInput } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -20,6 +20,7 @@ import { toast } from "@/components/ui/toast";
 import { useApplyAsProfessional } from "@/hooks";
 import { MAX_UPLOAD_SIZE_MB } from "@/lib/constants";
 import type { ApplyAsProfessionalPayload } from "@/types";
+import { toE164Phone } from "@/utils";
 import {
   type ProfessionalApplicationFormValues,
   professionalApplicationSchema,
@@ -49,7 +50,7 @@ export default function ApplyAsProfessionalForm() {
       onSubmit: professionalApplicationSchema,
     },
     onSubmit: ({ value }) => {
-      const phone = value.phone?.trim() ?? "";
+      const phone = toE164Phone(value.phone);
       const bio = value.bio.trim();
       const city = value.city.trim();
       const country = value.country.trim();
@@ -60,7 +61,7 @@ export default function ApplyAsProfessionalForm() {
           email: value.email.trim(),
         },
         professional: {
-          phone: phone === "" ? undefined : phone,
+          phone: phone ?? undefined,
           professionalTitle: value.professionalTitle.trim(),
           bio: bio === "" ? undefined : bio,
           experienceYears: Number(value.experienceYears),
@@ -193,16 +194,13 @@ export default function ApplyAsProfessionalForm() {
                 return (
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Phone Number</FieldLabel>
-                    <Input
+                    <PhoneInput
                       id={field.name}
                       name={field.name}
-                      type="tel"
-                      placeholder="+880 1712 345678"
-                      value={field.state.value ?? ""}
+                      value={field.state.value}
                       onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onValueChange={(value) => field.handleChange(value)}
                       aria-invalid={isInvalid}
-                      autoComplete="tel"
                       disabled={isPending}
                     />
                     {isInvalid && (
@@ -394,7 +392,7 @@ export default function ApplyAsProfessionalForm() {
                   <FileUpload
                     value={field.state.value}
                     onChange={field.handleChange}
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     multiple
                     disabled={isPending}
                     prompt="Add certificates or work samples"
