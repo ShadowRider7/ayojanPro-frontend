@@ -71,9 +71,11 @@ export function AdminOverview() {
               icon={WalletIcon}
               value={<CurrencyText value={analytics.netRevenue} />}
               hint={
-                analytics.totalRefunded > 0
-                  ? `${formatCurrency(analytics.totalRefunded)} refunded`
-                  : undefined
+                analytics.totalEscrowed > 0
+                  ? `${formatCurrency(analytics.totalEscrowed)} held in escrow`
+                  : analytics.totalRefunded > 0
+                    ? `${formatCurrency(analytics.totalRefunded)} refunded`
+                    : undefined
               }
             />
           </div>
@@ -123,7 +125,7 @@ export function AdminOverview() {
             />
             <MetricBars
               title="Revenue"
-              description="Completed payments across the platform."
+              description="Money collected, held in escrow, refunded and released."
               data={[
                 {
                   label: "Gross",
@@ -131,9 +133,21 @@ export function AdminOverview() {
                   format: (value) => formatCurrency(value),
                 },
                 {
+                  label: "In escrow",
+                  value: analytics.totalEscrowed,
+                  tone: "info",
+                  format: (value) => formatCurrency(value),
+                },
+                {
                   label: "Refunded",
                   value: analytics.totalRefunded,
                   tone: "neutral",
+                  format: (value) => formatCurrency(value),
+                },
+                {
+                  label: "Refund pending",
+                  value: analytics.totalPendingRefunds,
+                  tone: "warning",
                   format: (value) => formatCurrency(value),
                 },
                 {

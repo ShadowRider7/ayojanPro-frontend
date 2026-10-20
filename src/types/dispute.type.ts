@@ -51,4 +51,9 @@ export interface UpdateDisputeStatusPayload {
 
 export interface ResolveDisputePayload {
   resolution: string;
+  /**
+   * The platform holds the client's money in escrow. When the dispute is
+   * resolved in the client's favour the escrow is returned to them.
+   */
+  refundClient?: boolean;
 }

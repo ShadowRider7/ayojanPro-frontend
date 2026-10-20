@@ -66,9 +66,11 @@ export function ProfessionalOverview() {
               icon={WalletIcon}
               value={<CurrencyText value={analytics.totalEarnings} />}
               hint={
-                analytics.totalRefunded > 0
-                  ? `${formatCurrency(analytics.totalRefunded)} refunded`
-                  : undefined
+                analytics.totalPendingPayout > 0
+                  ? `${formatCurrency(analytics.totalPendingPayout)} pending payout`
+                  : analytics.totalRefunded > 0
+                    ? `${formatCurrency(analytics.totalRefunded)} refunded`
+                    : undefined
               }
             />
             <StatCard
@@ -128,7 +130,7 @@ export function ProfessionalOverview() {
             />
             <MetricBars
               title="Payments"
-              description="Completed and refunded payments on your contracts."
+              description="Released, pending, refunded and pending payments on your contracts."
               data={[
                 {
                   label: "Earned",
@@ -136,9 +138,21 @@ export function ProfessionalOverview() {
                   format: (value) => formatCurrency(value),
                 },
                 {
+                  label: "Pending payout",
+                  value: analytics.totalPendingPayout,
+                  tone: "info",
+                  format: (value) => formatCurrency(value),
+                },
+                {
                   label: "Refunded",
                   value: analytics.totalRefunded,
                   tone: "neutral",
+                  format: (value) => formatCurrency(value),
+                },
+                {
+                  label: "Refund pending",
+                  value: analytics.totalPendingRefunds,
+                  tone: "warning",
                   format: (value) => formatCurrency(value),
                 },
               ]}

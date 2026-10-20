@@ -1,6 +1,7 @@
 import apiClient from "@/lib/apiClient";
 import type {
   AdminEvent,
+  AdminRefund,
   AdminUser,
   ApiResponse,
   ApproveProfessionalPayload,
@@ -8,6 +9,8 @@ import type {
   IQuery,
   Payment,
   Professional,
+  Refund,
+  SettleRefundPayload,
   UpdateUserStatusPayload,
   User,
 } from "@/types";
@@ -26,6 +29,17 @@ export function getAdminContracts(query?: IQuery) {
 
 export function getAdminPayments(query?: IQuery) {
   return apiClient<ApiResponse<Payment[]>>("/admin/payments", { query });
+}
+
+export function getAdminRefunds(query?: IQuery) {
+  return apiClient<ApiResponse<AdminRefund[]>>("/admin/refunds", { query });
+}
+
+export function settleRefund(refundId: string, payload: SettleRefundPayload) {
+  return apiClient<ApiResponse<Refund>>(`/admin/refunds/${refundId}/settle`, {
+    method: "PATCH",
+    body: payload,
+  });
 }
 
 export function updateUserStatus(

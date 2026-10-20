@@ -10,5 +10,6 @@ export * from "./notification.type";
 export * from "./payment.type";
 export * from "./professional.type";
 export * from "./proposal.type";
+export * from "./refund.type";
 export * from "./review.type";
 export * from "./user.type";

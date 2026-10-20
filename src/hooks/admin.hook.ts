@@ -4,11 +4,17 @@ import {
   getAdminContracts,
   getAdminEvents,
   getAdminPayments,
+  getAdminRefunds,
   getAdminUsers,
   getAllProfessionals,
+  settleRefund,
   updateUserStatus,
 } from "@/api";
-import type { ApproveProfessionalPayload, IQuery } from "@/types";
+import type {
+  ApproveProfessionalPayload,
+  IQuery,
+  SettleRefundPayload,
+} from "@/types";
 
 export function useAdminUsers(query?: IQuery) {
   return useQuery({
@@ -35,6 +41,33 @@ export function useAdminPayments(query?: IQuery) {
   return useQuery({
     queryKey: ["admin", "payments", query ?? {}],
     queryFn: () => getAdminPayments(query),
+  });
+}
+
+export function useAdminRefunds(query?: IQuery) {
+  return useQuery({
+    queryKey: ["admin", "refunds", query ?? {}],
+    queryFn: () => getAdminRefunds(query),
+  });
+}
+
+export function useSettleRefund() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      refundId,
+      payload,
+    }: {
+      refundId: string;
+      payload: SettleRefundPayload;
+    }) => settleRefund(refundId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "refunds"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "payments"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["contracts"] });
+    },
   });
 }
 

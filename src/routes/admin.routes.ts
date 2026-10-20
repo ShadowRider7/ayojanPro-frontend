@@ -36,6 +36,10 @@ export const adminRoutes: SidebarItems = [
         url: `${prefix}/payments`,
       },
       {
+        title: "Refunds",
+        url: `${prefix}/refunds`,
+      },
+      {
         title: "Disputes",
         url: `${prefix}/disputes`,
       },

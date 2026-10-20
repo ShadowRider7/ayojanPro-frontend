@@ -4,8 +4,9 @@ import type { Event, EventServiceRequirement } from "./event.type";
 import type { Payment } from "./payment.type";
 import type { Professional, ProfessionalService } from "./professional.type";
 import type { ProposalItem } from "./proposal.type";
+import type { Refund } from "./refund.type";
 import type { Review } from "./review.type";
-import type { Client } from "./user.type";
+import type { Client, Role } from "./user.type";
 
 export const CONTRACT_STATUSES = [
   "PENDING",
@@ -38,6 +39,10 @@ export interface Contract {
   completedAt: Nullable<ISODateString>;
   cancelledAt: Nullable<ISODateString>;
   cancellationReason: Nullable<string>;
+  cancelledByUserId: Nullable<string>;
+  cancelledByRole: Nullable<Role>;
+  refundIssuedAt: Nullable<ISODateString>;
+  refundAmount: Nullable<DecimalValue>;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   client?: Client;
@@ -51,6 +56,7 @@ export interface Contract {
   deliverables?: Deliverable | null;
   reviews?: Review[];
   disputes?: Dispute[];
+  refunds?: Refund[];
 }
 
 export interface AttachDeliverablePayload {

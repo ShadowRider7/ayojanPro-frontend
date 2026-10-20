@@ -55,14 +55,21 @@ import {
   useInitiateFinalPayment,
   useInitiateInitialPayment,
 } from "@/hooks";
+import {
+  getProfessionalCancellationDeadline,
+  isProfessionalCancellationWindowOpen,
+  PROFESSIONAL_CANCEL_NOTICE_MESSAGE,
+} from "@/lib/contract-policy";
 import type {
   ApiResponse,
   ContractStatus,
   InitiatePaymentResult,
   Payment,
+  Refund,
 } from "@/types";
-import { humanize, toNumber } from "@/utils";
+import { formatDateTime, humanize, toNumber } from "@/utils";
 import { type ReviewFormValues, reviewFormSchema } from "@/validation";
+import { ContractCounterparty } from "./ContractCounterparty";
 import { DeliverableForm } from "./DeliverableForm";
 
 const INITIAL_PAYMENT_RATIO = 0.3;
@@ -73,6 +80,12 @@ const CANCELLABLE_STATUSES: ContractStatus[] = [
   "CONFIRMED",
   "IN_PROGRESS",
 ];
+
+const CANCELLER_LABEL: Record<string, string> = {
+  CLIENT: "the client",
+  PROFESSIONAL: "the professional",
+  ADMIN: "an admin",
+};
 
 const PAYMENT_OUTCOMES: Record<
   string,
@@ -171,22 +184,45 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
 
   const contract = data.data;
   const professional = contract.professional ?? null;
+  const client = contract.client ?? null;
   const event = contract.event ?? null;
   const requirement = contract.eventServiceRequirement ?? null;
 
   const payments = paymentsQuery.data?.data ?? [];
   const payment = payments.length > 0 ? payments[payments.length - 1] : null;
+  const refund: Refund | null =
+    payment?.refund ?? contract.refunds?.[0] ?? null;
   const fullyPaid = payment?.status === "COMPLETED";
-  const initialSettled = payment?.status === "PARTIALLY_COMPLETED";
+  // The platform holds the money the client paid until the contract is
+  // completed — then it is released to the professional.
+  const inEscrow = payment?.status === "ESCROWED";
+  const initialSettled = payment?.status === "PARTIALLY_COMPLETED" || inEscrow;
   const initialAttemptInFlight =
     payment?.stage === "INITIAL" && payment?.status === "PENDING";
+  const refundSettled = refund?.status === "COMPLETED";
+  const refundPending =
+    refund?.status === "PENDING" || refund?.status === "PROCESSING";
+  const refundFailed = refund?.status === "FAILED";
+  const wasRefunded = Boolean(refund);
+  const moneyWasCaptured = initialSettled || fullyPaid || wasRefunded;
+  const escrowedAmount = inEscrow ? (toNumber(payment?.amount) ?? 0) : 0;
 
   const agreedAmount = toNumber(contract.agreedAmount) ?? 0;
   const initialAmount = agreedAmount * INITIAL_PAYMENT_RATIO;
   const finalAmount = agreedAmount * FINAL_PAYMENT_RATIO;
 
   const isCancellable = CANCELLABLE_STATUSES.includes(contract.status);
-  const canComplete = contract.status === "DELIVERED" && fullyPaid;
+  // A professional can only cancel while the service is still 5 days away.
+  const professionalWindowOpen = isProfessionalCancellationWindowOpen(
+    contract.serviceStartAt,
+  );
+  const cancellationDeadline = getProfessionalCancellationDeadline(
+    contract.serviceStartAt,
+  );
+  const canCancel =
+    isCancellable && (!isProfessional || professionalWindowOpen);
+  const canComplete =
+    contract.status === "DELIVERED" && (fullyPaid || inEscrow);
   const canPayInitial =
     contract.status === "PENDING" && !initialSettled && !fullyPaid;
   const canPayFinal = contract.status === "DELIVERED" && !fullyPaid;
@@ -230,14 +266,25 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
         payload: cancelReason.trim() ? { reason: cancelReason.trim() } : {},
       },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
+          const issuedRefund = response.data?.refunds?.[0] ?? null;
+          // The backend moves the proposal with the contract: a professional
+          // withdrawal is withdrawn, a client cancellation is rejected.
+          const proposalNote = isProfessional
+            ? "your proposal is marked withdrawn"
+            : "the professional's proposal is marked rejected";
+
           toast.add({
             title: "Contract cancelled",
-            description:
-              "The requirement is open for new proposals again and the professional has been notified.",
+            description: issuedRefund
+              ? `The client is refunded ${issuedRefund.amount} ${issuedRefund.currency}. The requirement is open for new proposals again and ${proposalNote}.`
+              : isProfessional
+                ? `The requirement is open for new proposals again, ${proposalNote} and the client has been notified.`
+                : `The requirement is open for new proposals again, ${proposalNote} and the professional has been notified. A payment you already made is not refunded when you cancel.`,
             type: "success",
           });
           refreshContractTrees();
+          queryClient.invalidateQueries({ queryKey: ["payments"] });
           setCancelOpen(false);
           setCancelReason("");
         },
@@ -286,7 +333,7 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
             <span>
               {requirement?.serviceName ?? "Service"} ·{" "}
               {isProfessional
-                ? `${contract.client?.user?.name ?? "Client"}`
+                ? `${client?.user?.name ?? "Client"}`
                 : `${professional?.name ?? "Professional"}`}
             </span>
             <StatusBadge status={contract.status} />
@@ -295,19 +342,28 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/dashboard/contracts">
               <ArrowLeftIcon /> Back to contracts
             </Link>
           }
         />
-        {isCancellable ? (
+        {canCancel ? (
           <Button
             variant="destructive"
             disabled={isCancelling || isCompleting}
             onClick={() => setCancelOpen(true)}
           >
             Cancel contract
+          </Button>
+        ) : isCancellable && isProfessional ? (
+          <Button
+            variant="outline"
+            disabled
+            title={PROFESSIONAL_CANCEL_NOTICE_MESSAGE}
+          >
+            Cancellation closed
           </Button>
         ) : null}
         {canComplete && !isProfessional ? (
@@ -328,6 +384,34 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
           </Button>
         ) : null}
       </PageHeader>
+
+      {isCancellable && isProfessional && !professionalWindowOpen ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          The cancellation window closed on{" "}
+          <DateText value={cancellationDeadline} mode="datetime" />. A
+          professional can only cancel a contract at least 5 days before the
+          service starts — raise a dispute and an admin will review it.
+        </p>
+      ) : null}
+
+      {contract.status === "CANCELLED" && refund ? (
+        <p
+          className={
+            refundSettled
+              ? "flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+              : refundFailed
+                ? "flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200"
+                : "flex flex-wrap items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300"
+          }
+        >
+          <CircleCheckIcon className="size-4 shrink-0" />
+          {refundSettled
+            ? `A refund of ${refund.amount} ${refund.currency} was returned to your bKash account.`
+            : refundFailed
+              ? `We could not return your ${refund.amount} ${refund.currency} yet — our team is sorting it out.`
+              : `A refund of ${refund.amount} ${refund.currency} is on its way to your bKash account.`}
+        </p>
+      ) : null}
 
       <Card size="sm">
         <CardContent className="flex flex-col gap-4">
@@ -366,6 +450,27 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
                 {contract.cancellationReason}
               </DetailRow>
             ) : null}
+            {contract.cancelledByRole ? (
+              <DetailRow label="Cancelled by">
+                {CANCELLER_LABEL[contract.cancelledByRole] ??
+                  contract.cancelledByRole}
+              </DetailRow>
+            ) : null}
+            {refund ? (
+              <DetailRow label="Refund">
+                <CurrencyText
+                  value={refund.amount}
+                  currency={refund.currency}
+                />{" "}
+                — {humanize(refund.status)}
+                {refund.settledAt ? (
+                  <>
+                    {" "}
+                    on <DateText value={refund.settledAt} mode="datetime" />
+                  </>
+                ) : null}
+              </DetailRow>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-x-4 gap-y-1 border-t pt-3">
             <Button
@@ -374,19 +479,16 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
               nativeButton={false}
               className="h-auto p-0"
               render={
-                <Link href={`/dashboard/events/${contract.eventId}`}>
+                // The client event detail lives under the client-only route, so
+                // a professional is sent to the workspace copy of the event.
+                <Link
+                  href={
+                    isProfessional
+                      ? `/dashboard/professional/browse-events/${contract.eventId}`
+                      : `/dashboard/events/${contract.eventId}`
+                  }
+                >
                   View event
-                </Link>
-              }
-            />
-            <Button
-              variant="link"
-              size="sm"
-              nativeButton={false}
-              className="h-auto p-0"
-              render={
-                <Link href={`/professionals/${contract.professionalId}`}>
-                  View professional's profile
                 </Link>
               }
             />
@@ -394,13 +496,35 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
         </CardContent>
       </Card>
 
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-heading text-lg font-semibold">
+            {isProfessional ? "Client" : "Professional"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {isProfessional
+              ? "The client who hired you for this contract — their contact details and profile."
+              : "The professional you hired for this contract — their profile and contact details."}
+          </p>
+        </div>
+
+        <ContractCounterparty
+          client={client}
+          professional={professional}
+          professionalId={contract.professionalId}
+          isProfessional={isProfessional}
+        />
+      </section>
+
       {!isProfessional ? (
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-heading text-lg font-semibold">Payments</h2>
             <p className="text-sm text-muted-foreground">
               Paid through bKash in two parts: 30% to confirm the booking, 70%
-              once the work is delivered.
+              once the work is delivered. The platform holds your money until
+              the contract is completed, and returns it to you if the contract
+              is cancelled.
             </p>
           </div>
 
@@ -418,10 +542,20 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {contract.status === "CANCELLED"
-                      ? "Cancelled — no longer due on this contract."
-                      : initialSettled || fullyPaid
-                        ? "Paid — the professional is booked."
-                        : "Due to confirm the booking."}
+                      ? refundSettled
+                        ? "Refunded to your bKash account."
+                        : refundPending
+                          ? "Refund on its way to your bKash account."
+                          : refundFailed
+                            ? "Refund failed — our team is sorting it out."
+                            : moneyWasCaptured
+                              ? "Paid — kept on the contract, a client cancellation is not refunded."
+                              : "Cancelled — nothing was due on this contract."
+                      : inEscrow
+                        ? "Held by the platform — released when the contract is completed."
+                        : initialSettled || fullyPaid
+                          ? "Paid — the professional is booked."
+                          : "Due to confirm the booking."}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 rounded-lg border bg-muted/40 p-3">
@@ -435,7 +569,13 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     {contract.status === "CANCELLED"
-                      ? "Cancelled — no longer due on this contract."
+                      ? refundSettled
+                        ? "Refunded to your bKash account."
+                        : refundPending
+                          ? "Refund on its way to your bKash account."
+                          : refundFailed
+                            ? "Refund failed — our team is sorting it out."
+                            : "Cancelled — no longer due on this contract."
                       : fullyPaid
                         ? "Paid — the contract is settled."
                         : "Due after the work is delivered."}
@@ -447,6 +587,15 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
                 <p className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <CircleCheckIcon className="size-4 shrink-0" />
                   Fully paid — nothing else is due on this contract.
+                </p>
+              ) : null}
+
+              {inEscrow ? (
+                <p className="flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-300">
+                  <BanknoteIcon className="size-4 shrink-0" />
+                  Held by the platform — the money is released to the
+                  professional once the contract is completed, and returned to
+                  you if it is cancelled.
                 </p>
               ) : null}
 
@@ -522,6 +671,32 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
               </ul>
             )}
           </div>
+        </section>
+      ) : null}
+
+      {isProfessional && inEscrow ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-heading text-lg font-semibold">Your payout</h2>
+            <p className="text-sm text-muted-foreground">
+              The platform holds the client&apos;s money until the contract is
+              completed — then it is released to you. If the contract is
+              cancelled, the client gets the money back.
+            </p>
+          </div>
+
+          <Card size="sm">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted-foreground">
+                Held for you by the platform
+              </p>
+              <CurrencyText
+                value={escrowedAmount}
+                currency={contract.currency}
+                className="font-semibold"
+              />
+            </CardContent>
+          </Card>
         </section>
       ) : null}
 
@@ -605,7 +780,9 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
             description={
               contract.status === "CANCELLED"
                 ? "The contract was cancelled before anything was delivered."
-                : "The professional has not submitted anything yet. You will be notified when they do."
+                : isProfessional
+                  ? "You have not submitted the finished work for this contract yet."
+                  : "The professional has not submitted anything yet. You will be notified when they do."
             }
           />
         )}
@@ -646,7 +823,11 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
           }
         }}
         title="Cancel this contract?"
-        description="The requirement re-opens for new proposals and the professional is notified. This cannot be undone."
+        description={
+          isProfessional
+            ? `The client gets their payment back in full and the requirement re-opens for new proposals. You can cancel until ${formatDateTime(cancellationDeadline)}. Your proposal is marked withdrawn. This cannot be undone.`
+            : "The requirement re-opens for new proposals, the professional is notified and their proposal is marked rejected. A payment you already made is not refunded. This cannot be undone."
+        }
         confirmLabel="Cancel contract"
         variant="destructive"
         loading={isCancelling}
@@ -733,6 +914,8 @@ function DetailRow({
 }
 
 function PaymentRow({ payment }: { payment: Payment }) {
+  const refund = payment.refund ?? null;
+
   return (
     <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border bg-card p-3 text-sm ring-1 ring-foreground/10">
       <div className="flex flex-wrap items-center gap-2">
@@ -740,12 +923,19 @@ function PaymentRow({ payment }: { payment: Payment }) {
           {payment.stage === "INITIAL" ? "Initial payment" : "Final payment"}
         </span>
         <StatusBadge status={payment.status} />
+        {refund ? (
+          <StatusBadge
+            status={refund.status}
+            label={`Refund · ${humanize(refund.status)}`}
+          />
+        ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {payment.bkashTransactionId ? (
           <span>TrxID {payment.bkashTransactionId}</span>
         ) : null}
         {payment.failureReason ? <span>{payment.failureReason}</span> : null}
+        {refund?.reference ? <span>Refund ref {refund.reference}</span> : null}
         <span>{humanize(payment.method)}</span>
         <DateText
           value={payment.paidAt ?? payment.transactionTime ?? payment.createdAt}

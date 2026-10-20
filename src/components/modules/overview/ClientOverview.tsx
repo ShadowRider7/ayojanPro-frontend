@@ -56,9 +56,11 @@ export function ClientOverview() {
               icon={WalletIcon}
               value={<CurrencyText value={analytics.totalAmountSpent} />}
               hint={
-                analytics.totalRefunded > 0
-                  ? `${formatCurrency(analytics.totalRefunded)} refunded`
-                  : undefined
+                analytics.totalInEscrow > 0
+                  ? `${formatCurrency(analytics.totalInEscrow)} held by the platform`
+                  : analytics.totalRefunded > 0
+                    ? `${formatCurrency(analytics.totalRefunded)} refunded`
+                    : undefined
               }
             />
             <StatCard
@@ -123,7 +125,7 @@ export function ClientOverview() {
             />
             <MetricBars
               title="Payments"
-              description="Completed and refunded payments."
+              description="Completed, escrowed, refunded and pending payments."
               data={[
                 {
                   label: "Amount spent",
@@ -131,9 +133,21 @@ export function ClientOverview() {
                   format: (value) => formatCurrency(value),
                 },
                 {
+                  label: "Held by the platform",
+                  value: analytics.totalInEscrow,
+                  tone: "info",
+                  format: (value) => formatCurrency(value),
+                },
+                {
                   label: "Refunded",
                   value: analytics.totalRefunded,
                   tone: "neutral",
+                  format: (value) => formatCurrency(value),
+                },
+                {
+                  label: "Refund pending",
+                  value: analytics.totalPendingRefunds,
+                  tone: "warning",
                   format: (value) => formatCurrency(value),
                 },
               ]}

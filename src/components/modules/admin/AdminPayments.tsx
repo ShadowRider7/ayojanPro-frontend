@@ -157,6 +157,23 @@ export function AdminPayments() {
             cell: (payment) => <StatusBadge status={payment.status} />,
           },
           {
+            id: "refund",
+            header: "Refund",
+            cell: (payment) =>
+              payment.refund ? (
+                <div className="flex flex-col">
+                  <StatusBadge status={payment.refund.status} />
+                  <CurrencyText
+                    value={payment.refund.amount}
+                    currency={payment.refund.currency}
+                    className="text-muted-foreground text-xs"
+                  />
+                </div>
+              ) : (
+                <span className="text-muted-foreground text-sm">—</span>
+              ),
+          },
+          {
             id: "method",
             header: "Method",
             cell: (payment) => (

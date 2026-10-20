@@ -1,5 +1,7 @@
+import type { Contract } from "./contract.type";
 import type { Event } from "./event.type";
 import type { Professional } from "./professional.type";
+import type { Refund } from "./refund.type";
 import type { Client, User } from "./user.type";
 
 export interface AdminUser extends User {
@@ -8,6 +10,11 @@ export interface AdminUser extends User {
 }
 
 export interface AdminEvent extends Omit<Event, "client"> {
+  client: (Client & { user: User }) | null;
+}
+
+export interface AdminRefund extends Refund {
+  contract: (Contract & { event: Event }) | null;
   client: (Client & { user: User }) | null;
 }
 

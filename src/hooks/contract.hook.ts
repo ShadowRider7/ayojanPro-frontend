@@ -63,6 +63,8 @@ export function useCancelContract() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contracts"] });
       queryClient.invalidateQueries({ queryKey: ["events"] });
+      // Cancelling a contract also moves the proposal behind it.
+      queryClient.invalidateQueries({ queryKey: ["proposals"] });
     },
   });
 }

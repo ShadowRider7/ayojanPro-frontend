@@ -136,6 +136,7 @@ export function ContractList() {
           contract.event?.title,
           contract.eventServiceRequirement?.serviceName,
           contract.professional?.name,
+          contract.client?.user?.name,
           contract.currency,
         ].some((field) => field?.toLowerCase().includes(term));
 
@@ -232,6 +233,7 @@ export function ContractList() {
           }
           action={
             <Button
+              nativeButton={false}
               render={
                 <Link
                   href={

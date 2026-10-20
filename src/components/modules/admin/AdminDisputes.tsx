@@ -12,6 +12,7 @@ import {
   StatusBadge,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -60,6 +61,7 @@ export function AdminDisputes() {
 
   const [resolveTarget, setResolveTarget] = useState<Dispute | null>(null);
   const [resolution, setResolution] = useState("");
+  const [refundClient, setRefundClient] = useState(false);
 
   const filtered = disputes.filter((dispute) => {
     const matchesStatus = status === "all" || dispute.status === status;
@@ -117,18 +119,24 @@ export function AdminDisputes() {
     resolve(
       {
         disputeId: resolveTarget.id,
-        payload: { resolution: resolution.trim() },
+        payload: {
+          resolution: resolution.trim(),
+          ...(refundClient ? { refundClient: true } : {}),
+        },
       },
       {
         onSuccess: () => {
           toast.add({
             title: "Dispute resolved",
-            description: "Both parties have been notified.",
+            description: refundClient
+              ? "Both parties have been notified and the client's payment is being returned."
+              : "Both parties have been notified.",
             type: "success",
           });
           queryClient.invalidateQueries({ queryKey: ["disputes"] });
           setResolveTarget(null);
           setResolution("");
+          setRefundClient(false);
         },
         onError: (err) => {
           toast.add({
@@ -140,7 +148,7 @@ export function AdminDisputes() {
         },
       },
     );
-  }, [resolve, resolveTarget, resolution, queryClient]);
+  }, [resolve, resolveTarget, resolution, refundClient, queryClient]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -323,6 +331,7 @@ export function AdminDisputes() {
           if (!open) {
             setResolveTarget(null);
             setResolution("");
+            setRefundClient(false);
           }
         }}
         title="Resolve this dispute?"
@@ -337,6 +346,24 @@ export function AdminDisputes() {
           onChange={(e) => setResolution(e.target.value)}
           rows={4}
         />
+        <label
+          htmlFor="admin-refund-client"
+          className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm hover:bg-muted/40 has-[:checked]:border-primary/50 has-[:checked]:bg-muted/40"
+        >
+          <Checkbox
+            id="admin-refund-client"
+            className="mt-0.5"
+            checked={refundClient}
+            onCheckedChange={(checked) => setRefundClient(checked === true)}
+          />
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="font-medium">Refund the client</span>
+            <span className="text-xs text-muted-foreground">
+              The platform holds the client&apos;s money in escrow. Tick this to
+              return it to them as part of the resolution.
+            </span>
+          </span>
+        </label>
       </ConfirmDialog>
     </div>
   );

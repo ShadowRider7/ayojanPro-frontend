@@ -19,6 +19,7 @@ import {
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
@@ -74,6 +75,7 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
   const [resolution, setResolution] = useState("");
+  const [refundClient, setRefundClient] = useState(false);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["disputes"] });
@@ -92,6 +94,7 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/dashboard/contracts">
               <ArrowLeftIcon /> Back to contracts
@@ -251,18 +254,24 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
           resolve(
             {
               disputeId: dispute.id,
-              payload: { resolution: resolution.trim() },
+              payload: {
+                resolution: resolution.trim(),
+                ...(refundClient ? { refundClient: true } : {}),
+              },
             },
             {
               onSuccess: () => {
                 toast.add({
                   title: "Dispute resolved",
-                  description: "Both parties have been notified.",
+                  description: refundClient
+                    ? "Both parties have been notified and the client's payment is being returned."
+                    : "Both parties have been notified.",
                   type: "success",
                 });
                 refresh();
                 setResolveDialogOpen(false);
                 setResolution("");
+                setRefundClient(false);
               },
               onError: (err) => {
                 toast.add({
@@ -282,6 +291,24 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
           onChange={(e) => setResolution(e.target.value)}
           rows={4}
         />
+        <label
+          htmlFor="refund-client"
+          className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm hover:bg-muted/40 has-[:checked]:border-primary/50 has-[:checked]:bg-muted/40"
+        >
+          <Checkbox
+            id="refund-client"
+            className="mt-0.5"
+            checked={refundClient}
+            onCheckedChange={(checked) => setRefundClient(checked === true)}
+          />
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="font-medium">Refund the client</span>
+            <span className="text-xs text-muted-foreground">
+              The platform holds the client&apos;s money in escrow. Tick this to
+              return it to them as part of the resolution.
+            </span>
+          </span>
+        </label>
       </ConfirmDialog>
     </div>
   );

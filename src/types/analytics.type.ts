@@ -8,6 +8,8 @@ export interface ClientAnalytics {
   cancelledContracts: number;
   totalAmountSpent: number;
   totalRefunded: number;
+  totalInEscrow: number;
+  totalPendingRefunds: number;
   totalDisputesRaised: number;
   totalReviewsGiven: number;
 }
@@ -23,6 +25,8 @@ export interface ProfessionalAnalytics {
   cancelledContracts: number;
   totalEarnings: number;
   totalRefunded: number;
+  totalPendingPayout: number;
+  totalPendingRefunds: number;
   averageRating: number;
   totalReviews: number;
   totalDisputesRaised: number;
@@ -42,5 +46,7 @@ export interface AdminAnalytics {
   totalOpenDisputes: number;
   totalRevenue: number;
   totalRefunded: number;
+  totalEscrowed: number;
+  totalPendingRefunds: number;
   netRevenue: number;
 }

@@ -5,6 +5,7 @@ import type {
   Nullable,
 } from "./common.type";
 import type { Contract } from "./contract.type";
+import type { Refund } from "./refund.type";
 import type { Client } from "./user.type";
 
 export const PAYMENT_STAGES = ["INITIAL", "FINAL"] as const;
@@ -14,6 +15,7 @@ export const PAYMENT_STATUSES = [
   "PENDING",
   "PROCESSING",
   "PARTIALLY_COMPLETED",
+  "ESCROWED",
   "COMPLETED",
   "FAILED",
   "CANCELLED",
@@ -39,12 +41,18 @@ export interface Payment {
   merchantInvoiceNumber: Nullable<string>;
   transactionTime: Nullable<ISODateString>;
   paidAt: Nullable<ISODateString>;
+  releasedAt: Nullable<ISODateString>;
+  refundedAt: Nullable<ISODateString>;
+  refundAmount: Nullable<DecimalValue>;
+  refundReason: Nullable<string>;
+  refundReference: Nullable<string>;
   failureReason: Nullable<string>;
   metadata: Nullable<JsonObject>;
   createdAt: ISODateString;
   updatedAt: ISODateString;
   contract?: Contract;
   client?: Client;
+  refund?: Refund | null;
 }
 
 export interface InitiatePaymentResult {

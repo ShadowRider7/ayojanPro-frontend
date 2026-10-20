@@ -25,6 +25,7 @@ const resolveDisputeSchema = z.object({
     .string()
     .min(10, "Please provide a resolution summary")
     .max(5000, "Resolution cannot exceed 5000 characters"),
+  refundClient: z.boolean().optional(),
 });
 
 export const disputeValidation = {

@@ -11,6 +11,7 @@ import {
   PAYMENT_STAGES,
   PAYMENT_STATUSES,
   PROPOSAL_STATUSES,
+  REFUND_STATUSES,
   REVIEVEE_ROLES,
   ROLES,
   type Role,
@@ -63,6 +64,7 @@ export const STATUS_TONES: Record<string, StatusTone> = {
   PUBLISHED: "info",
   IN_PROGRESS: "info",
   DELIVERED: "info",
+  ESCROWED: "info",
 
   ACTIVE: "success",
   APPROVED: "success",
@@ -123,6 +125,7 @@ export const PROPOSAL_STATUS_OPTIONS = toEnumOptions(PROPOSAL_STATUSES);
 export const CONTRACT_STATUS_OPTIONS = toEnumOptions(CONTRACT_STATUSES);
 export const PAYMENT_STAGE_OPTIONS = toEnumOptions(PAYMENT_STAGES);
 export const PAYMENT_STATUS_OPTIONS = toEnumOptions(PAYMENT_STATUSES);
+export const REFUND_STATUS_OPTIONS = toEnumOptions(REFUND_STATUSES);
 export const PAYMENT_METHOD_OPTIONS = toEnumOptions(PAYMENT_METHODS);
 export const REVIEVEE_ROLE_OPTIONS = toEnumOptions(REVIEVEE_ROLES);
 export const DISPUTE_STATUS_OPTIONS = toEnumOptions(DISPUTE_STATUSES);

@@ -106,6 +106,15 @@ export function AdminContracts() {
             ),
           },
           {
+            id: "client",
+            header: "Client",
+            cell: (contract) => (
+              <span className="text-sm">
+                {contract.client?.user?.name ?? "—"}
+              </span>
+            ),
+          },
+          {
             id: "professional",
             header: "Professional",
             cell: (contract) => (
