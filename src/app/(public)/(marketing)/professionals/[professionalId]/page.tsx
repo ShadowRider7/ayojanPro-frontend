@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getPublicProfessional, getPublicProfessionals } from "@/api";
 import ProfessionalProfile from "@/components/modules/professionals/ProfessionalProfile";
+import { staticExportParams } from "@/lib/static-params";
 
 export async function generateStaticParams() {
   try {
@@ -13,12 +14,12 @@ export async function generateStaticParams() {
     }));
 
     if (!params.some((param) => param.professionalId === "placeholder")) {
-      params.push({ professionalId: "placeholder" });
+      params.push(...staticExportParams("professionalId"));
     }
 
-    return params.length > 0 ? params : [{ professionalId: "placeholder" }];
+    return params.length > 0 ? params : staticExportParams("professionalId");
   } catch {
-    return [{ professionalId: "placeholder" }];
+    return staticExportParams("professionalId");
   }
 }
 

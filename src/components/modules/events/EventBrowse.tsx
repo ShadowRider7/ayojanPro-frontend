@@ -1,10 +1,8 @@
 "use client";
 
 import { CalendarSearchIcon } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import {
-  DateText,
   EmptyState,
   ErrorState,
   PageHeader,
@@ -21,76 +19,27 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePublishedEvents } from "@/hooks";
-import { SERVICE_REQUIREMENT_STATUS_OPTIONS } from "@/lib/constants";
-import type { Event, IQuery } from "@/types";
-import { ALL_EVENT_TYPES, eventTypeLabel } from "@/utils";
+import {
+  SERVICE_REQUIREMENT_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
+import type { IQuery } from "@/types";
+import { ALL_EVENT_TYPES } from "@/utils";
+import { EventCard } from "./EventCard";
 import { EventTypeFilter } from "./EventTypeFilter";
 
 const PAGE_SIZE = 9;
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All requirement statuses" },
-  ...SERVICE_REQUIREMENT_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  SERVICE_REQUIREMENT_STATUS_OPTIONS,
+  "All requirement statuses",
+);
 
 const SKELETON_KEYS = Array.from(
   { length: 6 },
   (_, index) => `browse-event-skeleton-${index}`,
 );
-
-function EventCard({ event }: { event: Event }) {
-  const liveRequirements =
-    event.serviceRequirements?.filter(
-      (requirement) => !requirement.isDeleted,
-    ) ?? [];
-  const openCount = liveRequirements.filter(
-    (requirement) =>
-      requirement.status === "OPEN" ||
-      requirement.status === "PARTIALLY_FILLED",
-  ).length;
-  const location = [event.city, event.country].filter(Boolean).join(", ");
-  const postedBy = event.client?.user?.name;
-
-  return (
-    <Link
-      href={`/dashboard/professional/browse-events/${event.id}`}
-      className="group flex flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground ring-1 ring-foreground/10 transition-colors hover:border-primary/40 hover:bg-muted/40"
-    >
-      <h2 className="font-heading leading-snug font-medium group-hover:text-primary">
-        {event.title}
-      </h2>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-          {eventTypeLabel(event.eventType)}
-        </span>
-        {postedBy ? (
-          <span className="text-xs text-muted-foreground">
-            Posted by {postedBy}
-          </span>
-        ) : null}
-      </div>
-
-      <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-        <p>
-          <DateText value={event.startAt} /> – <DateText value={event.endAt} />
-        </p>
-        {location ? <p>{location}</p> : null}
-      </div>
-
-      <div className="mt-auto flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-        <span>
-          {openCount > 0
-            ? `${openCount} of ${liveRequirements.length} services open for proposals`
-            : `${liveRequirements.length} service${
-                liveRequirements.length === 1 ? "" : "s"
-              } requested`}
-        </span>
-        <DateText value={event.createdAt} mode="relative" />
-      </div>
-    </Link>
-  );
-}
 
 function EventCardSkeleton() {
   return (
@@ -217,7 +166,12 @@ export function EventBrowse() {
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                href={`/dashboard/professional/browse-events/${event.id}`}
+                postedBy={event.client?.user?.name}
+              />
             ))}
           </div>
 

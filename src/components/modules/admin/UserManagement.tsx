@@ -19,18 +19,25 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { useAdminUsers, useUpdateUserStatus } from "@/hooks";
-import { enumLabel, ROLE_OPTIONS, USER_STATUS_OPTIONS } from "@/lib/constants";
-import type { AdminUser } from "@/types";
+import {
+  enumLabel,
+  ROLE_OPTIONS,
+  SETTABLE_USER_STATUS_OPTIONS,
+  type SelectOption,
+  USER_STATUS_OPTIONS,
+  withAllOption,
+} from "@/lib/constants";
+import type { AdminUser, SettableUserStatus } from "@/types";
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...USER_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  USER_STATUS_OPTIONS,
+  "All statuses",
+);
 
-const ROLE_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All roles" },
-  ...ROLE_OPTIONS,
-];
+const ROLE_FILTER_ITEMS: SelectOption[] = withAllOption(
+  ROLE_OPTIONS,
+  "All roles",
+);
 
 export function UserManagement() {
   const [search, setSearch] = useState("");
@@ -55,11 +62,11 @@ export function UserManagement() {
   });
 
   const handleStatusChange = useCallback(
-    (userId: string, newStatus: string) => {
+    (userId: string, newStatus: SettableUserStatus) => {
       updateStatus(
         {
           userId,
-          payload: { status: newStatus as "ACTIVE" | "SUSPENDED" | "BLOCKED" },
+          payload: { status: newStatus },
         },
         {
           onSuccess: () => {
@@ -189,10 +196,14 @@ export function UserManagement() {
               return (
                 <div className="flex justify-end">
                   <Select
+                    items={SETTABLE_USER_STATUS_OPTIONS}
                     value={user.status}
                     onValueChange={(value) => {
                       if (value && value !== user.status) {
-                        handleStatusChange(user.id, value);
+                        handleStatusChange(
+                          user.id,
+                          value as SettableUserStatus,
+                        );
                       }
                     }}
                   >
@@ -204,7 +215,7 @@ export function UserManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {USER_STATUS_OPTIONS.map((item) => (
+                      {SETTABLE_USER_STATUS_OPTIONS.map((item) => (
                         <SelectItem key={item.value} value={item.value}>
                           {item.label}
                         </SelectItem>

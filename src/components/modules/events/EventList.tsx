@@ -1,95 +1,37 @@
 "use client";
 
-import {
-  CalendarIcon,
-  CalendarPlusIcon,
-  MapPinIcon,
-  PlusIcon,
-} from "lucide-react";
+import { CalendarPlusIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import {
-  DateText,
   EmptyState,
   ErrorState,
   PageHeader,
   PaginationBar,
   SearchInput,
-  StatusBadge,
+  SelectFilter,
 } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMyEvents } from "@/hooks";
-import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
-import type { Event } from "@/types";
-import { eventTypeLabel } from "@/utils";
+import {
+  EVENT_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
+import { EventCard } from "./EventCard";
 
 const PAGE_SIZE = 9;
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...EVENT_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  EVENT_STATUS_OPTIONS,
+  "All statuses",
+);
 
 const SKELETON_KEYS = Array.from(
   { length: 6 },
   (_, index) => `event-skeleton-${index}`,
 );
-
-function EventCard({ event }: { event: Event }) {
-  const requirementCount =
-    event.serviceRequirements?.filter((requirement) => !requirement.isDeleted)
-      .length ?? 0;
-  const location = [event.city, event.country].filter(Boolean).join(", ");
-
-  return (
-    <Link
-      href={`/dashboard/events/${event.id}`}
-      className="group flex flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground ring-1 ring-foreground/10 transition-colors hover:border-primary/40 hover:bg-muted/40"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <h2 className="font-heading leading-snug font-medium group-hover:text-primary">
-          {event.title}
-        </h2>
-        <StatusBadge status={event.status} className="shrink-0" />
-      </div>
-
-      <Badge variant="secondary" className="w-fit">
-        {eventTypeLabel(event.eventType)}
-      </Badge>
-
-      <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
-        <p className="flex items-center gap-2">
-          <CalendarIcon className="size-4 shrink-0" />
-          <DateText value={event.startAt} /> – <DateText value={event.endAt} />
-        </p>
-        {location ? (
-          <p className="flex items-center gap-2">
-            <MapPinIcon className="size-4 shrink-0" />
-            {location}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-auto flex items-center justify-between border-t pt-3 text-xs text-muted-foreground">
-        <span>
-          {requirementCount === 1
-            ? "1 requirement"
-            : `${requirementCount} requirements`}
-        </span>
-        <DateText value={event.createdAt} mode="relative" />
-      </div>
-    </Link>
-  );
-}
 
 function EventCardSkeleton() {
   return (
@@ -180,25 +122,14 @@ export function EventList() {
           placeholder="Search by title, type or city…"
           className="w-full sm:max-w-md"
         />
-        <Select
+        <SelectFilter
           items={STATUS_FILTER_ITEMS}
           value={status}
-          onValueChange={handleStatusChange}
-        >
-          <SelectTrigger
-            className="w-full sm:w-48"
-            aria-label="Filter by status"
-          >
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={handleStatusChange}
+          label="Filter by status"
+          placeholder="All statuses"
+          triggerClassName="sm:w-48"
+        />
       </div>
 
       {isPending ? (
@@ -241,7 +172,11 @@ export function EventList() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {visibleEvents.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                href={`/dashboard/events/${event.id}`}
+              />
             ))}
           </div>
           <PaginationBar

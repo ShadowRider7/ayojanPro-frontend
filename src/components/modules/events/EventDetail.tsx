@@ -189,7 +189,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <BackButton href="/dashboard/events" label="Back to events" />
+      <BackButton fallbackHref="/dashboard/events" label="Back to events" />
       <PageHeader
         title={event.title}
         description={

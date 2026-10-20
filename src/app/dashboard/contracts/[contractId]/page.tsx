@@ -4,6 +4,7 @@ import {
   ContractDetail,
   ContractDetailSkeleton,
 } from "@/components/modules/contracts/ContractDetail";
+import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Contract",
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{ contractId: "placeholder" }];
+  return staticExportParams("contractId");
 }
 
 type ContractDetailPageProps = {

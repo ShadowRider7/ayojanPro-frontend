@@ -28,6 +28,7 @@ import { toE164Phone } from "@/utils";
 import {
   type UpdateClientProfileFormValues,
   updateClientProfileSchema,
+  validateOnChange,
 } from "@/validation";
 
 type ProfileDetailsFormProps = {
@@ -53,9 +54,7 @@ export function ProfileDetailsForm({
 
   const form = useForm({
     defaultValues: seedForm(client),
-    validators: {
-      onSubmit: updateClientProfileSchema,
-    },
+    validators: validateOnChange(updateClientProfileSchema),
     onSubmit: ({ value }) => {
       const phone = toE164Phone(value.phone);
       const address = value.address?.trim() ?? "";
@@ -191,6 +190,9 @@ export function ProfileDetailsForm({
                       {isInvalid && (
                         <FieldError errors={field.state.meta.errors} />
                       )}
+                      <FieldDescription>
+                        Leave blank to keep your saved address.
+                      </FieldDescription>
                     </Field>
                   );
                 }}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DisputeDetail } from "@/components/modules/disputes/DisputeDetail";
+import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Dispute",
@@ -7,22 +8,17 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{ disputeId: "placeholder" }];
+  return staticExportParams("disputeId");
 }
 
-export default function DisputeDetailPage({
-  params,
-}: {
+type DisputeDetailPageProps = {
   params: Promise<{ disputeId: string }>;
-}) {
-  return <DisputeDetailWrapper params={params} />;
-}
+};
 
-async function DisputeDetailWrapper({
+export default async function DisputeDetailPage({
   params,
-}: {
-  params: Promise<{ disputeId: string }>;
-}) {
+}: DisputeDetailPageProps) {
   const { disputeId } = await params;
+
   return <DisputeDetail disputeId={disputeId} />;
 }

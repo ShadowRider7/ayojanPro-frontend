@@ -24,6 +24,7 @@ import { toE164Phone } from "@/utils";
 import {
   type ProfessionalApplicationFormValues,
   professionalApplicationSchema,
+  validateOnChange,
 } from "@/validation";
 
 const DEFAULT_VALUES: ProfessionalApplicationFormValues = {
@@ -46,9 +47,7 @@ export default function ApplyAsProfessionalForm() {
 
   const form = useForm({
     defaultValues: DEFAULT_VALUES,
-    validators: {
-      onSubmit: professionalApplicationSchema,
-    },
+    validators: validateOnChange(professionalApplicationSchema),
     onSubmit: ({ value }) => {
       const phone = toE164Phone(value.phone);
       const bio = value.bio.trim();

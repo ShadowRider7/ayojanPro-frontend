@@ -3,7 +3,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeftIcon,
   BanknoteIcon,
   CircleCheckIcon,
   ExternalLinkIcon,
@@ -16,6 +15,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DisputeForm } from "@/components/modules/disputes/DisputeForm";
 import {
+  BackButton,
   ConfirmDialog,
   CurrencyText,
   DateText,
@@ -63,12 +63,18 @@ import {
 import type {
   ApiResponse,
   ContractStatus,
+  Deliverable,
   InitiatePaymentResult,
   Payment,
   Refund,
+  Role,
 } from "@/types";
 import { formatDateTime, humanize, toNumber } from "@/utils";
-import { type ReviewFormValues, reviewFormSchema } from "@/validation";
+import {
+  type ReviewFormValues,
+  reviewFormSchema,
+  validateOnChange,
+} from "@/validation";
 import { ContractCounterparty } from "./ContractCounterparty";
 import { DeliverableForm } from "./DeliverableForm";
 
@@ -81,7 +87,7 @@ const CANCELLABLE_STATUSES: ContractStatus[] = [
   "IN_PROGRESS",
 ];
 
-const CANCELLER_LABEL: Record<string, string> = {
+const CANCELLER_LABEL: Record<Role, string> = {
   CLIENT: "the client",
   PROFESSIONAL: "the professional",
   ADMIN: "an admin",
@@ -189,22 +195,42 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   const requirement = contract.eventServiceRequirement ?? null;
 
   const payments = paymentsQuery.data?.data ?? [];
-  const payment = payments.length > 0 ? payments[payments.length - 1] : null;
+  // The backend keeps ONE payment row per contract: it first holds the 30%
+  // advance (stage INITIAL) and is later reused for the 70% balance (stage
+  // FINAL). The stage says which phase the row is currently in, so the two
+  // instalments have to be read from it separately.
+  const payment = payments.at(-1) ?? null;
+  const paymentStage = payment?.stage ?? null;
+  const paymentStatus = payment?.status ?? null;
   const refund: Refund | null =
     payment?.refund ?? contract.refunds?.[0] ?? null;
-  const fullyPaid = payment?.status === "COMPLETED";
-  // The platform holds the money the client paid until the contract is
-  // completed — then it is released to the professional.
-  const inEscrow = payment?.status === "ESCROWED";
-  const initialSettled = payment?.status === "PARTIALLY_COMPLETED" || inEscrow;
+
+  const isSettledStatus =
+    paymentStatus === "ESCROWED" ||
+    paymentStatus === "PARTIALLY_COMPLETED" ||
+    paymentStatus === "COMPLETED";
+  // The final instalment can only be started once the advance is settled, so
+  // a row that already sits on the FINAL stage proves the advance was paid.
+  const initialSettled =
+    paymentStage === "FINAL"
+      ? true
+      : paymentStage === "INITIAL" && isSettledStatus;
+  // The 70% balance is paid and held by the platform until the contract is
+  // completed — that is what releases it to the professional.
+  const finalSettled =
+    paymentStage === "FINAL" &&
+    (paymentStatus === "ESCROWED" || paymentStatus === "COMPLETED");
+  const inEscrow = paymentStatus === "ESCROWED";
+  // The escrow released the money, so the contract is fully settled.
+  const fullyPaid = paymentStage === "FINAL" && paymentStatus === "COMPLETED";
   const initialAttemptInFlight =
-    payment?.stage === "INITIAL" && payment?.status === "PENDING";
+    paymentStage === "INITIAL" && paymentStatus === "PENDING";
   const refundSettled = refund?.status === "COMPLETED";
   const refundPending =
     refund?.status === "PENDING" || refund?.status === "PROCESSING";
   const refundFailed = refund?.status === "FAILED";
   const wasRefunded = Boolean(refund);
-  const moneyWasCaptured = initialSettled || fullyPaid || wasRefunded;
+  const moneyWasCaptured = initialSettled || finalSettled || wasRefunded;
   const escrowedAmount = inEscrow ? (toNumber(payment?.amount) ?? 0) : 0;
 
   const agreedAmount = toNumber(contract.agreedAmount) ?? 0;
@@ -221,11 +247,11 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
   );
   const canCancel =
     isCancellable && (!isProfessional || professionalWindowOpen);
-  const canComplete =
-    contract.status === "DELIVERED" && (fullyPaid || inEscrow);
-  const canPayInitial =
-    contract.status === "PENDING" && !initialSettled && !fullyPaid;
-  const canPayFinal = contract.status === "DELIVERED" && !fullyPaid;
+  // The backend only completes a contract once the FINAL instalment has
+  // settled, so the button must not appear before that.
+  const canComplete = contract.status === "DELIVERED" && finalSettled;
+  const canPayInitial = contract.status === "PENDING" && !initialSettled;
+  const canPayFinal = contract.status === "DELIVERED" && !finalSettled;
   const isRedirecting = isStartingInitial || isStartingFinal;
 
   const refreshContractTrees = () => {
@@ -340,14 +366,10 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
           </span>
         }
       >
-        <Button
+        <BackButton
+          fallbackHref="/dashboard/contracts"
+          label="Back to contracts"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href="/dashboard/contracts">
-              <ArrowLeftIcon /> Back to contracts
-            </Link>
-          }
         />
         {canCancel ? (
           <Button
@@ -553,7 +575,7 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
                               : "Cancelled — nothing was due on this contract."
                       : inEscrow
                         ? "Held by the platform — released when the contract is completed."
-                        : initialSettled || fullyPaid
+                        : initialSettled
                           ? "Paid — the professional is booked."
                           : "Due to confirm the booking."}
                   </p>
@@ -576,14 +598,16 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
                           : refundFailed
                             ? "Refund failed — our team is sorting it out."
                             : "Cancelled — no longer due on this contract."
-                      : fullyPaid
-                        ? "Paid — the contract is settled."
+                      : finalSettled
+                        ? fullyPaid
+                          ? "Paid — the contract is settled."
+                          : "Paid — held by the platform until the contract is completed."
                         : "Due after the work is delivered."}
                   </p>
                 </div>
               </div>
 
-              {fullyPaid ? (
+              {finalSettled ? (
                 <p className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
                   <CircleCheckIcon className="size-4 shrink-0" />
                   Fully paid — nothing else is due on this contract.
@@ -733,46 +757,7 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
             onRetry={deliverableQuery.refetch}
           />
         ) : deliverableQuery.data?.data ? (
-          (() => {
-            const deliverable = deliverableQuery.data.data;
-
-            return (
-              <Card size="sm">
-                <CardContent className="flex flex-col gap-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <p className="font-medium">
-                      {deliverable.title ?? "Submitted work"}
-                    </p>
-                    <DateText
-                      value={deliverable.submittedAt}
-                      mode="datetime"
-                      className="text-xs text-muted-foreground"
-                    />
-                  </div>
-                  {deliverable.description ? (
-                    <p className="text-sm text-muted-foreground">
-                      {deliverable.description}
-                    </p>
-                  ) : null}
-                  <ul className="flex flex-col gap-2 border-t pt-3">
-                    {deliverable.externalUrl.map((url) => (
-                      <li key={url}>
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
-                        >
-                          <ExternalLinkIcon className="size-4 shrink-0" />
-                          <span className="truncate">{url}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            );
-          })()
+          <DeliverableCard deliverable={deliverableQuery.data.data} />
         ) : (
           <EmptyState
             icon={FileTextIcon}
@@ -869,30 +854,57 @@ export function ContractDetail({ contractId }: ContractDetailProps) {
               notified and an admin will review.
             </DialogDescription>
           </DialogHeader>
-          <DisputeForm
-            contractId={contractId}
-            onSuccess={() => {}}
-            onOpenChange={setDisputeOpen}
-          />
+          <DisputeForm contractId={contractId} onOpenChange={setDisputeOpen} />
         </DialogContent>
       </Dialog>
 
-      {deliverableQuery.data?.data ? (
-        <DeliverableForm
-          contractId={contractId}
-          deliverable={deliverableQuery.data.data}
-          open={deliverableFormOpen}
-          onOpenChange={setDeliverableFormOpen}
-        />
-      ) : (
-        <DeliverableForm
-          contractId={contractId}
-          deliverable={null}
-          open={deliverableFormOpen}
-          onOpenChange={setDeliverableFormOpen}
-        />
-      )}
+      <DeliverableForm
+        contractId={contractId}
+        deliverable={deliverableQuery.data?.data ?? null}
+        open={deliverableFormOpen}
+        onOpenChange={setDeliverableFormOpen}
+      />
     </div>
+  );
+}
+
+/**
+ * The finished work a professional attached to the contract.
+ */
+function DeliverableCard({ deliverable }: { deliverable: Deliverable }) {
+  return (
+    <Card size="sm">
+      <CardContent className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <p className="font-medium">{deliverable.title ?? "Submitted work"}</p>
+          <DateText
+            value={deliverable.submittedAt}
+            mode="datetime"
+            className="text-xs text-muted-foreground"
+          />
+        </div>
+        {deliverable.description ? (
+          <p className="text-sm text-muted-foreground">
+            {deliverable.description}
+          </p>
+        ) : null}
+        <ul className="flex flex-col gap-2 border-t pt-3">
+          {deliverable.externalUrl.map((url) => (
+            <li key={url}>
+              <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
+              >
+                <ExternalLinkIcon className="size-4 shrink-0" />
+                <span className="truncate">{url}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -963,9 +975,7 @@ function ReviewForm({
 
   const form = useForm({
     defaultValues: { rating: 0, comment: "" } satisfies ReviewFormValues,
-    validators: {
-      onSubmit: reviewFormSchema,
-    },
+    validators: validateOnChange(reviewFormSchema),
     onSubmit: ({ value }) => {
       submitReview(
         {

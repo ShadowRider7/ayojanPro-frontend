@@ -1,6 +1,5 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import {
   BellIcon,
   CheckIcon,
@@ -9,7 +8,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Logo from "@/assets/svg/Logo";
 import { NotificationBell } from "@/components/account/notification-bell";
 import { UserMenu } from "@/components/account/user-menu";
@@ -27,8 +26,7 @@ import {
 } from "@/components/ui/sheet";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "@/components/ui/toast";
-import { useGetMe, useLogout } from "@/hooks";
+import { useGetMe, useSignOut } from "@/hooks";
 import {
   APP_NAME,
   DASHBOARD_ROUTES,
@@ -107,38 +105,14 @@ function EventTypeSheetLinks() {
 }
 
 export default function Header() {
-  const router = useRouter();
   const pathname = usePathname();
-  const queryClient = useQueryClient();
   const { data, isPending } = useGetMe();
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const { signOut, isPending: isLoggingOut } = useSignOut();
   const user = data?.data;
   const dashboardUrl = user ? DASHBOARD_ROUTES[user.role] : null;
   const profileUrl = user ? PROFILE_ROUTES[user.role] : null;
   // The dashboard owns the sidebar, so the header carries its trigger.
   const isDashboard = pathname?.startsWith("/dashboard") ?? false;
-
-  const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () => {
-        toast.add({
-          title: "Signed out",
-          description: "You have been logged out.",
-          type: "success",
-        });
-
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-        router.push("/");
-      },
-      onError: (err) => {
-        toast.add({
-          title: "Logout failed",
-          description: err.message || "Something went wrong. Please try again",
-          type: "error",
-        });
-      },
-    });
-  };
 
   return (
     <header className="sticky top-0 z-40 h-header w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -305,7 +279,7 @@ export default function Header() {
                       render={
                         <Button
                           variant="outline"
-                          onClick={handleLogout}
+                          onClick={signOut}
                           disabled={isLoggingOut}
                           className="w-full justify-start"
                         />

@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  ArrowLeftIcon,
-  CalendarSearchIcon,
-  ClockIcon,
-  SendIcon,
-} from "lucide-react";
+import { CalendarSearchIcon, ClockIcon, SendIcon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  BackButton,
   CurrencyText,
   DateText,
   EmptyState,
@@ -142,14 +138,10 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
             requirementsQuery.refetch();
           }}
         />
-        <Button
+        <BackButton
+          fallbackHref="/dashboard/professional/browse-events"
+          label="Back to browse events"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href="/dashboard/professional/browse-events">
-              <ArrowLeftIcon /> Back to browse events
-            </Link>
-          }
         />
       </div>
     );
@@ -169,14 +161,10 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
           </span>
         }
       >
-        <Button
+        <BackButton
+          fallbackHref="/dashboard/professional/browse-events"
+          label="Back to browse"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href="/dashboard/professional/browse-events">
-              <ArrowLeftIcon /> Back to browse
-            </Link>
-          }
         />
         <Button
           disabled={!isApproved || matchableRequirementIds.size === 0}

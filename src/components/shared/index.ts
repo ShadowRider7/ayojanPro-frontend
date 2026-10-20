@@ -11,4 +11,5 @@ export * from "./page-header";
 export * from "./pagination-bar";
 export * from "./phone-input";
 export * from "./search-input";
+export * from "./select-filter";
 export * from "./status-badge";

@@ -1,4 +1,5 @@
 import z from "zod";
+import { isValidHttpUrl } from "@/utils";
 
 function parseDate(value: string): Date {
   return new Date(value);
@@ -19,15 +20,6 @@ export function splitDeliverableUrls(value: string): string[] {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
-}
-
-function isValidHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
 }
 
 const proposalItemFormSchema = z

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EventBrowseDetail } from "@/components/modules/events/EventBrowseDetail";
+import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Event",
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{ eventId: "placeholder" }];
+  return staticExportParams("eventId");
 }
 
 type BrowseEventDetailPageProps = {

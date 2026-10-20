@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowLeftIcon,
   BriefcaseIcon,
   CalendarIcon,
   ExternalLinkIcon,
@@ -10,15 +9,14 @@ import {
   StarIcon,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import {
+  BackButton,
   Container,
   DateText,
   EmptyState,
   ErrorState,
 } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -216,7 +214,33 @@ function ReviewItem({ review }: { review: Review }) {
   );
 }
 
-function ProfessionalProfileSkeleton() {
+function ProfessionalProfileSkeleton({
+  variant = "marketing",
+}: {
+  variant?: "marketing" | "dashboard";
+}) {
+  if (variant === "dashboard") {
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-8 w-32" />
+        <div className="flex flex-col gap-4 rounded-xl border p-6">
+          <div className="flex items-start gap-4">
+            <Skeleton className="size-20 shrink-0 rounded-full" />
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Container className="flex flex-col gap-6 py-12 sm:py-16">
       <Skeleton className="h-8 w-32" />
@@ -240,10 +264,24 @@ function ProfessionalProfileSkeleton() {
 
 type ProfessionalProfileProps = {
   professionalId: string;
+
+  /**
+   * "marketing" is the public profile page, "dashboard" is the one inside the
+   * dashboard shell — it drops the marketing container and its padding,
+   * because the shell already provides both.
+   */
+  variant?: "marketing" | "dashboard";
+
+  /**
+   * Where the back button returns to when the profile was opened directly.
+   */
+  backHref?: string;
 };
 
 export default function ProfessionalProfile({
   professionalId,
+  variant = "marketing",
+  backHref = "/professionals",
 }: ProfessionalProfileProps) {
   const { data, isPending, isError, error, refetch } =
     usePublicProfessional(professionalId);
@@ -251,7 +289,7 @@ export default function ProfessionalProfile({
   const professional = data?.data;
 
   if (isPending) {
-    return <ProfessionalProfileSkeleton />;
+    return <ProfessionalProfileSkeleton variant={variant} />;
   }
 
   if (isError || !professional) {
@@ -284,18 +322,10 @@ export default function ProfessionalProfile({
     professional.name.slice(0, 2).toUpperCase() ||
     "?";
 
-  return (
-    <Container className="flex flex-col gap-10 py-12 sm:py-16">
+  const body = (
+    <>
       <div>
-        <Button
-          variant="ghost"
-          size="sm"
-          nativeButton={false}
-          render={<Link href="/professionals" />}
-        >
-          <ArrowLeftIcon />
-          Back to professionals
-        </Button>
+        <BackButton fallbackHref={backHref} label="Back to professionals" />
       </div>
 
       <Card>
@@ -451,6 +481,16 @@ export default function ProfessionalProfile({
           </>
         )}
       </section>
+    </>
+  );
+
+  if (variant === "dashboard") {
+    return <div className="flex flex-col gap-6">{body}</div>;
+  }
+
+  return (
+    <Container className="flex flex-col gap-10 py-12 sm:py-16">
+      {body}
     </Container>
   );
 }

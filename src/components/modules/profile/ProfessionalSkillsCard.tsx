@@ -18,7 +18,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useAddSkill, useDeleteSkill, usePublicProfessional } from "@/hooks";
-import { type SkillFormValues, skillFormSchema } from "@/validation";
+import {
+  type SkillFormValues,
+  skillFormSchema,
+  validateOnChange,
+} from "@/validation";
 
 type ProfessionalSkillsCardProps = {
   professionalId: string;
@@ -54,9 +58,7 @@ export function ProfessionalSkillsCard({
 
   const form = useForm({
     defaultValues: { name: "" } satisfies SkillFormValues,
-    validators: {
-      onSubmit: skillFormSchema,
-    },
+    validators: validateOnChange(skillFormSchema),
     onSubmit: ({ value }) => {
       addSkill(
         { name: value.name.trim() },

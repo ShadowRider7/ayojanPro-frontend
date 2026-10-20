@@ -2,21 +2,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCardSkeleton } from "./StatCard";
 
-const STAT_SKELETON_KEYS = [
-  "stat-skeleton-0",
-  "stat-skeleton-1",
-  "stat-skeleton-2",
-  "stat-skeleton-3",
-  "stat-skeleton-4",
-  "stat-skeleton-5",
-];
+const STAT_SKELETON_KEYS = Array.from(
+  { length: 6 },
+  (_, index) => `stat-skeleton-${index}`,
+);
 
-const PANEL_SKELETON_KEYS = [
-  "panel-skeleton-0",
-  "panel-skeleton-1",
-  "panel-skeleton-2",
-  "panel-skeleton-3",
-];
+const PANEL_SKELETON_KEYS = Array.from(
+  { length: 4 },
+  (_, index) => `panel-skeleton-${index}`,
+);
 
 export function OverviewSkeleton() {
   return (

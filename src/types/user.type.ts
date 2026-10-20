@@ -12,6 +12,17 @@ export const USER_STATUSES = [
 ] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 
+/**
+ * The statuses an admin can set on a user. `DELETED` is a soft-delete flag
+ * the platform sets itself, so it is not offered in the admin list.
+ */
+export const SETTABLE_USER_STATUSES = [
+  "ACTIVE",
+  "SUSPENDED",
+  "BLOCKED",
+] as const;
+export type SettableUserStatus = (typeof SETTABLE_USER_STATUSES)[number];
+
 export const AUTH_PROVIDERS = ["CREDENTIAL", "GOOGLE"] as const;
 export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
 

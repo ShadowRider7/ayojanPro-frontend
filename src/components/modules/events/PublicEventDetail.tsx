@@ -3,6 +3,7 @@
 import { CalendarIcon, MapPinIcon, SendIcon } from "lucide-react";
 import Link from "next/link";
 import {
+  BackButton,
   Container,
   CurrencyText,
   DateText,
@@ -14,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetMe, usePublicEvent } from "@/hooks";
+import { useCanApplyAsProfessional, usePublicEvent } from "@/hooks";
 import { eventTypeLabel } from "@/utils";
 
 type PublicEventDetailProps = {
@@ -30,11 +31,13 @@ type PublicEventDetailProps = {
  */
 export default function PublicEventDetail({ eventId }: PublicEventDetailProps) {
   const { data, isPending, isError, error, refetch } = usePublicEvent(eventId);
-  const { data: me } = useGetMe();
+  const { user, isPending: isAuthPending } = useCanApplyAsProfessional();
 
   const event = data?.data ?? null;
-  const user = me?.data;
   const isProfessional = user?.role === "PROFESSIONAL";
+  // A signed-in client or admin cannot apply for a professional account, so
+  // the whole call to action is hidden for them.
+  const showCallToAction = !isAuthPending && (!user || isProfessional);
 
   if (isPending) {
     return <PublicEventDetailSkeleton />;
@@ -60,12 +63,11 @@ export default function PublicEventDetail({ eventId }: PublicEventDetailProps) {
     <section className="py-12 sm:py-16">
       <Container className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
-          <Link
-            href="/events"
-            className="w-fit text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            ← Back to all events
-          </Link>
+          <BackButton
+            fallbackHref="/events"
+            label="Back to all events"
+            className="h-auto px-0 text-sm text-muted-foreground hover:bg-transparent hover:text-foreground"
+          />
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
               {event.title}
@@ -161,36 +163,38 @@ export default function PublicEventDetail({ eventId }: PublicEventDetailProps) {
           )}
         </section>
 
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed bg-muted/40 p-4">
-          <div className="flex flex-col gap-1">
-            <p className="font-medium">
-              {isProfessional
-                ? "Interested in this event?"
-                : "Are you a professional?"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {isProfessional
-                ? "Open the event in your workspace to send a proposal for the services you offer."
-                : "Sign in as a professional to send a proposal for the services you offer."}
-            </p>
+        {showCallToAction ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed bg-muted/40 p-4">
+            <div className="flex flex-col gap-1">
+              <p className="font-medium">
+                {isProfessional
+                  ? "Interested in this event?"
+                  : "Are you a professional?"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {isProfessional
+                  ? "Open the event in your workspace to send a proposal for the services you offer."
+                  : "Sign in as a professional to send a proposal for the services you offer."}
+              </p>
+            </div>
+            <Button
+              className="ml-auto"
+              nativeButton={false}
+              render={
+                <Link
+                  href={
+                    isProfessional
+                      ? `/dashboard/professional/browse-events/${event.id}`
+                      : "/apply-as-professional"
+                  }
+                />
+              }
+            >
+              <SendIcon />
+              {isProfessional ? "Open in workspace" : "Apply as a professional"}
+            </Button>
           </div>
-          <Button
-            className="ml-auto"
-            nativeButton={false}
-            render={
-              <Link
-                href={
-                  isProfessional
-                    ? `/dashboard/professional/browse-events/${event.id}`
-                    : "/apply-as-professional"
-                }
-              />
-            }
-          >
-            <SendIcon />
-            {isProfessional ? "Open in workspace" : "Apply as a professional"}
-          </Button>
-        </div>
+        ) : null}
       </Container>
     </section>
   );

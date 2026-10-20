@@ -14,6 +14,7 @@ import type {
   ApproveProfessionalPayload,
   IQuery,
   SettleRefundPayload,
+  UpdateUserStatusPayload,
 } from "@/types";
 
 export function useAdminUsers(query?: IQuery) {
@@ -87,7 +88,7 @@ export function useUpdateUserStatus() {
       payload,
     }: {
       userId: string;
-      payload: { status: "ACTIVE" | "SUSPENDED" | "BLOCKED" };
+      payload: UpdateUserStatusPayload;
     }) => updateUserStatus(userId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "users"] });

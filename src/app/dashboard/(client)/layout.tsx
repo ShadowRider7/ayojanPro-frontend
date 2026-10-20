@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import RoleGuard from "@/components/auth/role-guard";
+import AuthGuard from "@/components/auth/auth-guard";
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
-  return <RoleGuard roles={["CLIENT"]}>{children}</RoleGuard>;
+  return <AuthGuard roles={["CLIENT"]}>{children}</AuthGuard>;
 }

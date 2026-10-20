@@ -29,6 +29,7 @@ import {
   type DeliverableFormValues,
   deliverableFormSchema,
   splitDeliverableUrls,
+  validateOnChange,
 } from "@/validation";
 
 type DeliverableFormProps = {
@@ -53,9 +54,7 @@ export function DeliverableForm({
       description: deliverable?.description ?? "",
       externalUrl: (deliverable?.externalUrl ?? []).join("\n"),
     } satisfies DeliverableFormValues,
-    validators: {
-      onSubmit: deliverableFormSchema,
-    },
+    validators: validateOnChange(deliverableFormSchema),
     onSubmit: ({ value }) => {
       attachDeliverable(
         {

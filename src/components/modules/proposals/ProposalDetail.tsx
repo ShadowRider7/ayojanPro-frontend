@@ -1,10 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeftIcon, FileTextIcon, InfoIcon, StarIcon } from "lucide-react";
+import { FileTextIcon, InfoIcon, StarIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import {
+  BackButton,
   ConfirmDialog,
   CurrencyText,
   DateText,
@@ -137,14 +138,10 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
           </span>
         }
       >
-        <Button
+        <BackButton
+          fallbackHref={`/dashboard/events/${proposal.eventId}`}
+          label="Back to event"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href={`/dashboard/events/${proposal.eventId}`}>
-              <ArrowLeftIcon /> Back to event
-            </Link>
-          }
         />
         {pendingItems.length > 0 ? (
           <>

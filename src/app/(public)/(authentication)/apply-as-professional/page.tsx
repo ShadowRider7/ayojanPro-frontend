@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
 import ApplyAsProfessionalForm from "@/components/form/apply-as-professional-form";
 
 export const metadata: Metadata = {
@@ -13,7 +14,9 @@ export default function ApplyAsProfessionalPage() {
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex flex-1 items-center justify-center py-6">
           <div className="w-full max-w-lg">
-            <ApplyAsProfessionalForm />
+            <RedirectIfAuthenticated>
+              <ApplyAsProfessionalForm />
+            </RedirectIfAuthenticated>
           </div>
         </div>
       </div>

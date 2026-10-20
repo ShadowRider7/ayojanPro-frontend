@@ -25,12 +25,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useCreatePortfolioItem, useUpdatePortfolioItem } from "@/hooks";
 import { MAX_UPLOAD_SIZE_MB } from "@/lib/constants";
-import type { CreatePortfolioItemPayload, PortfolioItem } from "@/types";
+import type { PortfolioItem } from "@/types";
 import { toDateInput } from "@/utils/formatters";
 import {
   createPortfolioItemSchema,
   type PortfolioFormValues,
   portfolioFormSchema,
+  validateOnChange,
 } from "@/validation";
 
 type PortfolioFormProps = {
@@ -61,15 +62,21 @@ export function PortfolioForm({
       externalUrl: item?.externalUrl ?? "",
       mediaFile: [] as File[],
     } satisfies PortfolioFormValues,
-    validators: {
-      onSubmit: isEditMode ? portfolioFormSchema : createPortfolioItemSchema,
-    },
+    validators: validateOnChange(
+      isEditMode ? portfolioFormSchema : createPortfolioItemSchema,
+    ),
     onSubmit: ({ value }) => {
-      const payload: CreatePortfolioItemPayload = {
+      // The work date is optional when editing — an item saved without one
+      // must stay editable, so it is only sent when the field is filled in.
+      const workDate = value.workDate
+        ? new Date(value.workDate).toISOString()
+        : undefined;
+
+      const payload = {
         title: value.title.trim(),
         description: value.description.trim(),
         eventType: value.eventType.trim(),
-        workDate: new Date(value.workDate).toISOString(),
+        ...(workDate ? { workDate } : {}),
         externalUrl: value.externalUrl.trim(),
       };
 
@@ -97,12 +104,12 @@ export function PortfolioForm({
 
       const mediaFile = value.mediaFile[0];
 
-      if (!mediaFile) {
+      if (!mediaFile || !workDate) {
         return;
       }
 
       createItem(
-        { payload, mediaFile },
+        { payload: { ...payload, workDate }, mediaFile },
         {
           onSuccess: () => {
             toast.add({ title: "Portfolio item added", type: "success" });

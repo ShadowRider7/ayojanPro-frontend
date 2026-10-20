@@ -4,7 +4,7 @@ import { FileCheck2Icon, ShieldCheckIcon, StarIcon } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import { useGetMe } from "@/hooks";
+import { useCanApplyAsProfessional } from "@/hooks";
 import { DASHBOARD_ROUTES } from "@/lib/constants";
 
 const HIGHLIGHTS = [
@@ -29,8 +29,7 @@ const HIGHLIGHTS = [
 ];
 
 export default function Hero() {
-  const { data, isPending } = useGetMe();
-  const user = data?.data;
+  const { user, isPending, canApply } = useCanApplyAsProfessional();
   const dashboardUrl = user ? DASHBOARD_ROUTES[user.role] : null;
 
   return (
@@ -80,7 +79,7 @@ export default function Hero() {
             ))}
         </div>
 
-        {!isPending && !user ? (
+        {canApply ? (
           <Link
             href="/apply-as-professional"
             className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"

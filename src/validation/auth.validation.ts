@@ -1,7 +1,14 @@
 import z from "zod";
 import { isValidPhone } from "@/utils";
 
-export const emailSchema = z.email("Please provide a valid email address");
+/**
+ * The email field. The value is trimmed first, so a pasted address with
+ * surrounding spaces is accepted and sent trimmed.
+ */
+export const emailSchema = z
+  .string()
+  .trim()
+  .pipe(z.email("Please provide a valid email address"));
 
 export const passwordSchema = z
   .string()

@@ -2,52 +2,23 @@
 
 import { CalendarSearchIcon, ClockIcon, ShieldXIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect } from "react";
 import { EmptyState, StatusBadge } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useGetMe } from "@/hooks";
-import AccessDenied from "./access-denied";
-import AuthLoading from "./auth-loading";
+import type { Professional } from "@/types";
 
-export default function ProfessionalStatusGuard({
-  children,
+/**
+ * The screen a professional sees while their application is still being
+ * reviewed (or after it was rejected). It offers a way to check the status
+ * again without a page reload.
+ */
+export default function ProfessionalPending({
+  professional,
 }: {
-  children: ReactNode;
+  professional: Professional;
 }) {
-  const router = useRouter();
-
-  const { data, isPending, isError, isRefetching, refetch } = useGetMe();
-
-  const user = data?.data;
-
-  useEffect(() => {
-    if (isPending) {
-      return;
-    }
-    if (isError || !user) {
-      router.replace("/login");
-    }
-  }, [isPending, isError, user, router]);
-
-  if (isPending) {
-    return <AuthLoading />;
-  }
-
-  if (isError || !user) {
-    return <AuthLoading label="Redirecting..." />;
-  }
-
-  const professional = user.professional;
-
-  if (!professional) {
-    return <AccessDenied />;
-  }
-
-  if (professional.status === "APPROVED") {
-    return <>{children}</>;
-  }
+  const { isRefetching, refetch } = useGetMe();
 
   const isRejected = professional.status === "REJECTED";
 

@@ -30,6 +30,7 @@ import type {
 import {
   type ProfessionalServiceFormValues,
   professionalServiceFormSchema,
+  validateOnChange,
 } from "@/validation";
 
 type ServiceFormProps = {
@@ -51,9 +52,7 @@ export function ServiceForm({ service, open, onOpenChange }: ServiceFormProps) {
       minimumPrice: service ? String(service.minimumPrice ?? "") : "",
       maximumPrice: service ? String(service.maximumPrice ?? "") : "",
     } satisfies ProfessionalServiceFormValues,
-    validators: {
-      onSubmit: professionalServiceFormSchema,
-    },
+    validators: validateOnChange(professionalServiceFormSchema),
     onSubmit: ({ value }) => {
       const payload: CreateProfessionalServicePayload = {
         name: value.name.trim(),

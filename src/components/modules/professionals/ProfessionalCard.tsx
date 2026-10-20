@@ -17,10 +17,20 @@ import { initials, toNumber } from "@/utils";
 
 type ProfessionalCardProps = {
   professional: PublicProfessional;
+
+  /**
+   * Where "View profile" points.
+   *
+   * The public directory sends the visitor to the marketing profile page, the
+   * dashboard directory to the one inside the dashboard shell, so the sidebar
+   * stays where it is.
+   */
+  href?: string;
 };
 
 export default function ProfessionalCard({
   professional,
+  href = `/professionals/${professional.id}`,
 }: ProfessionalCardProps) {
   const rating = toNumber(professional.averageRating) ?? 0;
   const skills = professional.skills?.map((item) => item.skill.name) ?? [];
@@ -89,7 +99,7 @@ export default function ProfessionalCard({
           size="sm"
           className="h-auto p-0"
           nativeButton={false}
-          render={<Link href={`/professionals/${professional.id}`} />}
+          render={<Link href={href} />}
         >
           View profile
         </Button>

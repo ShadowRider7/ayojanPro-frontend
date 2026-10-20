@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
 import VerifyProfessionalApplicationForm from "@/components/form/verify-professional-application-form";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -15,11 +16,13 @@ export default function VerifyProfessionalApplicationPage() {
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <Suspense
-              fallback={<Skeleton className="h-72 w-full rounded-xl" />}
-            >
-              <VerifyProfessionalApplicationForm />
-            </Suspense>
+            <RedirectIfAuthenticated>
+              <Suspense
+                fallback={<Skeleton className="h-72 w-full rounded-xl" />}
+              >
+                <VerifyProfessionalApplicationForm />
+              </Suspense>
+            </RedirectIfAuthenticated>
           </div>
         </div>
       </div>

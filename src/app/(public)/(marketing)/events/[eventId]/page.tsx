@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import PublicEventDetail from "@/components/modules/events/PublicEventDetail";
+import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Event",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{ eventId: "placeholder" }];
+  return staticExportParams("eventId");
 }
 
 type PublicEventDetailPageProps = {

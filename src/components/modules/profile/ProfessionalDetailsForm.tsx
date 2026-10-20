@@ -29,6 +29,7 @@ import { toE164Phone } from "@/utils";
 import {
   type UpdateProfessionalProfileFormValues,
   updateProfessionalProfileSchema,
+  validateOnChange,
 } from "@/validation";
 
 type ProfessionalDetailsFormProps = {
@@ -59,9 +60,7 @@ export function ProfessionalDetailsForm({
 
   const form = useForm({
     defaultValues: seedForm(professional),
-    validators: {
-      onSubmit: updateProfessionalProfileSchema,
-    },
+    validators: validateOnChange(updateProfessionalProfileSchema),
     onSubmit: ({ value }) => {
       const clearable = (text: string | undefined) => {
         const trimmed = text?.trim() ?? "";

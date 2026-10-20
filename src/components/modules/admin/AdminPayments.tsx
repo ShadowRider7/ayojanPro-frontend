@@ -8,28 +8,28 @@ import {
   EmptyState,
   PageHeader,
   SearchInput,
+  SelectFilter,
   StatusBadge,
 } from "@/components/shared";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAdminPayments } from "@/hooks";
-import { PAYMENT_STAGE_OPTIONS, PAYMENT_STATUS_OPTIONS } from "@/lib/constants";
+import {
+  PAYMENT_STAGE_OPTIONS,
+  PAYMENT_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
 import type { Payment } from "@/types";
+import { humanize } from "@/utils";
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...PAYMENT_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  PAYMENT_STATUS_OPTIONS,
+  "All statuses",
+);
 
-const STAGE_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All stages" },
-  ...PAYMENT_STAGE_OPTIONS,
-];
+const STAGE_FILTER_ITEMS: SelectOption[] = withAllOption(
+  PAYMENT_STAGE_OPTIONS,
+  "All stages",
+);
 
 export function AdminPayments() {
   const [search, setSearch] = useState("");
@@ -70,44 +70,21 @@ export function AdminPayments() {
           className="w-full sm:max-w-md"
         />
         <div className="flex gap-2">
-          <Select
+          <SelectFilter
             items={STAGE_FILTER_ITEMS}
             value={stage}
-            onValueChange={(value) => setStage(value ?? "all")}
-          >
-            <SelectTrigger
-              className="w-full sm:w-36"
-              aria-label="Filter by stage"
-            >
-              <SelectValue placeholder="All stages" />
-            </SelectTrigger>
-            <SelectContent>
-              {STAGE_FILTER_ITEMS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
+            onChange={setStage}
+            label="Filter by stage"
+            placeholder="All stages"
+            triggerClassName="sm:w-36"
+          />
+          <SelectFilter
             items={STATUS_FILTER_ITEMS}
             value={status}
-            onValueChange={(value) => setStatus(value ?? "all")}
-          >
-            <SelectTrigger
-              className="w-full sm:w-44"
-              aria-label="Filter by status"
-            >
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_FILTER_ITEMS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={setStatus}
+            label="Filter by status"
+            placeholder="All statuses"
+          />
         </div>
       </div>
 
@@ -136,7 +113,7 @@ export function AdminPayments() {
             header: "Stage",
             cell: (payment) => (
               <span className="text-muted-foreground text-sm">
-                {payment.stage}
+                {humanize(payment.stage)}
               </span>
             ),
           },
@@ -178,7 +155,7 @@ export function AdminPayments() {
             header: "Method",
             cell: (payment) => (
               <span className="text-muted-foreground text-sm">
-                {payment.method}
+                {humanize(payment.method)}
               </span>
             ),
           },

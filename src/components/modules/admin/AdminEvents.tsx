@@ -7,24 +7,22 @@ import {
   EmptyState,
   PageHeader,
   SearchInput,
+  SelectFilter,
   StatusBadge,
 } from "@/components/shared";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAdminEvents } from "@/hooks";
-import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
+import {
+  EVENT_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
 import type { AdminEvent } from "@/types";
 import { eventTypeLabel } from "@/utils";
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...EVENT_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  EVENT_STATUS_OPTIONS,
+  "All statuses",
+);
 
 export function AdminEvents() {
   const [search, setSearch] = useState("");
@@ -67,25 +65,13 @@ export function AdminEvents() {
           placeholder="Search by title, client, or location…"
           className="w-full sm:max-w-md"
         />
-        <Select
+        <SelectFilter
           items={STATUS_FILTER_ITEMS}
           value={status}
-          onValueChange={handleStatusChange}
-        >
-          <SelectTrigger
-            className="w-full sm:w-44"
-            aria-label="Filter by status"
-          >
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={handleStatusChange}
+          label="Filter by status"
+          placeholder="All statuses"
+        />
       </div>
 
       <DataTable<AdminEvent>
@@ -143,7 +129,9 @@ export function AdminEvents() {
             header: "Requirements",
             cell: (event) => (
               <span className="text-muted-foreground text-sm">
-                {event.serviceRequirements?.length ?? 0}
+                {event.serviceRequirements?.filter(
+                  (requirement) => !requirement.isDeleted,
+                ).length ?? 0}
               </span>
             ),
           },

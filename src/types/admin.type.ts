@@ -2,7 +2,7 @@ import type { Contract } from "./contract.type";
 import type { Event } from "./event.type";
 import type { Professional } from "./professional.type";
 import type { Refund } from "./refund.type";
-import type { Client, User } from "./user.type";
+import type { Client, SettableUserStatus, User } from "./user.type";
 
 export interface AdminUser extends User {
   client: Client | null;
@@ -19,7 +19,7 @@ export interface AdminRefund extends Refund {
 }
 
 export interface UpdateUserStatusPayload {
-  status: "ACTIVE" | "SUSPENDED" | "BLOCKED";
+  status: SettableUserStatus;
 }
 
 export interface ApproveProfessionalPayload {

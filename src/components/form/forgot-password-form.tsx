@@ -1,7 +1,6 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type z from "zod";
 import { Button } from "@/components/ui/button";
@@ -16,14 +15,16 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useForgotPassword } from "@/hooks";
+import { useGoBack } from "@/providers/navigation.provider";
 import type { ForgotPasswordPayload } from "@/types";
-import { forgotPasswordSchema } from "@/validation";
+import { forgotPasswordSchema, validateOnChange } from "@/validation";
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
 export default function ForgotPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const goBack = useGoBack();
 
   const { mutate: forgotPassword, isPending } = useForgotPassword();
 
@@ -31,9 +32,7 @@ export default function ForgotPasswordForm() {
     defaultValues: {
       email: searchParams.get("email") ?? "",
     } satisfies ForgotPasswordFormValues,
-    validators: {
-      onSubmit: forgotPasswordSchema,
-    },
+    validators: validateOnChange(forgotPasswordSchema),
     onSubmit: ({ value }) => {
       const payload: ForgotPasswordPayload = { email: value.email.trim() };
 
@@ -124,12 +123,13 @@ export default function ForgotPasswordForm() {
 
       <div className="text-center text-sm text-muted-foreground">
         Remembered it?{" "}
-        <Link
-          href="/login"
-          className="font-medium underline underline-offset-4 hover:text-primary"
+        <Button
+          variant="link"
+          className="h-auto p-0 font-medium underline underline-offset-4 hover:text-primary"
+          onClick={() => goBack("/login")}
         >
           Back to log in
-        </Link>
+        </Button>
       </div>
     </div>
   );

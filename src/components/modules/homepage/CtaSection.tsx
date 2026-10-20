@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { Container } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import { useGetMe } from "@/hooks";
+import { useCanApplyAsProfessional } from "@/hooks";
 
 export default function CtaSection() {
-  const { data, isPending } = useGetMe();
-  const user = data?.data;
+  const { canApply } = useCanApplyAsProfessional();
 
-  if (isPending || user) {
+  // The whole section is a call to action for visitors without an account.
+  if (!canApply) {
     return null;
   }
 

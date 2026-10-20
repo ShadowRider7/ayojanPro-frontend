@@ -24,7 +24,7 @@ import { toast } from "@/components/ui/toast";
 import { useLogin } from "@/hooks";
 import { resolveSignedInPath } from "@/lib/auth-redirect";
 import type { LoginPayload } from "@/types";
-import { loginSchema } from "@/validation";
+import { loginSchema, validateOnChange } from "@/validation";
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
@@ -42,9 +42,7 @@ export default function LoginForm() {
 
   const form = useForm({
     defaultValues: DEFAULT_VALUES,
-    validators: {
-      onSubmit: loginSchema,
-    },
+    validators: validateOnChange(loginSchema),
     onSubmit: ({ value }) => {
       const payload: LoginPayload = {
         email: value.email.trim(),

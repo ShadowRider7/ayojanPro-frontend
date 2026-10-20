@@ -10,7 +10,7 @@ import {
 import { EVENT_TYPE_OPTIONS } from "@/lib/constants";
 import { ALL_EVENT_TYPES } from "@/utils";
 
-export const EVENT_TYPE_FILTER_ITEMS: { value: string; label: string }[] = [
+const EVENT_TYPE_FILTER_ITEMS: { value: string; label: string }[] = [
   { value: ALL_EVENT_TYPES, label: "All event types" },
   ...EVENT_TYPE_OPTIONS,
 ];

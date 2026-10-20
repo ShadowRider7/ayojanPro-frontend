@@ -1,4 +1,5 @@
 import z from "zod";
+import { isValidHttpUrl } from "@/utils";
 import { emailSchema, optionalPhoneSchema } from "./auth.validation";
 
 export const professionalApplicationSchema = z.object({
@@ -165,23 +166,14 @@ const portfolioBaseSchema = z.object({
     .max(100, "Event type cannot exceed 100 characters"),
   workDate: z
     .string()
-    .min(1, "Work date is required")
-    .refine(isValidDate, "Work days must be a valid date"),
+    .refine((value) => value === "" || isValidDate(value), "Pick a valid date"),
   externalUrl: z
     .string()
     .trim()
-    .refine((value) => {
-      if (value === "") {
-        return true;
-      }
-
-      try {
-        new URL(value);
-        return true;
-      } catch {
-        return false;
-      }
-    }, "Enter a valid URL (e.g. https://…)"),
+    .refine(
+      (value) => value === "" || isValidHttpUrl(value),
+      "Enter a valid link, e.g. https://…",
+    ),
 });
 
 const portfolioMediaFile = z.array(z.instanceof(File));
@@ -193,6 +185,9 @@ export const portfolioFormSchema = portfolioBaseSchema.extend({
 export type PortfolioFormValues = z.infer<typeof portfolioFormSchema>;
 
 export const createPortfolioItemSchema = portfolioBaseSchema.extend({
+  workDate: portfolioBaseSchema.shape.workDate
+    .min(1, "Work date is required")
+    .refine(isValidDate, "Work days must be a valid date"),
   mediaFile: portfolioMediaFile.min(
     1,
     "Choose a photo for this portfolio item",

@@ -25,7 +25,11 @@ import { toast } from "@/components/ui/toast";
 import { useAddExperience, useUpdateExperience } from "@/hooks";
 import type { CreateExperiencePayload, Experience } from "@/types";
 import { toDateInput } from "@/utils/formatters";
-import { type ExperienceFormValues, experienceFormSchema } from "@/validation";
+import {
+  type ExperienceFormValues,
+  experienceFormSchema,
+  validateOnChange,
+} from "@/validation";
 
 type ExperienceFormProps = {
   experience: Experience | null;
@@ -50,9 +54,7 @@ export function ExperienceForm({
       startDate: toDateInput(experience?.startDate),
       endDate: toDateInput(experience?.endDate),
     } satisfies ExperienceFormValues,
-    validators: {
-      onSubmit: experienceFormSchema,
-    },
+    validators: validateOnChange(experienceFormSchema),
     onSubmit: ({ value }) => {
       const payload: CreateExperiencePayload = {
         title: value.title.trim(),

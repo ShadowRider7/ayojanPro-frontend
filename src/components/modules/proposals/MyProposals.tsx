@@ -25,23 +25,26 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/toast";
 import { useMyProposals, useWithdrawProposal } from "@/hooks";
-import { PROPOSAL_STATUS_OPTIONS } from "@/lib/constants";
+import {
+  PROPOSAL_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
 import type { Proposal, ProposalItem, ProposalStatus } from "@/types";
+import { PROPOSAL_STATUSES } from "@/types";
 
 const PAGE_SIZE = 6;
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...PROPOSAL_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  PROPOSAL_STATUS_OPTIONS,
+  "All statuses",
+);
 
-const STATUS_PRIORITY: ProposalStatus[] = [
-  "PENDING",
-  "ACCEPTED",
-  "REJECTED",
-  "WITHDRAWN",
-  "EXPIRED",
-];
+/**
+ * The status a proposal is shown with: the most interesting one of its
+ * items, so a proposal that is partly accepted does not read as pending.
+ */
+const STATUS_PRIORITY = PROPOSAL_STATUSES;
 
 const SKELETON_KEYS = Array.from(
   { length: 6 },

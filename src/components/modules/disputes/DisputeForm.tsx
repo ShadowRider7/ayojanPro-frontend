@@ -1,8 +1,7 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { FileIcon, UploadIcon } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { FileUpload } from "@/components/shared";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -14,10 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useRaiseDispute } from "@/hooks";
+import { raiseDisputeSchema, validateOnChange } from "@/validation";
 
 type DisputeFormValues = {
   reason: string;
   description: string;
+  evidence: File[];
 };
 
 export function DisputeForm({
@@ -26,38 +27,25 @@ export function DisputeForm({
   onOpenChange,
 }: {
   contractId: string;
-  onSuccess: () => void;
+  /** Called after the dispute was raised, before the dialog closes. */
+  onSuccess?: () => void;
   onOpenChange: (open: boolean) => void;
 }) {
   const { mutate: raiseDispute, isPending } = useRaiseDispute();
-  const [evidence, setEvidence] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm({
     defaultValues: {
       reason: "",
       description: "",
+      evidence: [] as File[],
     } satisfies DisputeFormValues,
-    validators: {
-      onSubmit: ({ value }) => {
-        if (evidence.length === 0) {
-          return "At least one piece of evidence is required";
-        }
-        if (value.reason.length < 3) {
-          return "Reason must be at least 3 characters";
-        }
-        if (value.description.length < 10) {
-          return "Please describe the issue in more detail";
-        }
-        return undefined;
-      },
-    },
+    validators: validateOnChange(raiseDisputeSchema),
     onSubmit: ({ value }) => {
       raiseDispute(
         {
           contractId,
           payload: { reason: value.reason, description: value.description },
-          evidence,
+          evidence: value.evidence,
         },
         {
           onSuccess: () => {
@@ -68,8 +56,7 @@ export function DisputeForm({
               type: "success",
             });
             form.reset();
-            setEvidence([]);
-            onSuccess();
+            onSuccess?.();
             onOpenChange(false);
           },
           onError: (err) => {
@@ -84,21 +71,6 @@ export function DisputeForm({
       );
     },
   });
-
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? []);
-      setEvidence((prev) => [...prev, ...files]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    },
-    [],
-  );
-
-  const removeFile = useCallback((index: number) => {
-    setEvidence((prev) => prev.filter((_, i) => i !== index));
-  }, []);
 
   return (
     <form
@@ -163,55 +135,31 @@ export function DisputeForm({
             );
           }}
         </form.Field>
-      </FieldGroup>
 
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium">Evidence (required)</span>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*,.pdf,.doc,.docx"
-          onChange={handleFileChange}
-          className="hidden"
-          id="dispute-evidence"
-        />
-        <label
-          htmlFor="dispute-evidence"
-          className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-muted/40"
-        >
-          <UploadIcon className="size-4" />
-          Click to upload evidence files
-        </label>
-        {evidence.length > 0 ? (
-          <ul className="flex flex-col gap-1">
-            {evidence.map((file, idx) => (
-              <li
-                key={`${file.name}-${idx}`}
-                className="flex items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-1.5 text-sm"
-              >
-                <span className="flex items-center gap-2 truncate">
-                  <FileIcon className="size-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{file.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    ({(file.size / 1024).toFixed(0)} KB)
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => removeFile(idx)}
-                  className="text-xs text-destructive hover:underline"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <p className="text-xs text-muted-foreground">
-          Upload at least one file (image, PDF, or document) as evidence.
-        </p>
-      </div>
+        <form.Field name="evidence">
+          {(field) => {
+            const isInvalid =
+              field.state.meta.isTouched && !field.state.meta.isValid;
+
+            return (
+              <Field data-invalid={isInvalid}>
+                <FieldLabel>Evidence (required)</FieldLabel>
+                <FileUpload
+                  value={field.state.value}
+                  onChange={(files) => field.handleChange(files)}
+                  accept="image/*,.pdf,.doc,.docx"
+                  multiple
+                  prompt="Click to upload evidence files"
+                  description="Upload at least one file (image, PDF, or document) as evidence."
+                />
+                {isInvalid ? (
+                  <FieldError errors={field.state.meta.errors} />
+                ) : null}
+              </Field>
+            );
+          }}
+        </form.Field>
+      </FieldGroup>
 
       <div className="flex justify-end gap-2 border-t pt-3">
         <Button

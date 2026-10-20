@@ -16,6 +16,7 @@ import {
   ROLES,
   type Role,
   SERVICE_REQUIREMENT_STATUSES,
+  SETTABLE_USER_STATUSES,
   USER_STATUSES,
 } from "@/types";
 import { humanize } from "@/utils/formatters";
@@ -95,10 +96,24 @@ export type EnumOption<T extends string = string> = {
   label: string;
 };
 
+/** A select option that is not tied to a single enum. */
+export type SelectOption = { value: string; label: string };
+
 export function toEnumOptions<T extends string>(
   values: readonly T[],
 ): EnumOption<T>[] {
   return values.map((value) => ({ value, label: humanize(value) }));
+}
+
+/**
+ * A select list that also offers an "All" entry, so a filter can be reset
+ * without a second control.
+ */
+export function withAllOption<T extends string>(
+  options: readonly EnumOption<T>[],
+  allLabel = "All",
+): SelectOption[] {
+  return [{ value: "all", label: allLabel }, ...options];
 }
 
 export function enumLabel<T extends string>(
@@ -114,6 +129,9 @@ export function enumLabel<T extends string>(
 
 export const ROLE_OPTIONS = toEnumOptions(ROLES);
 export const USER_STATUS_OPTIONS = toEnumOptions(USER_STATUSES);
+export const SETTABLE_USER_STATUS_OPTIONS = toEnumOptions(
+  SETTABLE_USER_STATUSES,
+);
 export const AUTH_PROVIDER_OPTIONS = toEnumOptions(AUTH_PROVIDERS);
 export const APPLICATION_STATUS_OPTIONS = toEnumOptions(APPLICATION_STATUSES);
 export const EVENT_STATUS_OPTIONS = toEnumOptions(EVENT_STATUSES);

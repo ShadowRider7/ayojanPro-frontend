@@ -1,33 +1,83 @@
+"use client";
+
 import Link from "next/link";
 import Logo from "@/assets/svg/Logo";
 import { Container } from "@/components/shared";
-import { APP_NAME } from "@/lib/constants";
+import { useCanApplyAsProfessional } from "@/hooks";
+import { APP_NAME, DASHBOARD_ROUTES, PROFILE_ROUTES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
-const FOOTER_COLUMNS = [
-  {
-    title: "Explore",
-    links: [
-      { name: "Home", url: "/" },
-      { name: "Browse Professionals", url: "/professionals" },
-    ],
-  },
-  {
-    title: "For professionals",
-    links: [{ name: "Apply as a professional", url: "/apply-as-professional" }],
-  },
-  {
-    title: "Account",
-    links: [
-      { name: "Log in", url: "/login" },
-      { name: "Create an account", url: "/register" },
-    ],
-  },
+type FooterLink = {
+  name: string;
+  url: string;
+};
+
+type FooterColumn = {
+  title: string;
+  links: FooterLink[];
+};
+
+const EXPLORE_LINKS: FooterLink[] = [
+  { name: "Home", url: "/" },
+  { name: "Browse Professionals", url: "/professionals" },
 ];
 
+const GUEST_ACCOUNT_LINKS: FooterLink[] = [
+  { name: "Log in", url: "/login" },
+  { name: "Create an account", url: "/register" },
+];
+
+/**
+ * The number of grid columns, including the brand block, per column count.
+ * Tailwind needs the class names to be static, so they are listed here.
+ */
+const GRID_COLUMNS: Record<number, string> = {
+  3: "lg:grid-cols-3",
+  4: "lg:grid-cols-4",
+};
+
 export default function Footer() {
+  const { user, canApply } = useCanApplyAsProfessional();
+
+  const profileUrl = user ? (PROFILE_ROUTES[user.role] ?? null) : null;
+
+  const accountLinks: FooterLink[] = user
+    ? [
+        { name: "Dashboard", url: DASHBOARD_ROUTES[user.role] },
+        ...(profileUrl ? [{ name: "Profile", url: profileUrl }] : []),
+      ]
+    : GUEST_ACCOUNT_LINKS;
+
+  const columns: FooterColumn[] = [
+    { title: "Explore", links: EXPLORE_LINKS },
+    // The application is only open to visitors without an account.
+    ...(canApply
+      ? [
+          {
+            title: "For professionals",
+            links: [
+              {
+                name: "Apply as a professional",
+                url: "/apply-as-professional",
+              },
+            ],
+          },
+        ]
+      : []),
+    {
+      title: "Account",
+      links: accountLinks,
+    },
+  ];
+
   return (
     <footer className="border-t bg-muted/30">
-      <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <Container
+        className={cn(
+          "grid gap-10 py-12 sm:grid-cols-2",
+          GRID_COLUMNS[columns.length + 1] ?? "lg:grid-cols-4",
+        )}
+      >
         <div className="flex flex-col gap-3">
           <Link
             href="/"
@@ -42,7 +92,7 @@ export default function Footer() {
           </p>
         </div>
 
-        {FOOTER_COLUMNS.map((column) => (
+        {columns.map((column) => (
           <div key={column.title} className="flex flex-col gap-3">
             <p className="font-heading text-sm font-medium">{column.title}</p>
             <ul className="flex flex-col gap-2">

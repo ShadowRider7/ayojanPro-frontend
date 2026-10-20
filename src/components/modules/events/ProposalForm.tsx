@@ -35,7 +35,11 @@ import type {
   ProfessionalService,
 } from "@/types";
 import { findMatchingService, toDateTimeLocal } from "@/utils";
-import { type ProposalFormValues, proposalFormSchema } from "@/validation";
+import {
+  type ProposalFormValues,
+  proposalFormSchema,
+  validateOnChange,
+} from "@/validation";
 
 const PROPOSABLE_STATUSES = ["OPEN", "PARTIALLY_FILLED"] as const;
 
@@ -67,7 +71,10 @@ function buildItem(
   service: ProfessionalService,
 ): ProposalFormValues["items"][number] {
   return {
-    id: crypto.randomUUID(),
+    // A proposal can only cover a requirement once, so the requirement id is
+    // a stable key for the row. A random id would change on every render and
+    // reset the form while the user is typing.
+    id: `item-${requirement.id}`,
     eventServiceRequirementId: requirement.id,
     professionalServiceId: service.id,
     proposedAmount: "",
@@ -125,9 +132,7 @@ export function ProposalForm({
         ? [buildItem(initialEntry.requirement, initialEntry.service)]
         : [],
     } satisfies ProposalFormValues,
-    validators: {
-      onSubmit: proposalFormSchema,
-    },
+    validators: validateOnChange(proposalFormSchema),
     onSubmit: async ({ value }) => {
       const message = value.message.trim();
 
@@ -388,9 +393,7 @@ export function ProposalForm({
               <form.Field name="items">
                 {(field) => {
                   const isInvalid =
-                    field.state.meta.isTouched &&
-                    !field.state.meta.isValid &&
-                    field.state.value.length > 0;
+                    field.state.meta.isTouched && !field.state.meta.isValid;
 
                   return isInvalid ? (
                     <Field data-invalid>

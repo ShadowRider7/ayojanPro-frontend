@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowLeftIcon, InboxIcon, StarIcon } from "lucide-react";
+import { InboxIcon, StarIcon } from "lucide-react";
 import Link from "next/link";
 import {
+  BackButton,
   CurrencyText,
   DateText,
   EmptyState,
@@ -60,14 +61,10 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
           title="Requirement not found"
           description="This service requirement no longer exists on the event."
         />
-        <Button
+        <BackButton
+          fallbackHref={`/dashboard/events/${eventId}`}
+          label="Back to event"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href={`/dashboard/events/${eventId}`}>
-              <ArrowLeftIcon /> Back to event
-            </Link>
-          }
         />
       </div>
     );
@@ -96,14 +93,10 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
           </span>
         }
       >
-        <Button
+        <BackButton
+          fallbackHref={`/dashboard/events/${eventId}`}
+          label="Back to event"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href={`/dashboard/events/${eventId}`}>
-              <ArrowLeftIcon /> Back to event
-            </Link>
-          }
         />
       </PageHeader>
 
@@ -119,14 +112,10 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
               : "Professionals who offer this service can reply with a quote and their availability. You will see their proposals here."
           }
           action={
-            <Button
+            <BackButton
+              fallbackHref={`/dashboard/events/${eventId}`}
+              label="Back to event"
               variant="outline"
-              nativeButton={false}
-              render={
-                <Link href={`/dashboard/events/${eventId}`}>
-                  <ArrowLeftIcon /> Back to event
-                </Link>
-              }
             />
           }
         />

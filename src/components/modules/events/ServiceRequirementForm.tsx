@@ -37,6 +37,7 @@ import { toDateTimeLocal, toNumber } from "@/utils/formatters";
 import {
   type ServiceRequirementFormValues,
   serviceRequirementFormSchema,
+  validateOnChange,
 } from "@/validation";
 
 type ServiceRequirementFormProps = {
@@ -72,9 +73,7 @@ export function ServiceRequirementForm({
       startAt: toDateTimeLocal(requirement?.startAt ?? hostEvent.startAt),
       endAt: toDateTimeLocal(requirement?.endAt ?? hostEvent.endAt),
     } satisfies ServiceRequirementFormValues,
-    validators: {
-      onSubmit: serviceRequirementFormSchema(hostEvent),
-    },
+    validators: validateOnChange(serviceRequirementFormSchema(hostEvent)),
     onSubmit: ({ value }) => {
       const payload: CreateServiceRequirementPayload = {
         serviceName: value.serviceName,

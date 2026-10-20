@@ -8,12 +8,11 @@ import {
   TriangleAlertIcon,
   WalletIcon,
 } from "lucide-react";
-import { CurrencyText, ErrorState } from "@/components/shared";
+import { CurrencyText } from "@/components/shared";
 import { useClientAnalytics } from "@/hooks";
 import { formatCurrency } from "@/utils/formatters";
 import { MetricBars } from "./MetricBars";
-import { OverviewHeader } from "./OverviewHeader";
-import { OverviewSkeleton } from "./OverviewSkeleton";
+import { OverviewView } from "./OverviewView";
 import { RecentActivity } from "./RecentActivity";
 import { StatCard } from "./StatCard";
 
@@ -22,18 +21,14 @@ export function ClientOverview() {
   const analytics = data?.data;
 
   return (
-    <div className="flex flex-col gap-6">
-      <OverviewHeader description="Your events, contracts and spending at a glance." />
-
-      {isPending ? (
-        <OverviewSkeleton />
-      ) : isError || !analytics ? (
-        <ErrorState
-          title="Could not load your dashboard"
-          error={error}
-          onRetry={refetch}
-        />
-      ) : (
+    <OverviewView
+      description="Your events, contracts and spending at a glance."
+      isPending={isPending}
+      isError={isError || !analytics}
+      error={error}
+      onRetry={refetch}
+    >
+      {analytics ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
@@ -155,7 +150,7 @@ export function ClientOverview() {
             <RecentActivity />
           </div>
         </>
-      )}
-    </div>
+      ) : null}
+    </OverviewView>
   );
 }

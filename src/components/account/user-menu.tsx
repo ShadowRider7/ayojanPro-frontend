@@ -1,9 +1,7 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { KeyRoundIcon, LogOutIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,16 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/components/ui/toast";
-import { useGetMe, useLogout } from "@/hooks";
+import { useGetMe, useSignOut } from "@/hooks";
 import { PROFILE_ROUTES } from "@/lib/constants";
 import { initials } from "@/utils";
 
 export function UserMenu() {
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const { data } = useGetMe();
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  const { signOut, isPending: isLoggingOut } = useSignOut();
 
   const user = data?.data;
 
@@ -33,28 +28,6 @@ export function UserMenu() {
   }
 
   const profileUrl = PROFILE_ROUTES[user.role];
-
-  const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () => {
-        toast.add({
-          title: "Signed out",
-          description: "You have been logged out.",
-          type: "success",
-        });
-
-        queryClient.invalidateQueries({ queryKey: ["user"] });
-        router.push("/");
-      },
-      onError: (err) => {
-        toast.add({
-          title: "Logout failed",
-          description: err.message || "Something went wrong. Please try again",
-          type: "error",
-        });
-      },
-    });
-  };
 
   return (
     <DropdownMenu>
@@ -109,7 +82,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
-          onClick={handleLogout}
+          onClick={signOut}
           disabled={isLoggingOut}
         >
           <LogOutIcon />

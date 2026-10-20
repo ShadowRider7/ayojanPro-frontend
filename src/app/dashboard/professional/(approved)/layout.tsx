@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import ProfessionalStatusGuard from "@/components/auth/professional-status-guard";
+import AuthGuard from "@/components/auth/auth-guard";
 
 /**
  * The part of the professional workspace that needs an approved account.
@@ -9,5 +9,5 @@ import ProfessionalStatusGuard from "@/components/auth/professional-status-guard
  * application to be approved first.
  */
 export default function ApprovedLayout({ children }: { children: ReactNode }) {
-  return <ProfessionalStatusGuard>{children}</ProfessionalStatusGuard>;
+  return <AuthGuard requireApprovedProfessional>{children}</AuthGuard>;
 }

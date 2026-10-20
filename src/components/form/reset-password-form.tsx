@@ -25,7 +25,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 import { useResetPassword } from "@/hooks";
 import type { ResetPasswordPayload } from "@/types";
-import { resetPasswordSchema } from "@/validation";
+import { resetPasswordSchema, validateOnChange } from "@/validation";
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
@@ -53,9 +53,7 @@ export default function ResetPasswordForm() {
       newPassword: "",
       confirmPassword: "",
     } satisfies ResetPasswordFormValues,
-    validators: {
-      onSubmit: resetPasswordSchema,
-    },
+    validators: validateOnChange(resetPasswordSchema),
     onSubmit: ({ value }) => {
       const payload: ResetPasswordPayload = {
         email: value.email.trim(),

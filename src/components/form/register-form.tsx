@@ -24,7 +24,7 @@ import { toast } from "@/components/ui/toast";
 import { useRegistration } from "@/hooks";
 import type { RegistrationPayload } from "@/types";
 import { toE164Phone } from "@/utils";
-import { registrationSchema } from "@/validation";
+import { registrationSchema, validateOnChange } from "@/validation";
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
@@ -45,9 +45,7 @@ export function RegisterForm() {
 
   const form = useForm({
     defaultValues: DEFAULT_VALUES,
-    validators: {
-      onSubmit: registrationSchema,
-    },
+    validators: validateOnChange(registrationSchema),
     onSubmit: ({ value }) => {
       const phone = toE164Phone(value.phone);
 

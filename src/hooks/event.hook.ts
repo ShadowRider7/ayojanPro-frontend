@@ -4,7 +4,7 @@ import {
   createEventServiceRequirement,
   deleteEvent,
   deleteEventServiceRequirement,
-  getAllEvents,
+  getAllPublishedEvents,
   getEvent,
   getEventRequiredServices,
   getMyEvents,
@@ -32,10 +32,15 @@ export function useMyEvents() {
   });
 }
 
+/**
+ * The published events board for signed-in professionals. It needs a
+ * session, so it also exposes the event's client and can be filtered by
+ * service-requirement status.
+ */
 export function usePublishedEvents(query: IQuery) {
   return useQuery<ApiResponse<Event[]>>({
     queryKey: ["events", "published", query],
-    queryFn: () => getAllEvents(query),
+    queryFn: () => getAllPublishedEvents(query),
   });
 }
 

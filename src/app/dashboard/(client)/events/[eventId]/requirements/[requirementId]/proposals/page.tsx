@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProposalList } from "@/components/modules/proposals/ProposalList";
+import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Proposals",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{ eventId: "placeholder", requirementId: "placeholder" }];
+  return staticExportParams("eventId", "requirementId");
 }
 
 type RequirementProposalsPageProps = {

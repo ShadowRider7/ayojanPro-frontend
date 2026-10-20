@@ -21,7 +21,7 @@ export const clientRoutes: SidebarItems = [
       },
       {
         title: "Browse Professionals",
-        url: "/professionals",
+        url: `${prefix}/professionals`,
       },
     ],
   },

@@ -38,7 +38,11 @@ import { EVENT_TYPE_OPTIONS } from "@/lib/constants";
 import type { CreateEventPayload, Event } from "@/types";
 import { EVENT_TYPES } from "@/types";
 import { toDateTimeLocal } from "@/utils/formatters";
-import { type EventFormValues, eventFormSchema } from "@/validation";
+import {
+  type EventFormValues,
+  eventFormSchema,
+  validateOnChange,
+} from "@/validation";
 
 type EventFormProps = {
   eventId?: string;
@@ -92,9 +96,7 @@ function EventFormFields({ existingEvent }: { existingEvent: Event | null }) {
 
   const form = useForm({
     defaultValues: seedForm(existingEvent),
-    validators: {
-      onSubmit: eventFormSchema,
-    },
+    validators: validateOnChange(eventFormSchema),
     onSubmit: ({ value }) => {
       const payload: CreateEventPayload = {
         title: value.title,

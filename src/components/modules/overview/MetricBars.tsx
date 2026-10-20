@@ -49,7 +49,7 @@ export function MetricBars({
         {description ? <CardDescription>{description}</CardDescription> : null}
       </CardHeader>
       <CardContent>
-        {max <= 0 ? (
+        {data.length === 0 ? (
           <EmptyState
             title="Nothing to show yet"
             description="Figures will appear here once there is activity."
@@ -61,6 +61,7 @@ export function MetricBars({
               const readout = datum.format
                 ? datum.format(datum.value)
                 : datum.value;
+              const width = max > 0 ? (datum.value / max) * 100 : 0;
 
               return (
                 <li key={datum.label} className="flex flex-col gap-1">
@@ -77,9 +78,7 @@ export function MetricBars({
                         "h-full rounded-full",
                         BAR_TONE_CLASSES[datum.tone ?? "primary"],
                       )}
-                      style={{
-                        width: `${Math.round((datum.value / max) * 100)}%`,
-                      }}
+                      style={{ width: `${Math.round(width)}%` }}
                     />
                   </div>
                 </li>

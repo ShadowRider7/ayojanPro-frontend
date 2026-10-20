@@ -11,7 +11,12 @@ import type {
   UpdateServiceRequirementPayload,
 } from "@/types";
 
-export function getAllEvents(query: IQuery = {}) {
+/**
+ * The published events board for signed-in professionals and admins.
+ * It needs a session, so it also exposes the event's client and supports
+ * the service-requirement status filter.
+ */
+export function getAllPublishedEvents(query: IQuery = {}) {
   return apiClient<ApiResponse<Event[]>>("/event/all-events", {
     query,
   });

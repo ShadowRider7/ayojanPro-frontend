@@ -9,25 +9,23 @@ import {
   EmptyState,
   PageHeader,
   SearchInput,
+  SelectFilter,
   StatusBadge,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "@/components/ui/toast";
 import { useAdminRefunds, useSettleRefund } from "@/hooks";
-import { REFUND_STATUS_OPTIONS } from "@/lib/constants";
+import {
+  REFUND_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
 import type { AdminRefund } from "@/types";
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...REFUND_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  REFUND_STATUS_OPTIONS,
+  "All statuses",
+);
 
 type SettleMode = "COMPLETED" | "FAILED";
 
@@ -117,25 +115,13 @@ export function AdminRefunds() {
           placeholder="Search by event, client, or reason…"
           className="w-full sm:max-w-md"
         />
-        <Select
+        <SelectFilter
           items={STATUS_FILTER_ITEMS}
           value={status}
-          onValueChange={(value) => setStatus(value ?? "all")}
-        >
-          <SelectTrigger
-            className="w-full sm:w-44"
-            aria-label="Filter by status"
-          >
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={setStatus}
+          label="Filter by status"
+          placeholder="All statuses"
+        />
       </div>
 
       <DataTable<AdminRefund>

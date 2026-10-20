@@ -4,25 +4,52 @@ import { CalendarIcon, MapPinIcon } from "lucide-react";
 import Link from "next/link";
 import { DateText, StatusBadge } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
-import type { PublicEvent } from "@/types";
+import type { EventStatus, EventType, ServiceRequirementStatus } from "@/types";
 import { eventTypeLabel } from "@/utils";
 
+/**
+ * The parts of an event a card renders. Both the public board
+ * (`PublicEvent`) and the professional board (`Event`) satisfy it, so the
+ * two boards share one card.
+ */
+export type EventCardEvent = {
+  id: string;
+  title: string;
+  status: EventStatus;
+  eventType: EventType;
+  city: string | null;
+  country: string | null;
+  startAt: string;
+  endAt: string;
+  createdAt: string;
+  serviceRequirements?: readonly {
+    status: ServiceRequirementStatus;
+    isDeleted?: boolean;
+  }[];
+};
+
 type EventCardProps = {
-  event: PublicEvent;
+  event: EventCardEvent;
   /**
    * Where the card links to. The public board and the professional
    * workspace show the same event, but each has its own detail route.
    */
   href: string;
+  /** The name of the client who posted the event, when it is known. */
+  postedBy?: string;
 };
 
 /**
  * A published event on a card. Used by both the public board and the
  * professional workspace so the two stay visually identical.
  */
-export function EventCard({ event, href }: EventCardProps) {
+export function EventCard({ event, href, postedBy }: EventCardProps) {
   const location = [event.city, event.country].filter(Boolean).join(", ");
-  const openServices = event.serviceRequirements.filter(
+  // A removed requirement is not part of the event any more.
+  const requirements = (event.serviceRequirements ?? []).filter(
+    (requirement) => !requirement.isDeleted,
+  );
+  const openServices = requirements.filter(
     (requirement) =>
       requirement.status === "OPEN" ||
       requirement.status === "PARTIALLY_FILLED",
@@ -40,9 +67,16 @@ export function EventCard({ event, href }: EventCardProps) {
         <StatusBadge status={event.status} className="shrink-0" />
       </div>
 
-      <Badge variant="secondary" className="w-fit">
-        {eventTypeLabel(event.eventType)}
-      </Badge>
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="secondary" className="w-fit">
+          {eventTypeLabel(event.eventType)}
+        </Badge>
+        {postedBy ? (
+          <span className="text-xs text-muted-foreground">
+            Posted by {postedBy}
+          </span>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
         <p className="flex items-center gap-2">
@@ -61,8 +95,8 @@ export function EventCard({ event, href }: EventCardProps) {
         <span>
           {openServices > 0
             ? `${openServices} service${openServices === 1 ? "" : "s"} open for proposals`
-            : `${event.serviceRequirements.length} service${
-                event.serviceRequirements.length === 1 ? "" : "s"
+            : `${requirements.length} service${
+                requirements.length === 1 ? "" : "s"
               } requested`}
         </span>
         <DateText value={event.createdAt} mode="relative" />

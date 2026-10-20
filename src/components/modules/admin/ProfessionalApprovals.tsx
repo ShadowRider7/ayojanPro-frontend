@@ -18,6 +18,7 @@ import {
   EmptyState,
   ErrorState,
   PageHeader,
+  SelectFilter,
   StatusBadge,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -26,17 +27,37 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useAllProfessionals, useApproveProfessional } from "@/hooks";
+import {
+  APPLICATION_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
 import type { Professional } from "@/types";
 import { formatPhone, toNumber } from "@/utils";
+import { approveProfessionalSchema } from "@/validation";
 
 type DialogState = {
   action: "reject";
   professional: Professional;
 } | null;
 
+const ALL = "all";
+const PENDING = "PENDING";
+const PAGE_LIMIT = 100;
+
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  APPLICATION_STATUS_OPTIONS,
+  "All statuses",
+);
+
 export function ProfessionalApprovals() {
+  const [statusFilter, setStatusFilter] = useState<string>(PENDING);
+
+  // The backend filters by status, so the list is never silently truncated:
+  // the applications waiting for a decision are always fetched in full.
   const { data, isPending, isError, error, refetch } = useAllProfessionals({
-    limit: 50,
+    status: statusFilter === ALL ? undefined : statusFilter,
+    limit: PAGE_LIMIT,
     sortBy: "createdAt",
     sortOrder: "desc",
   });
@@ -47,77 +68,87 @@ export function ProfessionalApprovals() {
 
   const handleApprove = useCallback(
     (professional: Professional) => {
-      approve(
-        { professionalId: professional.id, status: "APPROVED" },
-        {
-          onSuccess: () => {
-            toast.add({
-              title: `${professional.name} approved`,
-              description:
-                "They can now log in and use the professional workspace.",
-              type: "success",
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["admin", "professionals"],
-            });
-            setDialog(null);
-          },
-          onError: (err) => {
-            toast.add({
-              title: "Could not approve professional",
-              description:
-                err.message || "Something went wrong. Please try again.",
-              type: "error",
-            });
-          },
+      const payload = {
+        professionalId: professional.id,
+        status: "APPROVED" as const,
+      };
+
+      if (!approveProfessionalSchema.safeParse(payload).success) {
+        return;
+      }
+
+      approve(payload, {
+        onSuccess: () => {
+          toast.add({
+            title: `${professional.name} approved`,
+            description:
+              "They can now log in and use the professional workspace.",
+            type: "success",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["admin", "professionals"],
+          });
+          setDialog(null);
         },
-      );
+        onError: (err) => {
+          toast.add({
+            title: "Could not approve professional",
+            description:
+              err.message || "Something went wrong. Please try again.",
+            type: "error",
+          });
+        },
+      });
     },
     [approve, queryClient],
   );
 
   const handleReject = useCallback(
     (reason: string) => {
-      if (!dialog) return;
-      if (dialog.professional.status === "APPROVED") {
-        toast.add({
-          title: "Cannot reject an approved professional",
-          description:
-            "Approval is permanent. Suspend or block the user account instead.",
-          type: "error",
-        });
-        setDialog(null);
+      if (!dialog) {
         return;
       }
-      approve(
-        {
-          professionalId: dialog.professional.id,
-          status: "REJECTED",
-          rejectionReason: reason,
+
+      const payload = {
+        professionalId: dialog.professional.id,
+        status: "REJECTED" as const,
+        rejectionReason: reason.trim(),
+      };
+      const parsed = approveProfessionalSchema.safeParse(payload);
+
+      if (!parsed.success) {
+        toast.add({
+          title: "Could not reject professional",
+          description:
+            parsed.error.issues[0]?.message ??
+            "Please give the professional a reason.",
+          type: "error",
+        });
+        return;
+      }
+
+      approve(parsed.data, {
+        onSuccess: () => {
+          toast.add({
+            title: `${dialog.professional.name} rejected`,
+            description:
+              "They will see the rejection reason in their dashboard.",
+            type: "success",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["admin", "professionals"],
+          });
+          setDialog(null);
         },
-        {
-          onSuccess: () => {
-            toast.add({
-              title: `${dialog.professional.name} rejected`,
-              description:
-                "They will see the rejection reason in their dashboard.",
-              type: "success",
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["admin", "professionals"],
-            });
-            setDialog(null);
-          },
-          onError: (err) => {
-            toast.add({
-              title: "Could not reject professional",
-              description:
-                err.message || "Something went wrong. Please try again.",
-              type: "error",
-            });
-          },
+        onError: (err) => {
+          toast.add({
+            title: "Could not reject professional",
+            description:
+              err.message || "Something went wrong. Please try again.",
+            type: "error",
+          });
         },
-      );
+      });
     },
     [approve, dialog, queryClient],
   );
@@ -175,6 +206,14 @@ export function ProfessionalApprovals() {
       <PageHeader
         title="Professionals"
         description="Review professional applications and manage their status."
+      />
+
+      <SelectFilter
+        items={STATUS_FILTER_ITEMS}
+        value={statusFilter}
+        onChange={setStatusFilter}
+        label="Filter by application status"
+        placeholder="All statuses"
       />
 
       {professionals.length === 0 ? (

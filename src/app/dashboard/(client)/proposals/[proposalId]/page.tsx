@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ProposalDetail } from "@/components/modules/proposals/ProposalDetail";
+import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Proposal",
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export function generateStaticParams() {
-  return [{ proposalId: "placeholder" }];
+  return staticExportParams("proposalId");
 }
 
 type ProposalDetailPageProps = {

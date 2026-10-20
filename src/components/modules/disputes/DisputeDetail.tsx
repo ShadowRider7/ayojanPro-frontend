@@ -1,15 +1,11 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeftIcon,
-  ExternalLinkIcon,
-  FileTextIcon,
-  ShieldAlertIcon,
-} from "lucide-react";
+import { ExternalLinkIcon, FileTextIcon, ShieldAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import {
+  BackButton,
   ConfirmDialog,
   CurrencyText,
   DateText,
@@ -72,7 +68,6 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
 
   const { mutate: resolve, isPending: isResolving } = useResolveDispute();
 
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
   const [resolution, setResolution] = useState("");
   const [refundClient, setRefundClient] = useState(false);
@@ -92,15 +87,16 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
           </span>
         }
       >
-        <Button
+        <BackButton
+          fallbackHref="/dashboard/contracts"
+          label="Back to contracts"
           variant="outline"
-          nativeButton={false}
-          render={
-            <Link href="/dashboard/contracts">
-              <ArrowLeftIcon /> Back to contracts
-            </Link>
-          }
         />
+        {isTerminal ? null : (
+          <Button onClick={() => setResolveDialogOpen(true)}>
+            Resolve dispute
+          </Button>
+        )}
       </PageHeader>
 
       <Card size="sm">
@@ -152,7 +148,7 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
               </span>
               <ul className="flex flex-col gap-2">
                 {dispute.evidences.map((ev, idx) => (
-                  <li key={ev.mediaUrl}>
+                  <li key={`${ev.mediaUrl}-${idx}`}>
                     <a
                       href={ev.mediaUrl}
                       target="_blank"
@@ -219,21 +215,6 @@ function DisputeView({ dispute }: { dispute: Dispute }) {
           </CardContent>
         </Card>
       ) : null}
-
-      <ConfirmDialog
-        open={statusDialogOpen}
-        onOpenChange={setStatusDialogOpen}
-        title="Update dispute status"
-        description="Choose a new status for this dispute."
-        confirmLabel="Update status"
-        onConfirm={() => {
-          setStatusDialogOpen(false);
-        }}
-      >
-        <p className="text-sm text-muted-foreground">
-          Status management is available in the admin console.
-        </p>
-      </ConfirmDialog>
 
       <ConfirmDialog
         open={resolveDialogOpen}

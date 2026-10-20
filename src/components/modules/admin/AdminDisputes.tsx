@@ -9,6 +9,7 @@ import {
   EmptyState,
   PageHeader,
   SearchInput,
+  SelectFilter,
   StatusBadge,
 } from "@/components/shared";
 import { Button } from "@/components/ui/button";
@@ -27,25 +28,42 @@ import {
   useResolveDispute,
   useUpdateDisputeStatus,
 } from "@/hooks";
-import { DISPUTE_STATUS_OPTIONS } from "@/lib/constants";
-import type { Dispute, DisputeStatus } from "@/types";
+import {
+  DISPUTE_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
+import type {
+  Dispute,
+  DisputeStatus,
+  UpdateDisputeStatusPayload,
+} from "@/types";
+import { humanize } from "@/utils";
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...DISPUTE_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  DISPUTE_STATUS_OPTIONS,
+  "All statuses",
+);
 
-const STATUS_TRANSITIONS: Exclude<DisputeStatus, "RESOLVED">[] = [
+/** The statuses an admin can move a dispute to. `RESOLVED` is set by the
+ * resolve action, so it is not a transition. */
+const STATUS_TRANSITIONS = [
   "OPEN",
   "UNDER_REVIEW",
   "REJECTED",
   "CLOSED",
-];
+] as const satisfies Exclude<DisputeStatus, "RESOLVED">[];
+
+const STATUS_TRANSITION_ITEMS: SelectOption[] = STATUS_TRANSITIONS.map(
+  (status) => ({ value: status, label: humanize(status) }),
+);
 
 function isTransitionableStatus(
   status: DisputeStatus,
-): status is "OPEN" | "UNDER_REVIEW" | "REJECTED" | "CLOSED" {
-  return ["OPEN", "UNDER_REVIEW", "REJECTED", "CLOSED"].includes(status);
+): status is (typeof STATUS_TRANSITIONS)[number] {
+  return STATUS_TRANSITIONS.includes(
+    status as (typeof STATUS_TRANSITIONS)[number],
+  );
 }
 
 export function AdminDisputes() {
@@ -75,17 +93,11 @@ export function AdminDisputes() {
   });
 
   const handleStatusChange = useCallback(
-    (disputeId: string, newStatus: string) => {
+    (disputeId: string, newStatus: UpdateDisputeStatusPayload["status"]) => {
       updateStatus(
         {
           disputeId,
-          payload: {
-            status: newStatus as
-              | "OPEN"
-              | "UNDER_REVIEW"
-              | "REJECTED"
-              | "CLOSED",
-          },
+          payload: { status: newStatus },
         },
         {
           onSuccess: () => {
@@ -164,30 +176,16 @@ export function AdminDisputes() {
           placeholder="Search by event, reason, or raised by…"
           className="w-full sm:max-w-md"
         />
-        <Select
+        <SelectFilter
           items={STATUS_FILTER_ITEMS}
           value={status}
-          onValueChange={(value) => setStatus(value ?? "all")}
-        >
-          <SelectTrigger
-            className="w-full sm:w-44"
-            aria-label="Filter by status"
-          >
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={setStatus}
+          label="Filter by status"
+          placeholder="All statuses"
+        />
       </div>
 
-      <DataTable<
-        Dispute & { status: "OPEN" | "UNDER_REVIEW" | "REJECTED" | "CLOSED" }
-      >
+      <DataTable<Dispute>
         columns={[
           {
             id: "event",
@@ -256,10 +254,7 @@ export function AdminDisputes() {
               return (
                 <div className="flex justify-end gap-2">
                   <Select
-                    items={STATUS_TRANSITIONS.map((s) => ({
-                      value: s,
-                      label: s,
-                    }))}
+                    items={STATUS_TRANSITION_ITEMS}
                     value={dispute.status}
                     onValueChange={(value) => {
                       if (value && value !== dispute.status) {
@@ -275,9 +270,9 @@ export function AdminDisputes() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {STATUS_TRANSITIONS.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
+                      {STATUS_TRANSITION_ITEMS.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -298,13 +293,7 @@ export function AdminDisputes() {
             },
           },
         ]}
-        data={filtered.filter(
-          (
-            d,
-          ): d is Dispute & {
-            status: "OPEN" | "UNDER_REVIEW" | "REJECTED" | "CLOSED";
-          } => isTransitionableStatus(d.status),
-        )}
+        data={filtered}
         getRowKey={(dispute) => dispute.id}
         isLoading={isPending}
         error={error}

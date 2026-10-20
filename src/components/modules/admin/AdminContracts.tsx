@@ -8,23 +8,21 @@ import {
   EmptyState,
   PageHeader,
   SearchInput,
+  SelectFilter,
   StatusBadge,
 } from "@/components/shared";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAdminContracts } from "@/hooks";
-import { CONTRACT_STATUS_OPTIONS } from "@/lib/constants";
+import {
+  CONTRACT_STATUS_OPTIONS,
+  type SelectOption,
+  withAllOption,
+} from "@/lib/constants";
 import type { Contract } from "@/types";
 
-const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  ...CONTRACT_STATUS_OPTIONS,
-];
+const STATUS_FILTER_ITEMS: SelectOption[] = withAllOption(
+  CONTRACT_STATUS_OPTIONS,
+  "All statuses",
+);
 
 export function AdminContracts() {
   const [search, setSearch] = useState("");
@@ -68,25 +66,13 @@ export function AdminContracts() {
           placeholder="Search by event, professional, or service…"
           className="w-full sm:max-w-md"
         />
-        <Select
+        <SelectFilter
           items={STATUS_FILTER_ITEMS}
           value={status}
-          onValueChange={handleStatusChange}
-        >
-          <SelectTrigger
-            className="w-full sm:w-44"
-            aria-label="Filter by status"
-          >
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={handleStatusChange}
+          label="Filter by status"
+          placeholder="All statuses"
+        />
       </div>
 
       <DataTable<Contract>
