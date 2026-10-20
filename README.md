@@ -33,6 +33,10 @@ cp .env.example .env.local
 bun run dev
 ```
 
+## Demo accounts
+
+A ready-made demo dataset (clients, approved professionals, events, proposals) lives in the backend repo and is created by `scripts/seed-demo-data.ts`. The credentials of every seeded account are listed in [docs/demo_accounts.md](docs/demo_accounts.md) — all of them use fake Gmail mailboxes and role-wide passwords.
+
 ## Environment variables
 
 | Variable | Description | Example |
@@ -71,6 +75,8 @@ src/
     shared/       # PageHeader, DataTable, StatusBadge, states, etc.
     auth/         # Guards (AuthGuard, RoleGuard, ProfessionalStatusGuard)
     form/         # Domain forms (register, verify, apply)
+    account/      # Profile menu and notification bell (used by the header)
+    dashboard/    # Dashboard shell and role sidebar
     layout/public/# Header, Footer
     modules/      # Feature components (events, contracts, disputes, etc.)
   app/            # Next.js App Router pages
@@ -95,11 +101,17 @@ src/
 - Admin: `/dashboard/admin/*`
 - Shared: `/dashboard/contracts`, `/dashboard/notifications`
 
+## Proposal rules
+
+- A proposal covers **one service only** — one requirement + one of the professional's own services. The client accepts or rejects each service separately.
+- A professional may only propose for requirements matching a service they actually offer. The match is by name (`src/utils/service-match.util.ts`): names are lowercased and stripped of non-alphanumerics, then compared for equality or containment — "video man" matches "Professional Weedding Videoman". The backend applies the same rule on `POST /proposal/events/:eventId`.
+- The proposal dialog therefore lists only the services a professional can cover and sends one request per selected service; a partial failure keeps the failed rows for a retry.
+
 ## Backend gaps (see frontend plan §2.1)
 
 - `GET /event/my-events` and `GET /proposal/me` were added to the backend (commit `1ce7b01`) — both return plain arrays (no pagination).
 - Own skills/experience have no GET endpoint — read them from the public profile (`GET /professional/public/:id`).
-- Professionals get a random password at apply time — no set/change-password endpoint; use `/forgot-password` to set one.
+- Professionals get a random password at apply time — no set/change-password endpoint; use `/forgot-password` (also linked as "Forgot password" in the header account menu) to set one. After email verification they are told to wait for approval — no password prompt there.
 - Admin professional review (`GET /professional/all-professionals`) does not include `experience`/`portfolio` nested data.
 
 ## Development notes
