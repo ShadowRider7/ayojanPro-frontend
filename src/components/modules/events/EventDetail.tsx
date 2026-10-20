@@ -34,6 +34,7 @@ import {
   usePublishEvent,
 } from "@/hooks";
 import type { EventServiceRequirement } from "@/types";
+import { eventTypeLabel } from "@/utils";
 import { ServiceRequirementForm } from "./ServiceRequirementForm";
 
 type RequirementDialogState = {
@@ -88,7 +89,28 @@ export function EventDetail({ eventId }: { eventId: string }) {
       (requirement) => !requirement.isDeleted,
     ) ?? [];
 
+  // A published event can only be deleted while it has no live contracts.
+  const blockingContracts =
+    event.status === "PUBLISHED"
+      ? (event.contracts ?? []).filter(
+          (contract) => contract.status !== "CANCELLED",
+        )
+      : [];
+  const isDeleteBlocked = blockingContracts.length > 0;
+  const canPublish = requirements.length > 0;
+
   const handlePublish = () => {
+    if (requirements.length === 0) {
+      toast.add({
+        title: "Add a requirement first",
+        description:
+          "An event needs at least one service requirement before it can be published.",
+        type: "error",
+      });
+      setPublishDialogOpen(false);
+      return;
+    }
+
     publish(eventId, {
       onSuccess: () => {
         toast.add({
@@ -111,6 +133,17 @@ export function EventDetail({ eventId }: { eventId: string }) {
   };
 
   const handleDeleteEvent = () => {
+    if (isDeleteBlocked) {
+      toast.add({
+        title: "Event cannot be deleted",
+        description:
+          "This published event has active contracts. Cancel or complete them first.",
+        type: "error",
+      });
+      setDeleteDialogOpen(false);
+      return;
+    }
+
     removeEvent(eventId, {
       onSuccess: () => {
         toast.add({ title: "Event deleted", type: "success" });
@@ -161,7 +194,9 @@ export function EventDetail({ eventId }: { eventId: string }) {
         title={event.title}
         description={
           <span className="flex flex-wrap items-center gap-2">
-            {event.eventType ? <span>{event.eventType}</span> : null}
+            {event.eventType ? (
+              <span>{eventTypeLabel(event.eventType)}</span>
+            ) : null}
             {location ? <span>{location}</span> : null}
             <StatusBadge status={event.status} />
           </span>
@@ -170,7 +205,12 @@ export function EventDetail({ eventId }: { eventId: string }) {
         {event.status === "DRAFT" ? (
           <Button
             variant="outline"
-            disabled={isPublishing}
+            disabled={isPublishing || !canPublish}
+            title={
+              canPublish
+                ? undefined
+                : "Add at least one service requirement before publishing"
+            }
             onClick={() => setPublishDialogOpen(true)}
           >
             <SendIcon /> {isPublishing ? "Publishing…" : "Publish"}
@@ -178,13 +218,23 @@ export function EventDetail({ eventId }: { eventId: string }) {
         ) : null}
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href={`/dashboard/events/${event.id}/edit`}>
               <PencilIcon /> Edit
             </Link>
           }
         />
-        <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+        <Button
+          variant="destructive"
+          disabled={isDeletingEvent || isDeleteBlocked}
+          title={
+            isDeleteBlocked
+              ? `This event has ${blockingContracts.length} active contract${blockingContracts.length === 1 ? "" : "s"} and cannot be deleted.`
+              : undefined
+          }
+          onClick={() => setDeleteDialogOpen(true)}
+        >
           <Trash2Icon /> Delete
         </Button>
       </PageHeader>
@@ -198,7 +248,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
               </h2>
               <p className="text-sm text-muted-foreground">
                 {event.status === "DRAFT"
-                  ? "What professionals will proposal on once you publish the event."
+                  ? "What professionals will proposal on once you publish the event. Add at least one requirement to unlock publishing."
                   : "What professionals proposal on."}
               </p>
             </div>
@@ -215,7 +265,11 @@ export function EventDetail({ eventId }: { eventId: string }) {
             <EmptyState
               icon={BriefcaseIcon}
               title="No requirements yet"
-              description="List the services you need — photography, catering, decoration — so professionals know what to proposal on."
+              description={
+                event.status === "DRAFT"
+                  ? "List the services you need — photography, catering, decoration — so professionals know what to proposal on. You need at least one requirement before this event can be published."
+                  : "List the services you need — photography, catering, decoration — so professionals know what to proposal on."
+              }
               action={
                 <Button
                   onClick={() =>
@@ -261,6 +315,7 @@ export function EventDetail({ eventId }: { eventId: string }) {
                       <Button
                         variant="ghost"
                         size="xs"
+                        nativeButton={false}
                         render={
                           <Link
                             href={`/dashboard/events/${eventId}/requirements/${requirement.id}/proposals`}
