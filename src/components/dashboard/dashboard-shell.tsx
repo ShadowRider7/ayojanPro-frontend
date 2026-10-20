@@ -18,7 +18,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
   const user = data?.data;
 
   return (
-    <div className="flex min-h-[calc(100dvh-var(--header-height))] w-full">
+    <div className="flex min-h-[calc(100dvh-var(--spacing-header))] w-full">
       {user ? <DashboardSidebar role={user.role} /> : null}
       <SidebarInset className="min-w-0">
         <div className="flex flex-col gap-6 p-4 sm:p-6">{children}</div>
