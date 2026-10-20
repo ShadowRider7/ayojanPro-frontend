@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import Header from "@/components/layout/public/Header";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import Providers from "@/providers";
@@ -40,9 +42,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       )}
     >
       <Providers>
-        <body className="min-h-full flex flex-col">
-          {children}
-          <Toaster />
+        <body className="flex min-h-full flex-col">
+          <SidebarProvider className="flex min-h-0 w-full flex-1 flex-col">
+            <Header />
+            <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+            <Toaster />
+          </SidebarProvider>
         </body>
       </Providers>
     </html>

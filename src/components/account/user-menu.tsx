@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { LogOutIcon, UserIcon } from "lucide-react";
+import { KeyRoundIcon, LogOutIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -75,14 +76,16 @@ export function UserMenu() {
         </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="truncate font-medium text-foreground">
-            {user.name}
-          </span>
-          <span className="truncate font-normal text-muted-foreground">
-            {user.email}
-          </span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <span className="truncate font-medium text-foreground">
+              {user.name}
+            </span>
+            <span className="truncate font-normal text-muted-foreground">
+              {user.email}
+            </span>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {profileUrl ? (
           <DropdownMenuItem
@@ -93,6 +96,17 @@ export function UserMenu() {
             Profile
           </DropdownMenuItem>
         ) : null}
+        <DropdownMenuItem
+          nativeButton={false}
+          render={
+            <Link
+              href={`/forgot-password?email=${encodeURIComponent(user.email)}`}
+            />
+          }
+        >
+          <KeyRoundIcon />
+          Forgot password
+        </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
           onClick={handleLogout}

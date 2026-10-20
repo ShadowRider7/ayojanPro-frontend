@@ -51,6 +51,9 @@
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  /* Height of the global header. The dashboard shell and the sidebar use it
+     to size themselves against the space that is left below the header. */
+  --header-height: 4rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);

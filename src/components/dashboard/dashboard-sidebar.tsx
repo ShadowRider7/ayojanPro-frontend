@@ -2,20 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Logo from "@/assets/svg/Logo";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { APP_NAME, DASHBOARD_ROUTES } from "@/lib/constants";
+import { DASHBOARD_ROUTES } from "@/lib/constants";
 import { adminRoutes, clientRoutes, professionalRoutes } from "@/routes";
 import type { Role } from "@/types";
 import type { SidebarItems } from "@/types/sidebar.type";
@@ -37,22 +35,6 @@ export function DashboardSidebar({ role }: { role: Role }) {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={<Link href="/" />}
-              className="gap-2"
-            >
-              <Logo className="size-6 shrink-0 text-primary" />
-              <span className="font-heading text-sm font-semibold tracking-tight">
-                {APP_NAME}
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
       <SidebarContent>
         {routes.map((group) => (
           <SidebarGroup key={group.title}>

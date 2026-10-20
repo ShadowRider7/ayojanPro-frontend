@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import CtaSection from "@/components/modules/homepage/CtaSection";
+import EventTypeCategories from "@/components/modules/homepage/EventTypeCategories";
 import FeaturedProfessionals from "@/components/modules/homepage/FeaturedProfessionals";
 import Hero from "@/components/modules/homepage/Hero";
 import HowItWorks from "@/components/modules/homepage/HowItWorks";
@@ -31,6 +32,7 @@ export default function HomePage() {
     <>
       <Hero />
       <HowItWorks />
+      <EventTypeCategories />
       <ServiceCategories />
       <FeaturedProfessionals />
       <CtaSection />

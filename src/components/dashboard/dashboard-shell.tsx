@@ -1,23 +1,28 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 import { useGetMe } from "@/hooks";
 import { DashboardSidebar } from "./dashboard-sidebar";
-import { DashboardTopbar } from "./dashboard-topbar";
 
+/**
+ * The dashboard app shell.
+ *
+ * The public header sits above this shell, so the shell fills the remaining
+ * viewport height and the page keeps scrolling as one — the header stays
+ * sticky and the sidebar stays fixed while the content scrolls.
+ */
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const { data } = useGetMe();
 
   const user = data?.data;
 
   return (
-    <SidebarProvider>
+    <div className="flex min-h-[calc(100dvh-var(--header-height))] w-full">
       {user ? <DashboardSidebar role={user.role} /> : null}
-      <SidebarInset>
-        <DashboardTopbar />
-        <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">{children}</div>
+      <SidebarInset className="min-w-0">
+        <div className="flex flex-col gap-6 p-4 sm:p-6">{children}</div>
       </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }
