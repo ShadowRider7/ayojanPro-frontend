@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useAllProfessionals, useApproveProfessional } from "@/hooks";
 import type { Professional } from "@/types";
-import { toNumber } from "@/utils";
+import { formatPhone, toNumber } from "@/utils";
 
 type DialogState = {
   action: "reject";
@@ -79,6 +79,16 @@ export function ProfessionalApprovals() {
   const handleReject = useCallback(
     (reason: string) => {
       if (!dialog) return;
+      if (dialog.professional.status === "APPROVED") {
+        toast.add({
+          title: "Cannot reject an approved professional",
+          description:
+            "Approval is permanent. Suspend or block the user account instead.",
+          type: "error",
+        });
+        setDialog(null);
+        return;
+      }
       approve(
         {
           professionalId: dialog.professional.id,
@@ -220,6 +230,7 @@ export function ProfessionalApprovals() {
 
       <RejectDialog
         dialog={dialog}
+        loading={isApproving}
         onClose={() => setDialog(null)}
         onConfirm={handleReject}
       />
@@ -265,7 +276,7 @@ function ProfessionalCard({
           {professional.phone ? (
             <span className="flex items-center gap-2">
               <PhoneIcon className="size-3.5" />
-              {professional.phone}
+              {formatPhone(professional.phone)}
             </span>
           ) : null}
           {[professional.city, professional.country].filter(Boolean).length >
@@ -359,20 +370,22 @@ function ProfessionalCard({
           <Button
             size="sm"
             onClick={onApprove}
-            disabled={isApproving || professional.status === "APPROVED"}
+            disabled={isApproving || professional.status !== "PENDING"}
           >
             <CheckIcon />
             Approve
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onReject}
-            disabled={isApproving || professional.status === "REJECTED"}
-          >
-            <BanIcon />
-            Reject
-          </Button>
+          {professional.status === "PENDING" ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onReject}
+              disabled={isApproving}
+            >
+              <BanIcon />
+              Reject
+            </Button>
+          ) : null}
           <span className="ml-auto text-xs text-muted-foreground">
             <DateText value={professional.createdAt} mode="relative" />
           </span>
@@ -384,10 +397,12 @@ function ProfessionalCard({
 
 function RejectDialog({
   dialog,
+  loading,
   onClose,
   onConfirm,
 }: {
   dialog: DialogState;
+  loading: boolean;
   onClose: () => void;
   onConfirm: (reason: string) => void;
 }) {
@@ -398,6 +413,7 @@ function RejectDialog({
   return (
     <ConfirmDialog
       open
+      loading={loading}
       onOpenChange={(open) => {
         if (!open) {
           setReason("");

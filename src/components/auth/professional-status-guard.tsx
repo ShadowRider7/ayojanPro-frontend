@@ -1,6 +1,7 @@
 "use client";
 
-import { ClockIcon, ShieldXIcon } from "lucide-react";
+import { CalendarSearchIcon, ClockIcon, ShieldXIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { EmptyState, StatusBadge } from "@/components/shared";
@@ -66,19 +67,27 @@ export default function ProfessionalStatusGuard({
           }
         />
         <StatusBadge status={professional.status} />
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          disabled={isRefetching}
-        >
-          {isRefetching ? (
-            <>
-              <Spinner className="size-3.5" /> Checking
-            </>
-          ) : (
-            "Check again"
-          )}
-        </Button>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+          >
+            {isRefetching ? (
+              <>
+                <Spinner className="size-3.5" /> Checking
+              </>
+            ) : (
+              "Check again"
+            )}
+          </Button>
+          <Button
+            nativeButton={false}
+            render={<Link href="/dashboard/professional/browse-events" />}
+          >
+            <CalendarSearchIcon /> Browse events
+          </Button>
+        </div>
       </div>
     </div>
   );
