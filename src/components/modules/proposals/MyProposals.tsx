@@ -294,7 +294,7 @@ export function MyProposals() {
         <EmptyState
           icon={InboxIcon}
           title="No proposals yet"
-          description="Find an event that needs your services and send your first proposal — it can cover several requested services at once."
+          description="Find an event that needs your services and send your first proposal — you can cover several of the services you offer."
           action={
             <Button
               nativeButton={false}

@@ -1,10 +1,12 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { PlusIcon, Trash2Icon } from "lucide-react";
+import { SendIcon, Trash2Icon } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DateText } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -22,13 +24,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
@@ -37,8 +32,9 @@ import type {
   CreateProposalPayload,
   Event,
   EventServiceRequirement,
+  ProfessionalService,
 } from "@/types";
-import { toDateTimeLocal } from "@/utils/formatters";
+import { findMatchingService, toDateTimeLocal } from "@/utils";
 import { type ProposalFormValues, proposalFormSchema } from "@/validation";
 
 const PROPOSABLE_STATUSES = ["OPEN", "PARTIALLY_FILLED"] as const;
@@ -55,31 +51,28 @@ type ProposalFormProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-function newRequirementIds(
-  requirements: EventServiceRequirement[],
-  bidOn: string[],
-): string[] {
-  const blocked = new Set(bidOn);
+type EligibleRequirement = {
+  requirement: EventServiceRequirement;
+  service: ProfessionalService;
+};
 
-  return requirements
-    .filter(
-      (requirement) =>
-        !blocked.has(requirement.id) &&
-        PROPOSABLE_STATUSES.includes(
-          requirement.status as (typeof PROPOSABLE_STATUSES)[number],
-        ),
-    )
-    .map((requirement) => requirement.id);
+function isProposable(requirement: EventServiceRequirement): boolean {
+  return PROPOSABLE_STATUSES.includes(
+    requirement.status as (typeof PROPOSABLE_STATUSES)[number],
+  );
 }
 
-function blankItem(event: Event): ProposalFormValues["items"][number] {
+function buildItem(
+  requirement: EventServiceRequirement,
+  service: ProfessionalService,
+): ProposalFormValues["items"][number] {
   return {
     id: crypto.randomUUID(),
-    eventServiceRequirementId: "",
-    professionalServiceId: "",
+    eventServiceRequirementId: requirement.id,
+    professionalServiceId: service.id,
     proposedAmount: "",
-    proposedStartAt: toDateTimeLocal(event.startAt),
-    proposedEndAt: toDateTimeLocal(event.endAt),
+    proposedStartAt: toDateTimeLocal(requirement.startAt),
+    proposedEndAt: toDateTimeLocal(requirement.endAt),
   };
 }
 
@@ -91,84 +84,194 @@ export function ProposalForm({
   open,
   onOpenChange,
 }: ProposalFormProps) {
-  const { mutate: createProposal, isPending } = useCreateProposal();
+  const { mutateAsync: createProposal } = useCreateProposal();
   const servicesQuery = useMyServices();
-  const services = servicesQuery.data?.data ?? [];
-
-  const selectableRequirementIds = newRequirementIds(
-    requirements,
-    bidOnRequirementIds,
+  const services = useMemo(
+    () => servicesQuery.data?.data ?? [],
+    [servicesQuery.data?.data],
   );
-  const requirementItems = selectableRequirementIds.map((id) => {
-    const requirement = requirements.find((candidate) => candidate.id === id);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    return {
-      value: id,
-      label: requirement?.serviceName ?? "Service requirement",
-    };
-  });
-  const serviceItems = services.map((service) => ({
-    value: service.id,
-    label: service.name,
-  }));
+  // A professional may only propose for requirements matching a service they
+  // actually offer.
+  const eligibleRequirements = useMemo<EligibleRequirement[]>(() => {
+    const activeServices = services.filter((service) => service.isActive);
 
-  const initialRequirement = initialRequirementId
-    ? requirements.find((candidate) => candidate.id === initialRequirementId)
+    return requirements
+      .filter(
+        (requirement) =>
+          isProposable(requirement) &&
+          !bidOnRequirementIds.includes(requirement.id),
+      )
+      .map((requirement) => ({
+        requirement,
+        service: findMatchingService(requirement.serviceName, activeServices),
+      }))
+      .filter(
+        (entry): entry is EligibleRequirement => entry.service !== undefined,
+      );
+  }, [requirements, bidOnRequirementIds, services]);
+
+  const initialEntry = initialRequirementId
+    ? eligibleRequirements.find(
+        (entry) => entry.requirement.id === initialRequirementId,
+      )
     : undefined;
 
   const form = useForm({
     defaultValues: {
       message: "",
-      items: [
-        {
-          ...blankItem(event),
-          eventServiceRequirementId: initialRequirement?.id ?? "",
-          proposedStartAt: toDateTimeLocal(
-            initialRequirement?.startAt ?? event.startAt,
-          ),
-          proposedEndAt: toDateTimeLocal(
-            initialRequirement?.endAt ?? event.endAt,
-          ),
-        },
-      ],
+      items: initialEntry
+        ? [buildItem(initialEntry.requirement, initialEntry.service)]
+        : [],
     } satisfies ProposalFormValues,
     validators: {
       onSubmit: proposalFormSchema,
     },
-    onSubmit: ({ value }) => {
-      const payload: CreateProposalPayload = {
-        eventId: event.id,
-        ...(value.message.trim() ? { message: value.message.trim() } : {}),
-        items: value.items.map((item) => ({
-          eventServiceRequirementId: item.eventServiceRequirementId,
-          professionalServiceId: item.professionalServiceId,
-          proposedAmount: Number(item.proposedAmount),
-          proposedStartAt: new Date(item.proposedStartAt).toISOString(),
-          proposedEndAt: new Date(item.proposedEndAt).toISOString(),
-        })),
-      };
+    onSubmit: async ({ value }) => {
+      const message = value.message.trim();
 
-      createProposal(payload, {
-        onSuccess: () => {
-          toast.add({
-            title: "Proposal submitted",
-            description:
-              "The client has been notified and can accept or reject it from their event.",
-            type: "success",
-          });
-          onOpenChange(false);
-        },
-        onError: (err) => {
-          toast.add({
-            title: "Could not submit the proposal",
-            description:
-              err.message || "Something went wrong. Please try again",
-            type: "error",
-          });
-        },
-      });
+      if (value.items.length === 0) {
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      const results = await Promise.allSettled(
+        value.items.map((item) => {
+          const payload: CreateProposalPayload = {
+            eventId: event.id,
+            ...(message ? { message } : {}),
+            items: [
+              {
+                eventServiceRequirementId: item.eventServiceRequirementId,
+                professionalServiceId: item.professionalServiceId,
+                proposedAmount: Number(item.proposedAmount),
+                proposedStartAt: new Date(item.proposedStartAt).toISOString(),
+                proposedEndAt: new Date(item.proposedEndAt).toISOString(),
+              },
+            ],
+          };
+
+          return createProposal(payload);
+        }),
+      );
+
+      setIsSubmitting(false);
+
+      const failures = results.flatMap((result, index) =>
+        result.status === "rejected"
+          ? [
+              {
+                serviceName:
+                  requirements.find(
+                    (candidate) =>
+                      candidate.id ===
+                      value.items[index]?.eventServiceRequirementId,
+                  )?.serviceName ?? "Service",
+                message:
+                  result.reason?.message ??
+                  "Something went wrong. Please try again",
+              },
+            ]
+          : [],
+      );
+      const sentCount = results.length - failures.length;
+
+      if (failures.length === 0) {
+        toast.add({
+          title:
+            sentCount === 1 ? "Proposal sent" : `${sentCount} proposals sent`,
+          description:
+            "The client has been notified and can accept or reject each service.",
+          type: "success",
+        });
+
+        form.setFieldValue("items", []);
+        form.setFieldValue("message", "");
+        onOpenChange(false);
+
+        return;
+      }
+
+      if (sentCount > 0) {
+        toast.add({
+          title: `${sentCount} sent, ${failures.length} failed`,
+          description: failures
+            .map((failure) => `${failure.serviceName}: ${failure.message}`)
+            .join(" — "),
+          type: "error",
+        });
+      } else {
+        toast.add({
+          title: "Could not send the proposal",
+          description: failures
+            .map((failure) => `${failure.serviceName}: ${failure.message}`)
+            .join(" — "),
+          type: "error",
+        });
+      }
+
+      // Keep only the services that failed so they can be retried.
+      const failedIds = new Set(
+        value.items
+          .filter((_, index) => results[index]?.status === "rejected")
+          .map((item) => item.eventServiceRequirementId),
+      );
+
+      form.setFieldValue(
+        "items",
+        value.items.filter((item) =>
+          failedIds.has(item.eventServiceRequirementId),
+        ),
+      );
     },
   });
+
+  // Re-open the dialog on a single service (the "Propose" button on a
+  // requirement) — preselect it once per opening, so unchecking it sticks.
+  const preselectedForOpen = useRef(false);
+
+  useEffect(() => {
+    if (!open) {
+      preselectedForOpen.current = false;
+      return;
+    }
+
+    if (preselectedForOpen.current) {
+      return;
+    }
+
+    preselectedForOpen.current = true;
+
+    if (!initialEntry || form.state.values.items.length > 0) {
+      return;
+    }
+
+    form.pushFieldValue(
+      "items",
+      buildItem(initialEntry.requirement, initialEntry.service),
+    );
+  }, [open, initialEntry, form]);
+
+  const toggleRequirement = (entry: EligibleRequirement) => {
+    const index = form.state.values.items.findIndex(
+      (item) => item.eventServiceRequirementId === entry.requirement.id,
+    );
+
+    if (index >= 0) {
+      form.removeFieldValue("items", index);
+      return;
+    }
+
+    form.pushFieldValue("items", buildItem(entry.requirement, entry.service));
+  };
+
+  const selectedIds = form.state.values.items.map(
+    (item) => item.eventServiceRequirementId,
+  );
+  const selectedCount = form.state.values.items.length;
+  const noServices = services.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -176,8 +279,9 @@ export function ProposalForm({
         <DialogHeader>
           <DialogTitle>Send a proposal</DialogTitle>
           <DialogDescription>
-            Quote an amount and schedule for each service you want to cover on{" "}
-            {event.title}. The client accepts or rejects the whole proposal.
+            Tick every service of {event.title} you can cover. Each service is
+            sent as its own proposal, so the client accepts or rejects them one
+            by one.
           </DialogDescription>
         </DialogHeader>
 
@@ -185,20 +289,49 @@ export function ProposalForm({
           <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
             Could not load your services — close this dialog and try again.
           </p>
-        ) : serviceItems.length === 0 ? (
+        ) : noServices ? (
           <div className="flex flex-col gap-2 rounded-lg border border-dashed p-4 text-sm">
             <p className="font-medium">You need at least one service</p>
             <p className="text-muted-foreground">
-              Every proposal item offers one of your services. Add one under
+              You can only propose for services you offer. Add one under
               Services first.
             </p>
             <Button
               variant="outline"
               size="sm"
               className="w-fit"
+              nativeButton={false}
               render={
                 <Link href="/dashboard/professional/services">
                   Go to services
+                </Link>
+              }
+            />
+          </div>
+        ) : eligibleRequirements.length === 0 ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed p-4 text-sm">
+            <p className="font-medium">No matching services on this event</p>
+            <p className="text-muted-foreground">
+              This event needs{" "}
+              {requirements
+                .filter(isProposable)
+                .map((requirement) => requirement.serviceName)
+                .join(", ") || "no open services"}
+              . You offer{" "}
+              {services
+                .filter((service) => service.isActive)
+                .map((service) => service.name)
+                .join(", ") || "no active service"}
+              .
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-fit"
+              nativeButton={false}
+              render={
+                <Link href="/dashboard/professional/services">
+                  Manage services
                 </Link>
               }
             />
@@ -213,10 +346,51 @@ export function ProposalForm({
             }}
           >
             <FieldGroup>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">Services you can cover</p>
+                <ul className="flex flex-col gap-2">
+                  {eligibleRequirements.map((entry) => {
+                    const isSelected = selectedIds.includes(
+                      entry.requirement.id,
+                    );
+
+                    return (
+                      <li key={entry.requirement.id}>
+                        <label
+                          htmlFor={`propose-${entry.requirement.id}`}
+                          className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm hover:bg-muted/40 has-[:checked]:border-primary/50 has-[:checked]:bg-muted/40"
+                        >
+                          <Checkbox
+                            id={`propose-${entry.requirement.id}`}
+                            className="mt-0.5"
+                            checked={isSelected}
+                            onCheckedChange={() => toggleRequirement(entry)}
+                          />
+                          <span className="flex min-w-0 flex-col gap-0.5">
+                            <span className="font-medium">
+                              {entry.requirement.serviceName}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              You offer: {entry.service.name} ·{" "}
+                              {Number(
+                                entry.requirement.budget,
+                              ).toLocaleString()}{" "}
+                              {entry.requirement.currency} budget
+                            </span>
+                          </span>
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
               <form.Field name="items">
                 {(field) => {
                   const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+                    field.state.meta.isTouched &&
+                    !field.state.meta.isValid &&
+                    field.state.value.length > 0;
 
                   return isInvalid ? (
                     <Field data-invalid>
@@ -231,22 +405,9 @@ export function ProposalForm({
                   (candidate) =>
                     candidate.id === item.eventServiceRequirementId,
                 );
-                const otherSelectedIds = form.state.values.items
-                  .filter((_, otherIndex) => otherIndex !== index)
-                  .map((other) => other.eventServiceRequirementId);
-                const rowRequirementItems = [
-                  ...(item.eventServiceRequirementId
-                    ? requirementItems.filter(
-                        (option) =>
-                          option.value === item.eventServiceRequirementId,
-                      )
-                    : []),
-                  ...requirementItems.filter(
-                    (option) =>
-                      option.value !== item.eventServiceRequirementId &&
-                      !otherSelectedIds.includes(option.value),
-                  ),
-                ];
+                const service = services.find(
+                  (candidate) => candidate.id === item.professionalServiceId,
+                );
 
                 return (
                   <div
@@ -254,278 +415,209 @@ export function ProposalForm({
                     className="flex flex-col gap-4 rounded-xl border p-4"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-heading text-sm font-medium">
-                        Service {index + 1}
-                      </p>
-                      {form.state.values.items.length > 1 ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          aria-label={`Remove service ${index + 1}`}
-                          disabled={isPending}
-                          onClick={() => form.removeFieldValue("items", index)}
-                        >
-                          <Trash2Icon /> Remove
-                        </Button>
-                      ) : null}
+                      <div className="flex flex-col gap-0.5">
+                        <p className="font-heading text-sm font-medium">
+                          {requirement?.serviceName ?? "Service"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Covered by {service?.name ?? "your service"}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove ${requirement?.serviceName ?? "service"}`}
+                        disabled={isSubmitting}
+                        onClick={() => form.removeFieldValue("items", index)}
+                      >
+                        <Trash2Icon /> Remove
+                      </Button>
                     </div>
 
+                    <form.Field name={`items[${index}].proposedAmount`}>
+                      {(field) => {
+                        const isInvalid =
+                          field.state.meta.isTouched &&
+                          !field.state.meta.isValid;
+
+                        return (
+                          <Field data-invalid={isInvalid}>
+                            <FieldLabel htmlFor={field.name}>
+                              Proposed amount (BDT)
+                            </FieldLabel>
+                            <Input
+                              id={field.name}
+                              name={field.name}
+                              type="number"
+                              min="0"
+                              step="any"
+                              placeholder="40000"
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(event) =>
+                                field.handleChange(event.target.value)
+                              }
+                              aria-invalid={isInvalid}
+                            />
+                            {isInvalid ? (
+                              <FieldError errors={field.state.meta.errors} />
+                            ) : null}
+                            {requirement ? (
+                              <FieldDescription>
+                                Client budget:{" "}
+                                {Number(requirement.budget).toLocaleString()}{" "}
+                                {requirement.currency}
+                              </FieldDescription>
+                            ) : null}
+                          </Field>
+                        );
+                      }}
+                    </form.Field>
+
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <form.Field
-                        name={`items[${index}].eventServiceRequirementId`}
+                      <form.Subscribe
+                        selector={(state) =>
+                          state.values.items[index]?.proposedEndAt ?? ""
+                        }
                       >
-                        {(field) => {
-                          const isInvalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid;
+                        {(itemEndAt) => {
+                          const requirementEndAt = requirement
+                            ? toDateTimeLocal(requirement.endAt)
+                            : undefined;
+                          const maxAt =
+                            itemEndAt &&
+                            (!requirementEndAt || itemEndAt < requirementEndAt)
+                              ? itemEndAt
+                              : requirementEndAt;
 
                           return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor={field.name}>
-                                Requirement
-                              </FieldLabel>
-                              <Select
-                                items={rowRequirementItems}
-                                value={field.state.value || null}
-                                onValueChange={(value) => {
-                                  field.handleChange(value ?? "");
-                                  const next = requirements.find(
-                                    (candidate) => candidate.id === value,
-                                  );
+                            <form.Field
+                              name={`items[${index}].proposedStartAt`}
+                            >
+                              {(field) => {
+                                const isInvalid =
+                                  field.state.meta.isTouched &&
+                                  !field.state.meta.isValid;
 
-                                  if (next) {
-                                    form.setFieldValue(
-                                      `items[${index}].proposedStartAt`,
-                                      toDateTimeLocal(next.startAt),
-                                    );
-                                    form.setFieldValue(
-                                      `items[${index}].proposedEndAt`,
-                                      toDateTimeLocal(next.endAt),
-                                    );
-                                  }
-                                }}
-                              >
-                                <SelectTrigger
-                                  className="w-full"
-                                  aria-label="Requirement"
-                                >
-                                  <SelectValue placeholder="Pick a requirement" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {rowRequirementItems.map((option) => (
-                                    <SelectItem
-                                      key={option.value}
-                                      value={option.value}
-                                    >
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {isInvalid ? (
-                                <FieldError errors={field.state.meta.errors} />
-                              ) : null}
-                            </Field>
+                                return (
+                                  <Field data-invalid={isInvalid}>
+                                    <FieldLabel htmlFor={field.name}>
+                                      Starts at
+                                    </FieldLabel>
+                                    <Input
+                                      id={field.name}
+                                      name={field.name}
+                                      type="datetime-local"
+                                      min={
+                                        requirement
+                                          ? toDateTimeLocal(requirement.startAt)
+                                          : undefined
+                                      }
+                                      max={maxAt || undefined}
+                                      value={field.state.value}
+                                      onBlur={field.handleBlur}
+                                      onChange={(event) => {
+                                        const nextStartAt = event.target.value;
+
+                                        field.handleChange(nextStartAt);
+
+                                        // Keep the row valid when the start
+                                        // moves past the picked end.
+                                        if (
+                                          nextStartAt &&
+                                          itemEndAt &&
+                                          nextStartAt >= itemEndAt
+                                        ) {
+                                          form.setFieldValue(
+                                            `items[${index}].proposedEndAt`,
+                                            "",
+                                          );
+                                        }
+                                      }}
+                                      aria-invalid={isInvalid}
+                                    />
+                                    {isInvalid ? (
+                                      <FieldError
+                                        errors={field.state.meta.errors}
+                                      />
+                                    ) : null}
+                                  </Field>
+                                );
+                              }}
+                            </form.Field>
                           );
                         }}
-                      </form.Field>
+                      </form.Subscribe>
 
-                      <form.Field
-                        name={`items[${index}].professionalServiceId`}
+                      <form.Subscribe
+                        selector={(state) =>
+                          state.values.items[index]?.proposedStartAt ?? ""
+                        }
                       >
-                        {(field) => {
-                          const isInvalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid;
+                        {(itemStartAt) => {
+                          const requirementStartAt = requirement
+                            ? toDateTimeLocal(requirement.startAt)
+                            : undefined;
+                          const minAt =
+                            itemStartAt &&
+                            (!requirementStartAt ||
+                              itemStartAt > requirementStartAt)
+                              ? itemStartAt
+                              : requirementStartAt;
 
                           return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor={field.name}>
-                                Your service
-                              </FieldLabel>
-                              <Select
-                                items={serviceItems}
-                                value={field.state.value || null}
-                                onValueChange={(value) =>
-                                  field.handleChange(value ?? "")
-                                }
-                              >
-                                <SelectTrigger
-                                  className="w-full"
-                                  aria-label="Your service"
-                                >
-                                  <SelectValue placeholder="Pick one of your services" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {serviceItems.map((option) => (
-                                    <SelectItem
-                                      key={option.value}
-                                      value={option.value}
-                                    >
-                                      {option.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {isInvalid ? (
-                                <FieldError errors={field.state.meta.errors} />
-                              ) : null}
-                            </Field>
+                            <form.Field name={`items[${index}].proposedEndAt`}>
+                              {(field) => {
+                                const isInvalid =
+                                  field.state.meta.isTouched &&
+                                  !field.state.meta.isValid;
+
+                                return (
+                                  <Field data-invalid={isInvalid}>
+                                    <FieldLabel htmlFor={field.name}>
+                                      Ends at
+                                    </FieldLabel>
+                                    <Input
+                                      id={field.name}
+                                      name={field.name}
+                                      type="datetime-local"
+                                      min={minAt || undefined}
+                                      max={
+                                        requirement
+                                          ? toDateTimeLocal(requirement.endAt)
+                                          : undefined
+                                      }
+                                      value={field.state.value}
+                                      onBlur={field.handleBlur}
+                                      onChange={(event) =>
+                                        field.handleChange(event.target.value)
+                                      }
+                                      aria-invalid={isInvalid}
+                                    />
+                                    {isInvalid ? (
+                                      <FieldError
+                                        errors={field.state.meta.errors}
+                                      />
+                                    ) : null}
+                                    {requirement ? (
+                                      <FieldDescription>
+                                        Requirement window:{" "}
+                                        <DateText value={requirement.startAt} />{" "}
+                                        – <DateText value={requirement.endAt} />
+                                      </FieldDescription>
+                                    ) : null}
+                                  </Field>
+                                );
+                              }}
+                            </form.Field>
                           );
                         }}
-                      </form.Field>
-
-                      <form.Field name={`items[${index}].proposedAmount`}>
-                        {(field) => {
-                          const isInvalid =
-                            field.state.meta.isTouched &&
-                            !field.state.meta.isValid;
-
-                          return (
-                            <Field data-invalid={isInvalid}>
-                              <FieldLabel htmlFor={field.name}>
-                                Proposed amount (BDT)
-                              </FieldLabel>
-                              <Input
-                                id={field.name}
-                                name={field.name}
-                                type="number"
-                                min="0"
-                                step="any"
-                                placeholder="40000"
-                                value={field.state.value}
-                                onBlur={field.handleBlur}
-                                onChange={(event) =>
-                                  field.handleChange(event.target.value)
-                                }
-                                aria-invalid={isInvalid}
-                              />
-                              {isInvalid ? (
-                                <FieldError errors={field.state.meta.errors} />
-                              ) : null}
-                              {requirement ? (
-                                <FieldDescription>
-                                  Client budget:{" "}
-                                  {Number(requirement.budget).toLocaleString()}{" "}
-                                  {requirement.currency}
-                                </FieldDescription>
-                              ) : null}
-                            </Field>
-                          );
-                        }}
-                      </form.Field>
-
-                      <div className="grid gap-4">
-                        <form.Field name={`items[${index}].proposedStartAt`}>
-                          {(field) => {
-                            const isInvalid =
-                              field.state.meta.isTouched &&
-                              !field.state.meta.isValid;
-
-                            return (
-                              <Field data-invalid={isInvalid}>
-                                <FieldLabel htmlFor={field.name}>
-                                  Starts at
-                                </FieldLabel>
-                                <Input
-                                  id={field.name}
-                                  name={field.name}
-                                  type="datetime-local"
-                                  min={
-                                    requirement
-                                      ? toDateTimeLocal(requirement.startAt)
-                                      : undefined
-                                  }
-                                  max={
-                                    requirement
-                                      ? toDateTimeLocal(requirement.endAt)
-                                      : undefined
-                                  }
-                                  value={field.state.value}
-                                  onBlur={field.handleBlur}
-                                  onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                  }
-                                  aria-invalid={isInvalid}
-                                />
-                                {isInvalid ? (
-                                  <FieldError
-                                    errors={field.state.meta.errors}
-                                  />
-                                ) : null}
-                              </Field>
-                            );
-                          }}
-                        </form.Field>
-
-                        <form.Field name={`items[${index}].proposedEndAt`}>
-                          {(field) => {
-                            const isInvalid =
-                              field.state.meta.isTouched &&
-                              !field.state.meta.isValid;
-
-                            return (
-                              <Field data-invalid={isInvalid}>
-                                <FieldLabel htmlFor={field.name}>
-                                  Ends at
-                                </FieldLabel>
-                                <Input
-                                  id={field.name}
-                                  name={field.name}
-                                  type="datetime-local"
-                                  min={
-                                    requirement
-                                      ? toDateTimeLocal(requirement.startAt)
-                                      : undefined
-                                  }
-                                  max={
-                                    requirement
-                                      ? toDateTimeLocal(requirement.endAt)
-                                      : undefined
-                                  }
-                                  value={field.state.value}
-                                  onBlur={field.handleBlur}
-                                  onChange={(event) =>
-                                    field.handleChange(event.target.value)
-                                  }
-                                  aria-invalid={isInvalid}
-                                />
-                                {isInvalid ? (
-                                  <FieldError
-                                    errors={field.state.meta.errors}
-                                  />
-                                ) : null}
-                                {requirement ? (
-                                  <FieldDescription>
-                                    Requirement window:{" "}
-                                    <DateText value={requirement.startAt} /> –{" "}
-                                    <DateText value={requirement.endAt} />
-                                  </FieldDescription>
-                                ) : null}
-                              </Field>
-                            );
-                          }}
-                        </form.Field>
-                      </div>
+                      </form.Subscribe>
                     </div>
                   </div>
                 );
               })}
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-fit"
-                disabled={
-                  isPending ||
-                  form.state.values.items.length >= requirementItems.length
-                }
-                onClick={() => form.pushFieldValue("items", blankItem(event))}
-              >
-                <PlusIcon /> Add another service
-              </Button>
 
               <form.Field name="message">
                 {(field) => {
@@ -562,21 +654,27 @@ export function ProposalForm({
 
         <DialogFooter>
           <DialogClose
-            render={<Button variant="outline" disabled={isPending} />}
+            render={<Button variant="outline" disabled={isSubmitting} />}
           >
             Cancel
           </DialogClose>
           <Button
             type="submit"
             form="proposal-form"
-            disabled={isPending || serviceItems.length === 0}
+            disabled={isSubmitting || noServices || selectedCount === 0}
           >
-            {isPending ? (
+            {isSubmitting ? (
               <>
                 <Spinner /> Sending
               </>
+            ) : selectedCount > 1 ? (
+              <>
+                <SendIcon /> Send {selectedCount} proposals
+              </>
             ) : (
-              "Send proposal"
+              <>
+                <SendIcon /> Send proposal
+              </>
             )}
           </Button>
         </DialogFooter>

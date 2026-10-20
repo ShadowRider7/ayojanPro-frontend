@@ -1,6 +1,11 @@
 "use client";
 
-import { ArrowLeftIcon, CalendarSearchIcon, SendIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  CalendarSearchIcon,
+  ClockIcon,
+  SendIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
@@ -15,8 +20,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEvent, useEventRequiredServices, useMyProposals } from "@/hooks";
+import {
+  useEvent,
+  useEventRequiredServices,
+  useGetMe,
+  useMyProposals,
+  useMyServices,
+} from "@/hooks";
 import type { Event, EventServiceRequirement, Proposal } from "@/types";
+import { eventTypeLabel, findMatchingService } from "@/utils";
 import { ProposalForm } from "./ProposalForm";
 
 const PROPOSABLE_STATUSES = ["OPEN", "PARTIALLY_FILLED"] as const;
@@ -31,6 +43,11 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
   const eventQuery = useEvent(eventId);
   const requirementsQuery = useEventRequiredServices(eventId);
   const myProposalsQuery = useMyProposals();
+  const { data: me } = useGetMe();
+
+  // Browsing events is open to every professional, but only an approved one
+  // can commit to a job by sending a proposal.
+  const isApproved = me?.data.professional?.status === "APPROVED";
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogRequirementId, setDialogRequirementId] = useState<string | null>(
@@ -63,11 +80,36 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
         .map((item) => item.eventServiceRequirementId),
     [eventProposals],
   );
-  const proposableRequirements = requirements.filter(
-    (requirement) =>
-      PROPOSABLE_STATUSES.includes(
-        requirement.status as (typeof PROPOSABLE_STATUSES)[number],
-      ) && !bidOnRequirementIds.includes(requirement.id),
+  const proposableRequirements = useMemo(
+    () =>
+      requirements.filter(
+        (requirement) =>
+          PROPOSABLE_STATUSES.includes(
+            requirement.status as (typeof PROPOSABLE_STATUSES)[number],
+          ) && !bidOnRequirementIds.includes(requirement.id),
+      ),
+    [requirements, bidOnRequirementIds],
+  );
+
+  // A professional may only propose for requirements matching a service they
+  // actually offer.
+  const servicesQuery = useMyServices();
+  const myServices = useMemo(
+    () => servicesQuery.data?.data ?? [],
+    [servicesQuery.data?.data],
+  );
+  const matchableRequirementIds = useMemo(
+    () =>
+      new Set(
+        proposableRequirements
+          .filter(
+            (requirement) =>
+              findMatchingService(requirement.serviceName, myServices) !==
+              undefined,
+          )
+          .map((requirement) => requirement.id),
+      ),
+    [proposableRequirements, myServices],
   );
 
   const isPending = eventQuery.isPending || requirementsQuery.isPending;
@@ -102,6 +144,7 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
         />
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/dashboard/professional/browse-events">
               <ArrowLeftIcon /> Back to browse events
@@ -128,6 +171,7 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href="/dashboard/professional/browse-events">
               <ArrowLeftIcon /> Back to browse
@@ -135,7 +179,12 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
           }
         />
         <Button
-          disabled={proposableRequirements.length === 0}
+          disabled={!isApproved || matchableRequirementIds.size === 0}
+          title={
+            isApproved
+              ? undefined
+              : "Your application must be approved before you can send proposals."
+          }
           onClick={() => openDialog(null)}
         >
           <SendIcon /> Send proposal
@@ -148,14 +197,28 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
         <MyProposalsForEventCard proposals={eventProposals} />
       ) : null}
 
+      {!isApproved ? (
+        <div className="flex items-start gap-3 rounded-xl border border-dashed bg-muted/40 p-4 text-sm">
+          <ClockIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div className="flex flex-col gap-1">
+            <p className="font-medium">You can browse, but not propose yet</p>
+            <p className="text-muted-foreground">
+              Your application is still being reviewed. You can see every
+              published event now — as soon as an admin approves you, you will
+              be able to send proposals.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-heading text-lg font-semibold">
             Services requested
           </h2>
           <p className="text-sm text-muted-foreground">
-            Quote your own amount and schedule for each service — one proposal
-            can cover several of them at once.
+            You can propose for the services you offer — each one is sent as its
+            own proposal, so the client accepts them one by one.
           </p>
         </div>
 
@@ -180,6 +243,9 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
                 <RequirementCard
                   requirement={requirement}
                   alreadyBid={bidOnRequirementIds.includes(requirement.id)}
+                  canPropose={
+                    isApproved && matchableRequirementIds.has(requirement.id)
+                  }
                   onPropose={() => openDialog(requirement.id)}
                 />
               </li>
@@ -205,6 +271,7 @@ export function EventBrowseDetail({ eventId }: EventBrowseDetailProps) {
 
 function EventSummaryCard({ event }: { event: Event }) {
   const location = [event.city, event.country].filter(Boolean).join(", ");
+  const postedBy = event.client?.user?.name;
 
   return (
     <Card size="sm">
@@ -238,7 +305,15 @@ function EventSummaryCard({ event }: { event: Event }) {
               <p className="text-xs font-medium text-muted-foreground uppercase">
                 Event type
               </p>
-              <p className="text-sm">{event.eventType}</p>
+              <p className="text-sm">{eventTypeLabel(event.eventType)}</p>
+            </div>
+          ) : null}
+          {postedBy ? (
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase">
+                Posted by
+              </p>
+              <p className="text-sm">{postedBy}</p>
             </div>
           ) : null}
         </div>
@@ -250,10 +325,12 @@ function EventSummaryCard({ event }: { event: Event }) {
 function RequirementCard({
   requirement,
   alreadyBid,
+  canPropose,
   onPropose,
 }: {
   requirement: EventServiceRequirement;
   alreadyBid: boolean;
+  canPropose: boolean;
   onPropose: () => void;
 }) {
   const isProposable =
@@ -295,7 +372,7 @@ function RequirementCard({
           <DateText value={requirement.startAt} mode="datetime" /> –{" "}
           <DateText value={requirement.endAt} mode="datetime" />
         </span>
-        {isProposable ? (
+        {isProposable && canPropose ? (
           <Button size="sm" onClick={onPropose}>
             <SendIcon /> Propose
           </Button>
@@ -303,7 +380,9 @@ function RequirementCard({
           <span>
             {alreadyBid
               ? "Waiting on the client's response"
-              : "No longer open for proposals"}
+              : isProposable
+                ? "You don't offer this service"
+                : "No longer open for proposals"}
           </span>
         )}
       </div>
@@ -335,6 +414,7 @@ function MyProposalsForEventCard({ proposals }: { proposals: Proposal[] }) {
       <Button
         variant="outline"
         size="sm"
+        nativeButton={false}
         render={
           <Link href="/dashboard/professional/proposals">My proposals</Link>
         }

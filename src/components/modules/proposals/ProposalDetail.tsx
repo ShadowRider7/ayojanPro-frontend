@@ -139,6 +139,7 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href={`/dashboard/events/${proposal.eventId}`}>
               <ArrowLeftIcon /> Back to event
@@ -211,11 +212,9 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
           <div className="flex flex-col gap-1 text-sm">
             <p className="font-medium">How accepting works</p>
             <p className="text-muted-foreground">
-              Accepting responds to the whole proposal: every pending item below
-              is accepted at once — each one creates a contract at the proposed
-              amount and schedule, marks its requirement FILLED, and
-              automatically rejects every other pending proposal competing for
-              those requirements.
+              {pendingItems.length === 1
+                ? "Accepting creates a contract for the quoted amount and schedule, marks the requirement FILLED, and automatically rejects every other pending proposal competing for it."
+                : "Accepting responds to the whole proposal: every pending item below is accepted at once — each one creates a contract at the proposed amount and schedule, marks its requirement FILLED, and automatically rejects every other pending proposal competing for those requirements."}
             </p>
           </div>
         </div>
@@ -227,8 +226,7 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
             Requested services
           </h2>
           <p className="text-sm text-muted-foreground">
-            One item per service requirement — the quoted amount and schedule
-            become the contract's terms.
+            The quoted amount and schedule become the contract's terms.
           </p>
         </div>
 
@@ -257,7 +255,11 @@ export function ProposalDetail({ proposalId }: ProposalDetailProps) {
           }
         }}
         title="Accept this proposal?"
-        description={`This accepts all ${pendingItems.length} pending item${pendingItems.length === 1 ? "" : "s"} below at once and cannot be undone.`}
+        description={
+          pendingItems.length === 1
+            ? "This accepts the proposal, creates a contract and cannot be undone."
+            : `This accepts all ${pendingItems.length} pending items below at once and cannot be undone.`
+        }
         confirmLabel="Accept proposal"
         variant="default"
         loading={isAccepting}

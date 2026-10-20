@@ -62,6 +62,7 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
         />
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href={`/dashboard/events/${eventId}`}>
               <ArrowLeftIcon /> Back to event
@@ -97,6 +98,7 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
       >
         <Button
           variant="outline"
+          nativeButton={false}
           render={
             <Link href={`/dashboard/events/${eventId}`}>
               <ArrowLeftIcon /> Back to event
@@ -119,6 +121,7 @@ export function ProposalList({ eventId, requirementId }: ProposalListProps) {
           action={
             <Button
               variant="outline"
+              nativeButton={false}
               render={
                 <Link href={`/dashboard/events/${eventId}`}>
                   <ArrowLeftIcon /> Back to event
