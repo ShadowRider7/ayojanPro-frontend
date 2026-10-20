@@ -22,12 +22,21 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { useCreateEvent, useEvent, useUpdateEvent } from "@/hooks";
+import { EVENT_TYPE_OPTIONS } from "@/lib/constants";
 import type { CreateEventPayload, Event } from "@/types";
+import { EVENT_TYPES } from "@/types";
 import { toDateTimeLocal } from "@/utils/formatters";
 import { type EventFormValues, eventFormSchema } from "@/validation";
 
@@ -39,7 +48,7 @@ function seedForm(existingEvent: Event | null): EventFormValues {
   return {
     title: existingEvent?.title ?? "",
     description: existingEvent?.description ?? "",
-    eventType: existingEvent?.eventType ?? "",
+    eventType: existingEvent?.eventType ?? EVENT_TYPES[0],
     address: existingEvent?.address ?? "",
     city: existingEvent?.city ?? "",
     country: existingEvent?.country ?? "",
@@ -224,62 +233,88 @@ function EventFormFields({ existingEvent }: { existingEvent: Event | null }) {
             </form.Field>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <form.Field name="startAt">
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+              <form.Subscribe selector={(state) => state.values.endAt}>
+                {(endAt) => (
+                  <form.Field name="startAt">
+                    {(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
 
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>Starts at</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="datetime-local"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        aria-invalid={isInvalid}
-                      />
-                      {isInvalid ? (
-                        <FieldError errors={field.state.meta.errors} />
-                      ) : null}
-                    </Field>
-                  );
-                }}
-              </form.Field>
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>
+                            Starts at
+                          </FieldLabel>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="datetime-local"
+                            max={endAt || undefined}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) => {
+                              const nextStartAt = event.target.value;
 
-              <form.Field name="endAt">
-                {(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
+                              field.handleChange(nextStartAt);
 
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>Ends at</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type="datetime-local"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
-                        }
-                        aria-invalid={isInvalid}
-                      />
-                      {isInvalid ? (
-                        <FieldError errors={field.state.meta.errors} />
-                      ) : null}
-                      <FieldDescription>
-                        Must be after the start time.
-                      </FieldDescription>
-                    </Field>
-                  );
-                }}
-              </form.Field>
+                              // Keep the window valid when the start moves past
+                              // the end that was already picked.
+                              if (
+                                nextStartAt &&
+                                endAt &&
+                                nextStartAt >= endAt
+                              ) {
+                                form.setFieldValue("endAt", "");
+                              }
+                            }}
+                            aria-invalid={isInvalid}
+                          />
+                          {isInvalid ? (
+                            <FieldError errors={field.state.meta.errors} />
+                          ) : null}
+                        </Field>
+                      );
+                    }}
+                  </form.Field>
+                )}
+              </form.Subscribe>
+
+              <form.Subscribe selector={(state) => state.values.startAt}>
+                {(startAt) => (
+                  <form.Field name="endAt">
+                    {(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
+
+                      return (
+                        <Field data-invalid={isInvalid}>
+                          <FieldLabel htmlFor={field.name}>Ends at</FieldLabel>
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type="datetime-local"
+                            min={startAt || undefined}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(event) =>
+                              field.handleChange(event.target.value)
+                            }
+                            aria-invalid={isInvalid}
+                          />
+                          {isInvalid ? (
+                            <FieldError errors={field.state.meta.errors} />
+                          ) : null}
+                          <FieldDescription>
+                            {startAt
+                              ? "Must be after the start time — earlier dates are disabled."
+                              : "Must be after the start time."}
+                          </FieldDescription>
+                        </Field>
+                      );
+                    }}
+                  </form.Field>
+                )}
+              </form.Subscribe>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -291,17 +326,28 @@ function EventFormFields({ existingEvent }: { existingEvent: Event | null }) {
                   return (
                     <Field data-invalid={isInvalid}>
                       <FieldLabel htmlFor={field.name}>Event type</FieldLabel>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        placeholder="Wedding"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(event) =>
-                          field.handleChange(event.target.value)
+                      <Select
+                        items={EVENT_TYPE_OPTIONS}
+                        value={field.state.value || EVENT_TYPES[0]}
+                        onValueChange={(value) =>
+                          field.handleChange(value ?? EVENT_TYPES[0])
                         }
-                        aria-invalid={isInvalid}
-                      />
+                      >
+                        <SelectTrigger
+                          id={field.name}
+                          className="w-full"
+                          aria-label="Event type"
+                        >
+                          <SelectValue placeholder="Select an event type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EVENT_TYPE_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {isInvalid ? (
                         <FieldError errors={field.state.meta.errors} />
                       ) : null}

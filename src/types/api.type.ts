@@ -5,11 +5,6 @@ export interface TMeta {
   totalPages: number;
 }
 
-export interface IPaginated<T> {
-  data: T[];
-  meta: TMeta;
-}
-
 export interface ApiResponse<T> {
   success: true;
   statusCode: number;

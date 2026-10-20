@@ -8,6 +8,8 @@ import {
   getEvent,
   getEventRequiredServices,
   getMyEvents,
+  getPublishedEvent,
+  getPublishedEvents,
   publishEvent,
   updateEvent,
   updateEventServiceRequirement,
@@ -17,8 +19,8 @@ import type {
   CreateServiceRequirementPayload,
   Event,
   EventServiceRequirement,
-  IPaginated,
   IQuery,
+  PublicEvent,
   UpdateEventPayload,
   UpdateServiceRequirementPayload,
 } from "@/types";
@@ -31,9 +33,28 @@ export function useMyEvents() {
 }
 
 export function usePublishedEvents(query: IQuery) {
-  return useQuery<ApiResponse<IPaginated<Event>>>({
+  return useQuery<ApiResponse<Event[]>>({
     queryKey: ["events", "published", query],
     queryFn: () => getAllEvents(query),
+  });
+}
+
+/**
+ * The public events board. No auth required, so it is usable by a professional
+ * whose application has not been approved yet.
+ */
+export function usePublicEvents(query: IQuery) {
+  return useQuery<ApiResponse<PublicEvent[]>>({
+    queryKey: ["events", "board", query],
+    queryFn: () => getPublishedEvents(query),
+  });
+}
+
+export function usePublicEvent(eventId: string) {
+  return useQuery<ApiResponse<PublicEvent>>({
+    queryKey: ["events", "board", eventId],
+    queryFn: () => getPublishedEvent(eventId),
+    enabled: Boolean(eventId),
   });
 }
 

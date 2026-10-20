@@ -30,6 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMyEvents } from "@/hooks";
 import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
 import type { Event } from "@/types";
+import { eventTypeLabel } from "@/utils";
 
 const PAGE_SIZE = 9;
 
@@ -61,11 +62,9 @@ function EventCard({ event }: { event: Event }) {
         <StatusBadge status={event.status} className="shrink-0" />
       </div>
 
-      {event.eventType ? (
-        <Badge variant="secondary" className="w-fit">
-          {event.eventType}
-        </Badge>
-      ) : null}
+      <Badge variant="secondary" className="w-fit">
+        {eventTypeLabel(event.eventType)}
+      </Badge>
 
       <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
         <p className="flex items-center gap-2">

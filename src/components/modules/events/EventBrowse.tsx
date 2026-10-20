@@ -11,7 +11,6 @@ import {
   PaginationBar,
   SearchInput,
 } from "@/components/shared";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,6 +23,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePublishedEvents } from "@/hooks";
 import { SERVICE_REQUIREMENT_STATUS_OPTIONS } from "@/lib/constants";
 import type { Event, IQuery } from "@/types";
+import { ALL_EVENT_TYPES, eventTypeLabel } from "@/utils";
+import { EventTypeFilter } from "./EventTypeFilter";
 
 const PAGE_SIZE = 9;
 
@@ -48,6 +49,7 @@ function EventCard({ event }: { event: Event }) {
       requirement.status === "PARTIALLY_FILLED",
   ).length;
   const location = [event.city, event.country].filter(Boolean).join(", ");
+  const postedBy = event.client?.user?.name;
 
   return (
     <Link
@@ -58,11 +60,16 @@ function EventCard({ event }: { event: Event }) {
         {event.title}
       </h2>
 
-      {event.eventType ? (
-        <Badge variant="secondary" className="w-fit">
-          {event.eventType}
-        </Badge>
-      ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground">
+          {eventTypeLabel(event.eventType)}
+        </span>
+        {postedBy ? (
+          <span className="text-xs text-muted-foreground">
+            Posted by {postedBy}
+          </span>
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-1.5 text-sm text-muted-foreground">
         <p>
@@ -102,6 +109,7 @@ function EventCardSkeleton() {
 export function EventBrowse() {
   const [searchTerm, setSearchTerm] = useState("");
   const [status, setStatus] = useState("all");
+  const [eventType, setEventType] = useState(ALL_EVENT_TYPES);
   const [page, setPage] = useState(1);
 
   const query = useMemo<IQuery>(() => {
@@ -115,15 +123,21 @@ export function EventBrowse() {
       next.status = status;
     }
 
+    if (eventType !== ALL_EVENT_TYPES) {
+      next.eventType = eventType;
+    }
+
     return next;
-  }, [page, searchTerm, status]);
+  }, [page, searchTerm, status, eventType]);
 
   const { data, isPending, isError, error, refetch } =
     usePublishedEvents(query);
 
-  const events = data?.data?.data ?? [];
-  const meta = data?.data?.meta;
-  const hasFilters = Boolean(searchTerm || status !== "all");
+  const events = data?.data ?? [];
+  const meta = data?.meta;
+  const hasFilters = Boolean(
+    searchTerm || status !== "all" || eventType !== ALL_EVENT_TYPES,
+  );
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
@@ -135,9 +149,15 @@ export function EventBrowse() {
     setPage(1);
   }, []);
 
+  const handleEventTypeChange = useCallback((value: string) => {
+    setEventType(value);
+    setPage(1);
+  }, []);
+
   const handleClearFilters = useCallback(() => {
     setSearchTerm("");
     setStatus("all");
+    setEventType(ALL_EVENT_TYPES);
     setPage(1);
   }, []);
 
@@ -155,25 +175,8 @@ export function EventBrowse() {
           placeholder="Search by title, service, city or client…"
           className="w-full sm:max-w-md"
         />
-        <Select
-          items={STATUS_FILTER_ITEMS}
-          value={status}
-          onValueChange={handleStatusChange}
-        >
-          <SelectTrigger
-            className="w-full sm:w-64"
-            aria-label="Filter by requirement status"
-          >
-            <SelectValue placeholder="All requirement statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTER_ITEMS.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <EventTypeFilter value={eventType} onChange={handleEventTypeChange} />
+        <StatusFilter value={status} onChange={handleStatusChange} />
       </div>
 
       {isPending ? (
@@ -231,5 +234,35 @@ export function EventBrowse() {
         </>
       )}
     </div>
+  );
+}
+
+function StatusFilter({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <Select
+      items={STATUS_FILTER_ITEMS}
+      value={value}
+      onValueChange={(next) => onChange(next ?? "all")}
+    >
+      <SelectTrigger
+        className="w-full sm:w-64"
+        aria-label="Filter by requirement status"
+      >
+        <SelectValue placeholder="All requirement statuses" />
+      </SelectTrigger>
+      <SelectContent>
+        {STATUS_FILTER_ITEMS.map((item) => (
+          <SelectItem key={item.value} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

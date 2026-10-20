@@ -19,6 +19,7 @@ import {
 import { useAdminEvents } from "@/hooks";
 import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
 import type { AdminEvent } from "@/types";
+import { eventTypeLabel } from "@/utils";
 
 const STATUS_FILTER_ITEMS: { value: string; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -106,7 +107,7 @@ export function AdminEvents() {
             header: "Type",
             cell: (event) => (
               <span className="text-muted-foreground text-sm">
-                {event.eventType ?? "—"}
+                {eventTypeLabel(event.eventType)}
               </span>
             ),
           },

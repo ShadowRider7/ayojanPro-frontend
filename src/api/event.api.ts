@@ -5,16 +5,33 @@ import type {
   CreateServiceRequirementPayload,
   Event,
   EventServiceRequirement,
-  IPaginated,
   IQuery,
+  PublicEvent,
   UpdateEventPayload,
   UpdateServiceRequirementPayload,
 } from "@/types";
 
 export function getAllEvents(query: IQuery = {}) {
-  return apiClient<ApiResponse<IPaginated<Event>>>("/event/all-events", {
+  return apiClient<ApiResponse<Event[]>>("/event/all-events", {
     query,
   });
+}
+
+/**
+ * The public events board. Unlike `getAllEvents` this needs no auth, so a
+ * professional can browse the available work before their application is
+ * approved.
+ */
+export function getPublishedEvents(query: IQuery = {}) {
+  return apiClient<ApiResponse<PublicEvent[]>>("/event/published-events", {
+    query,
+  });
+}
+
+export function getPublishedEvent(eventId: string) {
+  return apiClient<ApiResponse<PublicEvent>>(
+    `/event/published-events/${eventId}`,
+  );
 }
 
 export function getMyEvents() {

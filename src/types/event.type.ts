@@ -12,6 +12,26 @@ export const EVENT_STATUSES = [
 ] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
+/**
+ * The event types a client can pick. Mirrors the backend `EventType` enum —
+ * the marketing home page, the header menu and every filter offer the same
+ * closed set of options.
+ */
+export const EVENT_TYPES = [
+  "WEDDING",
+  "WEDDING_RECEPTION",
+  "BIRTHDAY",
+  "ANNIVERSARY",
+  "CORPORATE",
+  "CONFERENCE",
+  "CONCERT",
+  "FESTIVAL",
+  "EXHIBITION",
+  "SPORTS",
+  "OTHER",
+] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+
 export const SERVICE_REQUIREMENT_STATUSES = [
   "OPEN",
   "PARTIALLY_FILLED",
@@ -28,7 +48,7 @@ export interface Event {
   clientId: string;
   title: string;
   description: Nullable<string>;
-  eventType: Nullable<string>;
+  eventType: EventType;
   address: Nullable<string>;
   city: Nullable<string>;
   country: Nullable<string>;
@@ -48,7 +68,7 @@ export interface Event {
 export interface CreateEventPayload {
   title: string;
   description?: string;
-  eventType?: string;
+  eventType?: EventType;
   city?: string;
   country?: string;
   address?: string;
@@ -61,7 +81,7 @@ export interface CreateEventPayload {
 export interface UpdateEventPayload {
   title?: string;
   description?: string;
-  eventType?: string;
+  eventType?: EventType;
   city?: string;
   country?: string;
   address?: string;
@@ -109,4 +129,41 @@ export interface EventServiceRequirement {
   event?: Event;
   proposalItems?: ProposalItem[];
   contracts?: Contract[];
+}
+
+/**
+ * A published event as the public board returns it. The client is reduced to
+ * a display name and avatar — the board never exposes contact details.
+ */
+export interface PublicEvent {
+  id: string;
+  title: string;
+  description: Nullable<string>;
+  eventType: EventType;
+  address: Nullable<string>;
+  city: Nullable<string>;
+  country: Nullable<string>;
+  startAt: ISODateString;
+  endAt: ISODateString;
+  status: EventStatus;
+  createdAt: ISODateString;
+  serviceRequirements: Pick<
+    EventServiceRequirement,
+    | "id"
+    | "serviceName"
+    | "description"
+    | "status"
+    | "startAt"
+    | "endAt"
+    | "budget"
+    | "currency"
+  >[];
+  client: {
+    id: string;
+    user: {
+      id: string;
+      name: string;
+      imageUrl: Nullable<string>;
+    };
+  } | null;
 }

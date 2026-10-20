@@ -168,3 +168,19 @@ export function humanize(value: string | null | undefined): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+
+/**
+ * The display label for an event type. `OTHER` is shown as "Other" rather
+ * than the raw enum value, so the fallback reads naturally on a card.
+ */
+export function eventTypeLabel(value: string | null | undefined): string {
+  if (!value) {
+    return EMPTY;
+  }
+
+  if (value === "OTHER") {
+    return "Other";
+  }
+
+  return humanize(value);
+}

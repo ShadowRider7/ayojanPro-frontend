@@ -1,4 +1,5 @@
 import z from "zod";
+import { EVENT_TYPES } from "@/types";
 
 function parseDate(value: string): Date {
   return new Date(value);
@@ -22,10 +23,9 @@ export const eventFormSchema = z
       .min(1, "Title is required")
       .max(255, "Title cannot exceed 255 characters"),
     description: z.string().trim(),
-    eventType: z
-      .string()
-      .trim()
-      .max(150, "Event type cannot exceed 150 characters"),
+    eventType: z.enum(EVENT_TYPES, {
+      message: "Event type is required",
+    }),
     address: z.string().trim(),
     city: z.string().trim().max(100, "City cannot exceed 100 characters"),
     country: z.string().trim().max(100, "Country cannot exceed 100 characters"),
