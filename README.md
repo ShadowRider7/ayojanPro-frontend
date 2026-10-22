@@ -41,7 +41,7 @@ A ready-made demo dataset (clients, approved professionals, events, proposals) l
 
 | Variable | Description | Example |
 |---|---|---|
-| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:5000/api/v1` |
+| `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `https://ayojan-pro.vercel.app/api/v1` |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID (same as backend) | `<your-client-id>` |
 
 The dev frontend must run on `http://localhost:3000` because the backend CORS is configured with `origin: FRONTEND_URL` and credentials.
