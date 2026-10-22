@@ -44,7 +44,9 @@ export function UserMenu() {
           {user.imageUrl ? <AvatarImage src={user.imageUrl} alt="" /> : null}
           <AvatarFallback>{initials(user.name)}</AvatarFallback>
         </Avatar>
-        <span className="hidden max-w-32 truncate font-medium text-sm sm:inline">
+        {/* The name only appears once the header has room for it. Below that
+            the avatar alone keeps the menu bar from crowding the screen. */}
+        <span className="hidden max-w-32 truncate font-medium text-sm xl:inline">
           {user.name}
         </span>
       </DropdownMenuTrigger>

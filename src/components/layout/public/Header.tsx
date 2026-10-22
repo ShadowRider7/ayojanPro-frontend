@@ -32,7 +32,14 @@ import { EVENTS_PATH, initials } from "@/utils";
 const NAV_LINKS = [
   { name: "Home", url: "/" },
   { name: "Events", url: EVENTS_PATH },
-  { name: "Browse Professionals", url: "/professionals" },
+  {
+    name: "Browse Professionals",
+    // On a small screen the full label does not fit next to the logo and the
+    // account actions, so the menu bar uses the shorter one until there is
+    // room for the whole thing again.
+    shortName: "Professionals",
+    url: "/professionals",
+  },
 ];
 
 const MOBILE_LINK_CLASS =
@@ -50,8 +57,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 h-header w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-2">
+      <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between gap-2 px-4 sm:gap-3 sm:px-6 lg:gap-4 lg:px-8">
+        <div className="flex shrink-0 items-center gap-2">
           {isDashboard ? (
             <>
               <SidebarTrigger className="-ml-1" />
@@ -67,30 +74,43 @@ export default function Header() {
           </Link>
         </div>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden min-w-0 items-center gap-0.5 sm:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.url}
               href={link.url}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:px-3"
             >
-              {link.name}
+              <span className="lg:hidden">{link.shortName ?? link.name}</span>
+              <span className="hidden lg:inline">{link.name}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden shrink-0 items-center gap-1 sm:flex lg:gap-2">
           {!isPending ? (
             user ? (
               <>
                 {dashboardUrl ? (
-                  <Button
-                    nativeButton={false}
-                    render={<Link href={dashboardUrl} />}
-                  >
-                    <LayoutDashboardIcon />
-                    Dashboard
-                  </Button>
+                  <>
+                    <Button
+                      nativeButton={false}
+                      render={<Link href={dashboardUrl} />}
+                      className="hidden lg:inline-flex"
+                    >
+                      <LayoutDashboardIcon />
+                      Dashboard
+                    </Button>
+                    <Button
+                      nativeButton={false}
+                      render={<Link href={dashboardUrl} />}
+                      size="icon-sm"
+                      className="lg:hidden"
+                      aria-label="Dashboard"
+                    >
+                      <LayoutDashboardIcon />
+                    </Button>
+                  </>
                 ) : null}
                 <NotificationBell />
                 <UserMenu />
@@ -111,7 +131,7 @@ export default function Header() {
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex shrink-0 items-center gap-1 sm:hidden">
           {!isPending && user ? (
             <>
               <NotificationBell />
