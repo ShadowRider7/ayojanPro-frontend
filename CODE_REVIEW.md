@@ -494,13 +494,67 @@ res.clearCookie("refreshToken", authCookieOptions);
 ### 3.12 The deployed backend was missing the public events board (High)
 
 The deployed API answered **404** for `GET /event/published-events`, so the
-public events board could not load — the route exists in the backend source,
-but only from commit `7334150`, and the deployment was older than that. Every
-other route the frontend calls was present.
+public events board could not load. The route exists in the backend source,
+but the **deployed build was older than the source**.
 
-This one is not a code change: **the backend has to be redeployed** from
-`C:\projects\AyojanPro` (`main`) for both the events board and the logout
-cookie fix in §3.11 to be live.
+The cause was the deploy itself, not the code. `vercel.json` uses the legacy
+`builds` config:
+
+```json
+{ "builds": [{ "src": "dist/src/server.js", "use": "@vercel/node" }] }
+```
+
+That entry packages `dist/src/server.js` **as it is on disk**. The local
+`dist/` was a stale build from 19 October — it did not contain the
+`/published-events` route at all. The request fell through to the old
+`GET /:eventId` route, which had no auth middleware, and came back as
+`404 "event Not Found"` — the exact error the live API was giving.
+
+**Fixed:** the backend is rebuilt before it is deployed, and the deployment
+no longer depends on whatever happens to be in `dist/`:
+
+- `package.json` gained `"vercel-build": "npm run build"`, so Vercel's build
+  step compiles the TypeScript itself instead of shipping a stale `dist/`.
+- `.vercelignore` keeps the local `.env` (database URL, JWT secrets, SMTP and
+  bKash credentials) out of the uploaded deployment. The runtime values come
+  from the Vercel project's environment variables, and `dotenv` does not
+  override variables that are already set — so the uploaded `.env` was only
+  ever a leak waiting to happen.
+
+Deploying from `C:\projects\AyojanPro` (`main`) now makes both the events
+board and the logout cookie fix in §3.11 live.
+
+### 3.13 The API only allowed one frontend origin (Medium)
+
+`app.ts` passes a single string to `cors`:
+
+```ts
+origin: config.frontend_url, // process.env.FRONTEND_URL
+```
+
+The `cors` package then always answers with that one origin, whatever the
+browser asked for. There are **two** frontend Vercel projects in the team —
+`ayojan-pro-frontend` (connected to the GitHub repo, auto-deploys on push)
+and `ayojanpro-frontend` (deployed through the CLI) — and only one of them
+was in `FRONTEND_URL`.
+
+Measured on the live API: a request from `https://ayojanpro-frontend.vercel.app`
+came back with
+
+```
+Access-Control-Allow-Origin: https://ayojan-pro-frontend.vercel.app
+```
+
+which the browser rejects, so **every** API call from that origin fails —
+the events board, the professionals list and the login all of it. The
+backend itself answers correctly, so the failure looks like a broken page
+rather than a CORS problem.
+
+`FRONTEND_URL` is also the base for the bKash redirect URLs
+(`payment.service.ts`), so it cannot simply become a list without splitting
+the two uses. Left as a deployment decision: point the env var at the one
+frontend that is actually used, and delete the other project so a stale
+deployment cannot be mistaken for the live one.
 
 ---
 
