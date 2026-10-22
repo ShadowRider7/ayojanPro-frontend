@@ -1,27 +1,6 @@
 import type { Metadata } from "next";
-import { getPublicProfessional, getPublicProfessionals } from "@/api";
+import { getPublicProfessional } from "@/api";
 import ProfessionalProfile from "@/components/modules/professionals/ProfessionalProfile";
-import { staticExportParams } from "@/lib/static-params";
-
-export async function generateStaticParams() {
-  try {
-    const { data: professionals } = await getPublicProfessionals({
-      limit: 1000,
-    });
-
-    const params = (professionals ?? []).map((professional) => ({
-      professionalId: professional.id,
-    }));
-
-    if (!params.some((param) => param.professionalId === "placeholder")) {
-      params.push(...staticExportParams("professionalId"));
-    }
-
-    return params.length > 0 ? params : staticExportParams("professionalId");
-  } catch {
-    return staticExportParams("professionalId");
-  }
-}
 
 type ProfessionalProfilePageProps = {
   params: Promise<{ professionalId: string }>;

@@ -1,15 +1,10 @@
 import type { Metadata } from "next";
 import { EventBrowseDetail } from "@/components/modules/events/EventBrowseDetail";
-import { staticExportParams } from "@/lib/static-params";
 
 export const metadata: Metadata = {
   title: "Event",
   description: "See what services an event needs and send a proposal.",
 };
-
-export function generateStaticParams() {
-  return staticExportParams("eventId");
-}
 
 type BrowseEventDetailPageProps = {
   params: Promise<{ eventId: string }>;

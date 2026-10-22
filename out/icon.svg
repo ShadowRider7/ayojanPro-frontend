@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="AyojanPro">
-  <rect width="512" height="512" rx="112" fill="#1447e6" />
-  <g transform="translate(16 16) scale(12)">
-    <path d="M20 4.5 36.5 35.5h-8.9L20 21.3 12.4 35.5H3.5L20 4.5Z" fill="#eff6ff" />
-    <path d="M12.4 26h15.2v4.6H12.4Z" fill="#eff6ff" fill-opacity="0.55" />
-  </g>
-</svg>

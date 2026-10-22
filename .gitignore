@@ -16,6 +16,11 @@
 # next.js
 /.next/
 
+# The static export output. The app is deployed as a Next.js server on Vercel,
+# so `out/` is a build artefact and must never be committed — a stale copy
+# would be served instead of the current build.
+/out
+
 docs
 
 # production
