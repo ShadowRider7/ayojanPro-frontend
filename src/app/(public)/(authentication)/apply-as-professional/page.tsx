@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AuthAside from "@/components/auth/auth-aside";
 import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
 import ApplyAsProfessionalForm from "@/components/form/apply-as-professional-form";
 
@@ -20,18 +21,11 @@ export default function ApplyAsProfessionalPage() {
           </div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-primary lg:block">
-        <div className="absolute inset-0 bg-linear-to-br from-primary via-primary to-primary/60" />
-        <div className="relative flex h-full flex-col justify-end gap-3 p-10 text-primary-foreground">
-          <p className="max-w-sm text-2xl font-semibold tracking-tight text-balance">
-            Turn your craft into a steady stream of event bookings.
-          </p>
-          <p className="text-sm text-primary-foreground/80">
-            Publish your services, respond to real event briefs and get paid
-            through the platform — once our team verifies your application.
-          </p>
-        </div>
-      </div>
+      <AuthAside
+        image="/illustrations/auth/apply-as-professional.svg"
+        title="Turn your craft into a steady stream of event bookings."
+        description="Publish your services, respond to real event briefs and get paid through the platform — once our team verifies your application."
+      />
     </div>
   );
 }

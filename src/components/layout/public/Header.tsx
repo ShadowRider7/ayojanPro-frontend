@@ -2,13 +2,12 @@
 
 import {
   BellIcon,
-  CheckIcon,
   LayoutDashboardIcon,
   MenuIcon,
   UserIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Logo from "@/assets/svg/Logo";
 import { NotificationBell } from "@/components/account/notification-bell";
 import { UserMenu } from "@/components/account/user-menu";
@@ -27,19 +26,8 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { useGetMe, useSignOut } from "@/hooks";
-import {
-  APP_NAME,
-  DASHBOARD_ROUTES,
-  EVENT_TYPE_OPTIONS,
-  PROFILE_ROUTES,
-} from "@/lib/constants";
-import {
-  ALL_EVENT_TYPES,
-  EVENTS_PATH,
-  eventTypeHref,
-  initials,
-  normalizeEventType,
-} from "@/utils";
+import { APP_NAME, DASHBOARD_ROUTES, PROFILE_ROUTES } from "@/lib/constants";
+import { EVENTS_PATH, initials } from "@/utils";
 
 const NAV_LINKS = [
   { name: "Home", url: "/" },
@@ -49,60 +37,6 @@ const NAV_LINKS = [
 
 const MOBILE_LINK_CLASS =
   "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted";
-
-/**
- * The event type the events board is currently filtered by.
- *
- * `useSearchParams` may only be read from a subtree that is mounted after
- * the page has been prerendered, so this hook lives in the header menus —
- * they are only mounted once they are opened. The header itself must never
- * call it, or every page would lose its static shell.
- */
-function useActiveEventType() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  if (pathname !== EVENTS_PATH) {
-    return null;
-  }
-
-  return normalizeEventType(searchParams.get("eventType"));
-}
-
-function EventTypeSheetLinks() {
-  const activeEventType = useActiveEventType();
-
-  return (
-    <>
-      <SheetClose
-        nativeButton={false}
-        render={<Link href={EVENTS_PATH} className={MOBILE_LINK_CLASS} />}
-      >
-        All events
-        {activeEventType === ALL_EVENT_TYPES ? (
-          <CheckIcon className="ml-auto size-4" />
-        ) : null}
-      </SheetClose>
-      {EVENT_TYPE_OPTIONS.map((option) => (
-        <SheetClose
-          key={option.value}
-          nativeButton={false}
-          render={
-            <Link
-              href={eventTypeHref(option.value)}
-              className={MOBILE_LINK_CLASS}
-            />
-          }
-        >
-          {option.label}
-          {option.value === activeEventType ? (
-            <CheckIcon className="ml-auto size-4" />
-          ) : null}
-        </SheetClose>
-      ))}
-    </>
-  );
-}
 
 export default function Header() {
   const pathname = usePathname();
@@ -211,10 +145,6 @@ export default function Header() {
                     {link.name}
                   </SheetClose>
                 ))}
-                <p className="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground uppercase">
-                  Event types
-                </p>
-                <EventTypeSheetLinks />
               </nav>
               {!isPending ? (
                 user ? (

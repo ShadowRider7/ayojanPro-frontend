@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AuthAside from "@/components/auth/auth-aside";
 import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
 import LoginForm from "@/components/form/login-form";
 import { APP_NAME } from "@/lib/constants";
@@ -21,18 +22,11 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-        <div className="relative hidden overflow-hidden bg-primary lg:block">
-          <div className="absolute inset-0 bg-linear-to-br from-primary via-primary to-primary/60" />
-          <div className="relative flex h-full flex-col justify-end gap-3 p-10 text-primary-foreground">
-            <p className="max-w-sm text-2xl font-semibold tracking-tight text-balance">
-              Welcome back to {APP_NAME}.
-            </p>
-            <p className="text-sm text-primary-foreground/80">
-              Pick up where you left off — track proposals, contracts and
-              bookings from one dashboard.
-            </p>
-          </div>
-        </div>
+        <AuthAside
+          image="/illustrations/auth/login.svg"
+          title={`Welcome back to ${APP_NAME}.`}
+          description="Pick up where you left off — track proposals, contracts and bookings from one dashboard."
+        />
       </div>
     </>
   );

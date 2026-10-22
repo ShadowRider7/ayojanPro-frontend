@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import AuthAside from "@/components/auth/auth-aside";
 import VerifyAccountForm from "@/components/form/verify-account-form";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,18 +23,11 @@ export default function VerifyAccountPage() {
           </div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-primary lg:block">
-        <div className="absolute inset-0 bg-linear-to-br from-primary via-primary to-primary/60" />
-        <div className="relative flex h-full flex-col justify-end gap-3 p-10 text-primary-foreground">
-          <p className="max-w-sm text-2xl font-semibold tracking-tight text-balance">
-            One step away from your AyojanPro account.
-          </p>
-          <p className="text-sm text-primary-foreground/80">
-            Verify your email to start planning events and booking
-            professionals.
-          </p>
-        </div>
-      </div>
+      <AuthAside
+        image="/illustrations/auth/verify-account.svg"
+        title="One step away from your AyojanPro account."
+        description="Verify your email to start planning events and booking professionals."
+      />
     </div>
   );
 }

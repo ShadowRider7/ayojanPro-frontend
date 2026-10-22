@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import AuthAside from "@/components/auth/auth-aside";
 import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
 import VerifyProfessionalApplicationForm from "@/components/form/verify-professional-application-form";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,18 +27,11 @@ export default function VerifyProfessionalApplicationPage() {
           </div>
         </div>
       </div>
-      <div className="relative hidden overflow-hidden bg-primary lg:block">
-        <div className="absolute inset-0 bg-linear-to-br from-primary via-primary to-primary/60" />
-        <div className="relative flex h-full flex-col justify-end gap-3 p-10 text-primary-foreground">
-          <p className="max-w-sm text-2xl font-semibold tracking-tight text-balance">
-            One step away from your professional application.
-          </p>
-          <p className="text-sm text-primary-foreground/80">
-            Verify your email and our team takes it from there — you will be
-            notified as soon as your application is reviewed.
-          </p>
-        </div>
-      </div>
+      <AuthAside
+        image="/illustrations/auth/verify-professional-application.svg"
+        title="One step away from your professional application."
+        description="Verify your email and our team takes it from there — you will be notified as soon as your application is reviewed."
+      />
     </div>
   );
 }
