@@ -276,30 +276,34 @@ Also: `hooks/index.ts` now exports `use-mobile`, `types/index.ts` exports
 `sidebar.type`, `getAllEvents` was renamed `getAllPublishedEvents` (it only
 returns published events), and `src/utils/url.util.ts` was added.
 
-### 2.9 The static-export placeholder had no explanation (Medium)
-Every dynamic route returned `[{ eventId: "placeholder" }]` from
-`generateStaticParams()` with no comment. The reason is not obvious and is
-easy to "clean up" by mistake: **a static export has no runtime to render
-the route on demand, and Next.js fails the build when
-`generateStaticParams()` returns an empty array** —
+### 2.9 The static export made every id route a 404 (High)
 
-```
-Error: Page "/dashboard/events/[eventId]" returned an empty array from
-"generateStaticParams()". With "output: export", at least one route must be
-generated.
-```
-
-The workaround now lives in one documented place
-(`src/lib/static-params.ts`) and every route uses it:
+`next.config.ts` had `output: "export"` in production, so Vercel served a
+**static export** of the app. A static export has no server to render a route
+on demand, and every `[id]` route was exported under a single hard-coded
+`placeholder` path:
 
 ```ts
 export function generateStaticParams() {
-  return staticExportParams("eventId");
+  return staticExportParams("eventId"); // -> [{ eventId: "placeholder" }]
 }
 ```
 
-The same rule is recorded in `AGENTS.md`, so the next change does not
-reintroduce the build break.
+The result was that only `/events/placeholder` existed. Every real id —
+`/events/<id>`, `/professionals/<id>`, `/dashboard/events/<id>`,
+`/dashboard/contracts/<id>` — answered **404 "route not found"**, and the
+client router could not fetch a payload for them either, so the links were
+dead in both directions.
+
+The placeholder hack also had a second problem: it made the export depend on
+a build-time snapshot of the database, which is why the committed `out/`
+folder kept going stale (it had `http://localhost:5000/api/v1` baked in).
+
+**Fixed:** the export is gone. The app is deployed as a Next.js **server** on
+Vercel (Framework Preset `Next.js`, Output Directory `Next.js default`), the
+`generateStaticParams()` calls and `src/lib/static-params.ts` are deleted, and
+`out/` is gitignored so a stale copy can never be served. Each `[id]` route is
+now `ƒ (Dynamic)` and renders on demand for any id.
 
 ### 2.10 The back buttons went to a fixed route (Medium)
 
@@ -449,6 +453,55 @@ any status that is not `ACTIVE` and names the status in the message.
 rewrite (and re-parent) or soft-delete another client's requirement.
 **Fixed:** the lookup is scoped to `{ id: serviceId, eventId }`.
 
+### 3.11 The logout never cleared the session cookie in production (High)
+
+`logout` cleared the cookies without repeating the attributes they were set
+with:
+
+```ts
+res.clearCookie("accessToken");
+res.clearCookie("refreshToken");
+```
+
+In production the API and the frontend are on different sites, so the cookies
+are written as `SameSite=None; Secure`. The deletion cookie came back with
+no `SameSite` and no `Secure` at all:
+
+```
+Set-Cookie: accessToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+```
+
+A `Set-Cookie` without `SameSite=None; Secure` is treated as `Lax`, and a
+`Lax` cookie is **refused in a cross-site response** — so Chrome threw the
+deletion away and the session survived the logout. It worked locally only
+because development uses `sameSite: "lax"` and both sides are on `localhost`,
+which is same-site.
+
+**Fixed:** the attributes live in one place and are used for both setting and
+clearing, so they cannot drift apart again:
+
+```ts
+const authCookieOptions = {
+	httpOnly: true,
+	secure: config.node_env !== "development",
+	sameSite: config.node_env === "development" ? ("lax" as const) : ("none" as const),
+};
+
+res.clearCookie("accessToken", authCookieOptions);
+res.clearCookie("refreshToken", authCookieOptions);
+```
+
+### 3.12 The deployed backend was missing the public events board (High)
+
+The deployed API answered **404** for `GET /event/published-events`, so the
+public events board could not load — the route exists in the backend source,
+but only from commit `7334150`, and the deployment was older than that. Every
+other route the frontend calls was present.
+
+This one is not a code change: **the backend has to be redeployed** from
+`C:\projects\AyojanPro` (`main`) for both the events board and the logout
+cookie fix in §3.11 to be live.
+
 ---
 
 ## 4. Backend — found, not fixed
@@ -487,7 +540,7 @@ changed.
 # frontend
 bunx tsc --noEmit     # 0 errors
 bun run lint          # biome check: 0 problems
-bun run build         # next build (static export): success, 0 warnings
+bun run build         # next build (Next.js server): success, 0 warnings
 
 # backend
 npx tsc --noEmit      # 0 errors
@@ -516,9 +569,9 @@ form-level onChange only        submit=[error] fix=[]      resubmit=[]        �
 - The `EventType` enum is identical in Prisma, the backend constants and the
   frontend types.
 - Every `useSearchParams()` call sits under a `<Suspense>` boundary, so the
-  static export prerenders.
+  page prerenders cleanly.
 - The bKash callback URL redirects to `/dashboard/contracts/:id?payment=success`,
-  which works with the static export.
+  which the server renders on demand.
 - The upload paths (`resume` + `additionalFiles`, `mediaFile`,
   `profileImage`) are attached as `FormData` correctly, and every form's
   request body matches its payload type.
